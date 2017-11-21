@@ -92,6 +92,12 @@
 //! }
 //! ```
 //!
+//! Note that Gate currently depends on SDL2,
+//! so you will need to [install SDL2 development libraries](https://github.com/Rust-SDL2/rust-sdl2#sdl20-development-libraries)
+//! in order to run your game successfully.
+//! Gate requires SDL2, SDL2_Image, and SDL2_Mixer,
+//! as well as OpenGL version 3.0 or later.
+//!
 //! #Future changes
 //!
 //! There are a number of new features I am planning to add to Gate in the future.
