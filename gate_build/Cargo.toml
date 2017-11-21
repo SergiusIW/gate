@@ -1,0 +1,16 @@
+[package]
+name = "gate_build"
+version = "0.1.0"
+authors = ["Matthew Michelotti <matthew@matthewmichelotti.com>"]
+description = "Build utilities for Gate, a specialized 2D game library"
+documentation = "https://docs.rs/gate_build/"
+repository = "https://github.com/SergiusIW/gate"
+readme = "README.md"
+keywords = ["2D", "game"]
+license = "Apache-2.0"
+
+[dependencies]
+image = "0.15.0"
+byteorder = "1.1.0"
+regex = "0.2.2"
+lazy_static = "0.2.8"
