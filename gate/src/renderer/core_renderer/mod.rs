@@ -1,0 +1,152 @@
+// Copyright 2017 Matthew D. Michelotti
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#[macro_use] mod shader_util;
+mod sprite_program;
+mod tiled_program;
+
+use std::mem;
+
+use sdl2::render::Texture;
+
+use gl::types::*;
+use gl;
+
+use super::render_buffer::RenderBuffer;
+use self::sprite_program::SpriteProgram;
+use self::tiled_program::TiledProgram;
+
+pub struct CoreRenderer {
+    vbo: GLuint,
+    sprite_program: SpriteProgram,
+    tiled_program: TiledProgram,
+    sprites_tex: Texture,
+    tiles_tex: Texture,
+}
+
+impl CoreRenderer {
+    pub fn new(r: &RenderBuffer, sprites_tex: Texture, tiles_tex: Texture) -> CoreRenderer {
+        let mut vbo = 0;
+        unsafe {
+            gl::GenBuffers(1, &mut vbo);
+            gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+        }
+        CoreRenderer {
+            vbo, sprites_tex, tiles_tex,
+            sprite_program: SpriteProgram::new(),
+            tiled_program: TiledProgram::new(r.game_dims()),
+        }
+    }
+}
+
+impl CoreRenderer {
+    pub(super) fn clear(&mut self, color: (u8, u8, u8)) {
+        unsafe {
+            gl::ClearColor(color.0 as f32 / 255., color.1 as f32 / 255., color.2 as f32 / 255., 1.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+        }
+    }
+
+    pub(super) fn draw_sprites(&mut self, r: &mut RenderBuffer) {
+        unsafe {
+            gl::UseProgram(self.sprite_program.handle);
+
+            gl::ActiveTexture(gl::TEXTURE0);
+            self.sprites_tex.gl_bind_texture();
+            gl::Uniform1i(self.sprite_program.uniform_tex, 0); // binds to GL_TEXTURE0
+            gl::Uniform2f(self.sprite_program.uniform_tex_dims,
+                          r.sprite_atlas.dims.0, r.sprite_atlas.dims.1);
+
+            gl::BindVertexArray(self.sprite_program.vao);
+
+            gl::BufferData(gl::ARRAY_BUFFER,
+                           (mem::size_of::<GLfloat>() * r.vbo_data.len()) as GLsizeiptr,
+                           mem::transmute(&r.vbo_data[0]),
+                           gl::STREAM_DRAW);
+
+            gl::DrawArrays(gl::TRIANGLES, 0, r.vbo_data.len() as GLint / 7);
+
+            gl::BindVertexArray(0);
+            self.sprites_tex.gl_unbind_texture();
+            gl::UseProgram(0);
+        }
+        r.vbo_data.clear();
+    }
+
+    pub(super) fn draw_tiles_to_fbo(&mut self, r: &mut RenderBuffer) {
+        unsafe {
+            gl::BindFramebuffer(gl::FRAMEBUFFER, self.tiled_program.fbo);
+
+            gl::ClearColor(0.0, 0.0, 0.0, 0.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+
+            gl::UseProgram(self.tiled_program.handle);
+            gl::Viewport(0, 0, self.tiled_program.fbo_tex_dims.0 as GLint, self.tiled_program.fbo_tex_dims.1 as GLint);
+
+            gl::ActiveTexture(gl::TEXTURE0);
+            self.tiles_tex.gl_bind_texture();
+            gl::Uniform1i(self.tiled_program.uniform_tex, 0);
+
+            gl::BindVertexArray(self.tiled_program.vao);
+
+            gl::BufferData(gl::ARRAY_BUFFER,
+                           (mem::size_of::<GLfloat>() * r.vbo_data.len()) as GLsizeiptr,
+                           mem::transmute(&r.vbo_data[0]),
+                           gl::STREAM_DRAW);
+
+            gl::DrawArrays(gl::TRIANGLES, 0, r.vbo_data.len() as GLint / 4);
+
+            gl::BindVertexArray(0);
+            self.tiles_tex.gl_unbind_texture();
+            gl::UseProgram(0);
+        }
+    }
+
+    pub(super) fn draw_tiles_from_fbo(&mut self, r: &mut RenderBuffer) {
+        unsafe {
+            gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+
+            gl::UseProgram(self.sprite_program.handle);
+
+            gl::Viewport(0, 0, r.screen_dims.0 as GLint, r.screen_dims.1 as GLint);
+
+            gl::ActiveTexture(gl::TEXTURE0);
+            gl::BindTexture(gl::TEXTURE_2D, self.tiled_program.fbo_tex);
+            gl::Uniform1i(self.sprite_program.uniform_tex, 0); // binds to GL_TEXTURE0
+            gl::Uniform2f(self.sprite_program.uniform_tex_dims,
+                          self.tiled_program.fbo_tex_dims.0 as f32, self.tiled_program.fbo_tex_dims.1 as f32);
+
+            gl::BindVertexArray(self.sprite_program.vao);
+
+            gl::BufferData(gl::ARRAY_BUFFER,
+                           (mem::size_of::<GLfloat>() * r.vbo_data.len()) as GLsizeiptr,
+                           mem::transmute(&r.vbo_data[0]),
+                           gl::STREAM_DRAW);
+
+            gl::DrawArrays(gl::TRIANGLES, 0, r.vbo_data.len() as GLint / 7);
+
+            gl::BindVertexArray(0);
+            gl::BindTexture(gl::TEXTURE_2D, 0);
+            gl::UseProgram(0);
+        }
+    }
+}
+
+impl Drop for CoreRenderer {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteBuffers(1, &self.vbo);
+        }
+    }
+}

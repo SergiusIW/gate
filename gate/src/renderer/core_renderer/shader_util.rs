@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use gl::types::*;
-use gl;
-
 use std::os::raw::c_char;
 use std::{ptr, str};
+
+use gl::types::*;
+use gl;
 
 macro_rules! c_str {
     ($s:expr) => (

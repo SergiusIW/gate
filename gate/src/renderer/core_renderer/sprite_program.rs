@@ -19,13 +19,11 @@ use gl::types::*;
 use gl;
 
 use super::shader_util;
-use renderer::atlas::Atlas;
 
 const VS_PIXEL_SRC: *const c_char = include_c_str!("sprite.vert");
 const FS_PIXEL_SRC: *const c_char = include_c_str!("sprite.frag");
 
 pub struct SpriteProgram {
-    pub atlas: Atlas,
     pub handle: GLuint,
     pub vao: GLuint,
     vs: GLuint,
@@ -35,14 +33,14 @@ pub struct SpriteProgram {
 }
 
 impl SpriteProgram {
-    pub fn new(atlas: Atlas) -> SpriteProgram {
+    pub fn new() -> SpriteProgram {
         let vs = shader_util::compile_shader(VS_PIXEL_SRC, gl::VERTEX_SHADER);
         let fs = shader_util::compile_shader(FS_PIXEL_SRC, gl::FRAGMENT_SHADER);
         let handle = shader_util::link_program(vs, fs);
         let vao = SpriteProgram::make_vao(handle);
         unsafe {
             SpriteProgram {
-                atlas, handle, vao, vs, fs,
+                handle, vao, vs, fs,
                 uniform_tex: gl::GetUniformLocation(handle, c_str!("tex")),
                 uniform_tex_dims: gl::GetUniformLocation(handle, c_str!("tex_dims")),
             }

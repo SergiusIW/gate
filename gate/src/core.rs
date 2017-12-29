@@ -15,13 +15,15 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::ffi::CStr;
 use std::path::Path;
-use std::u32;
+use std::fs::File;
+use std::io::BufReader;
 
 use sdl2::{self, VideoSubsystem};
 use sdl2::video::GLProfile;
 use sdl2::video::gl_attr::GLAttr;
 use sdl2::image::LoadTexture;
 use sdl2::mixer::{INIT_OGG, DEFAULT_CHANNELS, AUDIO_S16LSB};
+use sdl2::render::{Renderer as SdlRenderer};
 
 use gl;
 use gl::types::*;
@@ -29,6 +31,9 @@ use gl::types::*;
 use audio::Audio;
 use app_info::AppInfo;
 use renderer::Renderer;
+use renderer::core_renderer::CoreRenderer;
+use renderer::render_buffer::RenderBuffer;
+use renderer::atlas::Atlas;
 use input::{KeyEvent, KeyCode, EventHandler};
 use asset_id::AppAssetId;
 use app_clock::AppClock;
@@ -85,11 +90,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 
     init_gl(&video);
 
-    let sprites_tex = sdl_renderer.load_texture(Path::new("assets/sprites.png")).unwrap();
-    let tiles_tex = sdl_renderer.load_texture(Path::new("assets/tiles.png")).unwrap();
-    // TODO need to ensure Nearest-neighbor sampling is used?
-
-    let mut renderer = Renderer::<AS>::new(&info, sprites_tex, tiles_tex);
+    let mut renderer = build_renderer(&info, &sdl_renderer);
 
     gl_error_check();
 
@@ -116,6 +117,19 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
         if !event_handler.process_events(&mut app, &mut audio) { break }
         if !app.advance(elapsed, &mut audio) { break; }
     }
+}
+
+fn build_renderer<AS: AppAssetId>(info: &AppInfo, sdl_renderer: &SdlRenderer) -> Renderer<AS> {
+    let sprites_atlas = Atlas::new_sprite(BufReader::new(File::open("assets/sprites.atlas").unwrap()));
+    let tiles_atlas = Atlas::new_tiled(BufReader::new(File::open("assets/tiles.atlas").unwrap()));
+    let render_buffer = RenderBuffer::new(&info, sprites_atlas, tiles_atlas);
+
+    let sprites_tex = sdl_renderer.load_texture(Path::new("assets/sprites.png")).unwrap();
+    let tiles_tex = sdl_renderer.load_texture(Path::new("assets/tiles.png")).unwrap();
+    // TODO need to ensure Nearest-neighbor sampling is used?
+    let core_renderer = CoreRenderer::new(&render_buffer, sprites_tex, tiles_tex);
+
+    Renderer::<AS>::new(render_buffer, core_renderer)
 }
 
 fn init_mixer() {

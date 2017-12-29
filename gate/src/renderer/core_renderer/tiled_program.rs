@@ -19,13 +19,11 @@ use gl::types::*;
 use gl;
 
 use super::shader_util;
-use renderer::atlas::Atlas;
 
 const VS_TILED_SRC: *const c_char = include_c_str!("tiled.vert");
 const FS_TILED_SRC: *const c_char = include_c_str!("tiled.frag");
 
 pub struct TiledProgram {
-    pub atlas: Atlas,
     pub handle: GLuint,
     pub vao: GLuint,
     vs: GLuint,
@@ -37,7 +35,7 @@ pub struct TiledProgram {
 }
 
 impl TiledProgram {
-    pub fn new(atlas: Atlas, game_dims: (f64, f64)) -> TiledProgram {
+    pub fn new(game_dims: (f64, f64)) -> TiledProgram {
         let vs = shader_util::compile_shader(VS_TILED_SRC, gl::VERTEX_SHADER);
         let fs = shader_util::compile_shader(FS_TILED_SRC, gl::FRAGMENT_SHADER);
         let handle = shader_util::link_program(vs, fs);
@@ -46,7 +44,7 @@ impl TiledProgram {
         let (fbo, fbo_tex) = TiledProgram::make_fbo_and_tex(fbo_tex_dims);
         unsafe {
             TiledProgram {
-                atlas, handle, vao, vs, fs, fbo, fbo_tex, fbo_tex_dims,
+                handle, vao, vs, fs, fbo, fbo_tex, fbo_tex_dims,
                 uniform_tex: gl::GetUniformLocation(handle, c_str!("tex")),
             }
         }
