@@ -12,17 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Contains structs relating to application rendering.
-//!
-//! Rendering uses OpenGL shaders designed specifically for 2D pixel art,
-//! looking crisp at any scale or rotation.
+mod sdl;
 
-mod geom;
-pub(crate) mod atlas;
-pub(crate) mod render_buffer;
-mod renderer;
-mod vbo_packer;
-pub(crate) mod core_renderer;
-
-pub use self::renderer::*;
-pub use self::geom::Affine;
+pub use self::sdl::*;

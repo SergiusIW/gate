@@ -23,7 +23,7 @@ use sdl2::render::Texture;
 use gl::types::*;
 use gl;
 
-use super::render_buffer::RenderBuffer;
+use ::renderer::render_buffer::RenderBuffer;
 use self::sprite_program::SpriteProgram;
 use self::tiled_program::TiledProgram;
 
@@ -51,14 +51,14 @@ impl CoreRenderer {
 }
 
 impl CoreRenderer {
-    pub(super) fn clear(&mut self, color: (u8, u8, u8)) {
+    pub(in renderer) fn clear(&mut self, color: (u8, u8, u8)) {
         unsafe {
             gl::ClearColor(color.0 as f32 / 255., color.1 as f32 / 255., color.2 as f32 / 255., 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
     }
 
-    pub(super) fn draw_sprites(&mut self, r: &mut RenderBuffer) {
+    pub(in renderer) fn draw_sprites(&mut self, r: &mut RenderBuffer) {
         unsafe {
             gl::UseProgram(self.sprite_program.handle);
 
@@ -84,7 +84,7 @@ impl CoreRenderer {
         r.vbo_data.clear();
     }
 
-    pub(super) fn draw_tiles_to_fbo(&mut self, r: &mut RenderBuffer) {
+    pub(in renderer) fn draw_tiles_to_fbo(&mut self, r: &mut RenderBuffer) {
         unsafe {
             gl::BindFramebuffer(gl::FRAMEBUFFER, self.tiled_program.fbo);
 
@@ -113,7 +113,7 @@ impl CoreRenderer {
         }
     }
 
-    pub(super) fn draw_tiles_from_fbo(&mut self, r: &mut RenderBuffer) {
+    pub(in renderer) fn draw_tiles_from_fbo(&mut self, r: &mut RenderBuffer) {
         unsafe {
             gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
 

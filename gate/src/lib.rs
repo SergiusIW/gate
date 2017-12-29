@@ -123,9 +123,9 @@ pub mod asset_id;
 pub mod renderer;
 pub mod app_info;
 pub mod input;
+mod core;
 
-mod sdl_core;
-use ::sdl_core as core;
+pub use core::*;
 
 use std::marker::PhantomData;
 
@@ -134,6 +134,12 @@ use ::asset_id::{AppAssetId, IdU16};
 use ::input::{KeyEvent, KeyCode};
 use ::renderer::Renderer;
 use ::app_info::AppInfo;
+
+/// Invoke this in a `main` method to run the `App`.
+///
+/// Will panic if this method is called more than once.
+/// The `AppInfo` is used to specify intiailization parameters for the application.
+pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, app: AP) { core::run(info, app); }
 
 /// Trait that a user can implement to specify application behavior, passed into `gate::run(...)`.
 pub trait App<A: AppAssetId> {
@@ -149,13 +155,6 @@ pub trait App<A: AppAssetId> {
     /// Render the app in its current state.
     fn render(&mut self, renderer: &mut Renderer<A>);
 }
-
-/// Invoke this in a `main` method to run the `App`.
-///
-/// Will panic if this method is called more than once.
-/// The `AppInfo` is used to specify intiailization parameters for the application.
-pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, app: AP) { core::run(info, app); }
-
 
 /// Struct for audio playback.
 pub struct Audio<A: AppAssetId> { core: CoreAudio, phantom: PhantomData<A> }
