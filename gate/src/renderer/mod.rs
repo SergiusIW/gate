@@ -20,9 +20,11 @@
 mod geom;
 pub(crate) mod atlas;
 pub(crate) mod render_buffer;
-pub(crate) mod core_renderer;
 mod renderer;
 mod vbo_packer;
+
+pub(crate) mod sdl_core_renderer;
+pub(crate) use self::sdl_core_renderer as core_renderer;
 
 pub use self::renderer::*;
 pub use self::geom::Affine;

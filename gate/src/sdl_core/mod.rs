@@ -12,6 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+mod app_clock;
+mod core_audio;
+mod event_handler;
+
+pub use self::core_audio::CoreAudio;
+
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::ffi::CStr;
 use std::path::Path;
@@ -28,30 +34,15 @@ use sdl2::render::{Renderer as SdlRenderer};
 use gl;
 use gl::types::*;
 
-use audio::Audio;
+use ::{Audio, App};
 use app_info::AppInfo;
 use renderer::Renderer;
 use renderer::core_renderer::CoreRenderer;
 use renderer::render_buffer::RenderBuffer;
 use renderer::atlas::Atlas;
-use input::{KeyEvent, KeyCode, EventHandler};
-use asset_id::AppAssetId;
-use app_clock::AppClock;
-
-/// Trait that a user can implement to specify application behavior, passed into `gate::run(...)`.
-pub trait App<A: AppAssetId> {
-    /// Invoked when the application is first started, default behavior is a no-op.
-    fn start(&mut self, _audio: &mut Audio<A>) {}
-
-    /// Advances the app state by a given amount of `seconds` (usually a fraction of a second).
-    fn advance(&mut self, seconds: f64, audio: &mut Audio<A>) -> bool;
-
-    /// Invoked when user input is received (currently only keyboard presses/releases).
-    fn input(&mut self, event: KeyEvent, key: KeyCode, audio: &mut Audio<A>) -> bool;
-
-    /// Render the app in its current state.
-    fn render(&mut self, renderer: &mut Renderer<A>);
-}
+use ::asset_id::{AppAssetId, IdU16};
+use self::app_clock::AppClock;
+use self::event_handler::EventHandler;
 
 lazy_static! {
     static ref APP_CREATED: AtomicBool = AtomicBool::new(false);
@@ -62,10 +53,6 @@ fn mark_app_created_flag() {
     assert!(!previously_created, "Cannot construct more than one App.");
 }
 
-/// Invoke this in a `main` method to run the `App`.
-///
-/// Will panic if this method is called more than once.
-/// The `AppInfo` is used to specify intiailization parameters for the application.
 pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
     mark_app_created_flag();
 
@@ -94,7 +81,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 
     gl_error_check();
 
-    let mut audio = Audio::new();
+    let mut audio = Audio::new(CoreAudio::new(AS::Sound::count()));
 
     if info.print_gl_info { print_gl_info(); }
 

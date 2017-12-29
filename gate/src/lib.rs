@@ -122,10 +122,53 @@ extern crate byteorder;
 pub mod asset_id;
 pub mod renderer;
 pub mod app_info;
-mod app_clock;
-mod audio;
-mod core;
 pub mod input;
 
-pub use audio::Audio;
-pub use core::{App, run};
+mod sdl_core;
+use ::sdl_core as core;
+
+use std::marker::PhantomData;
+
+use core::CoreAudio;
+use ::asset_id::{AppAssetId, IdU16};
+use ::input::{KeyEvent, KeyCode};
+use ::renderer::Renderer;
+use ::app_info::AppInfo;
+
+/// Trait that a user can implement to specify application behavior, passed into `gate::run(...)`.
+pub trait App<A: AppAssetId> {
+    /// Invoked when the application is first started, default behavior is a no-op.
+    fn start(&mut self, _audio: &mut Audio<A>) {}
+
+    /// Advances the app state by a given amount of `seconds` (usually a fraction of a second).
+    fn advance(&mut self, seconds: f64, audio: &mut Audio<A>) -> bool;
+
+    /// Invoked when user input is received (currently only keyboard presses/releases).
+    fn input(&mut self, event: KeyEvent, key: KeyCode, audio: &mut Audio<A>) -> bool;
+
+    /// Render the app in its current state.
+    fn render(&mut self, renderer: &mut Renderer<A>);
+}
+
+/// Invoke this in a `main` method to run the `App`.
+///
+/// Will panic if this method is called more than once.
+/// The `AppInfo` is used to specify intiailization parameters for the application.
+pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, app: AP) { core::run(info, app); }
+
+
+/// Struct for audio playback.
+pub struct Audio<A: AppAssetId> { core: CoreAudio, phantom: PhantomData<A> }
+
+impl<A: AppAssetId> Audio<A> {
+    pub(crate) fn new(core: CoreAudio) -> Audio<A> { Audio { core, phantom: PhantomData } }
+
+    /// Plays the given sound effect once.
+    pub fn play_sound(&mut self, sound: A::Sound) { self.core.play_sound(sound.id_u16()); }
+
+    /// Continually loops the given music, replacing the currently playing music, if any.
+    pub fn loop_music(&mut self, music: A::Music) { self.core.loop_music(music.id_u16()); }
+
+    /// Stops the currently playing music, if any.
+    pub fn stop_music(&mut self) { self.core.stop_music(); }
+}
