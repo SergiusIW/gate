@@ -13,19 +13,16 @@
 // limitations under the License.
 
 //! Structs related to user input.
-//!
-//! Note: `KeyCode`, an enum for keyboard keys, is currently re-exported from SDL2.
 
 use std::collections::HashSet;
 
 use sdl2::EventPump;
 use sdl2::event::Event;
+use sdl2::keyboard::Keycode as SdlKeyCode;
 
 use ::App;
 use audio::Audio;
 use asset_id::AppAssetId;
-
-pub use sdl2::keyboard::Keycode as KeyCode;
 
 /// Events related to a keyboard key.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -34,6 +31,16 @@ pub enum KeyEvent {
     Pressed,
     /// A pressed down key is released.
     Released,
+}
+
+/// Enum for keyboard keys.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum KeyCode {
+    A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
+    Num0, Num1, Num2, Num3, Num4, Num5, Num6, Num7, Num8, Num9,
+    Right, Left, Down, Up,
+    Return,
+    Space,
 }
 
 pub(crate) struct EventHandler {
@@ -50,19 +57,73 @@ impl EventHandler {
         for event in self.pump.poll_iter() {
             match event {
                 Event::Quit { .. } => return false,
-                Event::KeyDown { keycode: Some(keycode), .. } =>
-                    if self.held_keys.insert(keycode) {
-                        let continuing = app.input(KeyEvent::Pressed, keycode, audio);
-                        if !continuing { return false }
-                    },
-                Event::KeyUp { keycode: Some(keycode), .. } =>
-                    if self.held_keys.remove(&keycode) {
-                        let continuing = app.input(KeyEvent::Released, keycode, audio);
-                        if !continuing { return false }
-                    },
+                Event::KeyDown { keycode: Some(keycode), .. } => {
+                    if let Some(keycode) = sdl_to_gate_key(keycode) {
+                        if self.held_keys.insert(keycode) {
+                            let continuing = app.input(KeyEvent::Pressed, keycode, audio);
+                            if !continuing { return false }
+                        }
+                    }
+                },
+                Event::KeyUp { keycode: Some(keycode), .. } => {
+                    if let Some(keycode) = sdl_to_gate_key(keycode) {
+                        if self.held_keys.remove(&keycode) {
+                            let continuing = app.input(KeyEvent::Released, keycode, audio);
+                            if !continuing { return false }
+                        }
+                    }
+                },
                 _ => {},
             }
         }
         true
+    }
+}
+
+fn sdl_to_gate_key(sdl: SdlKeyCode) -> Option<KeyCode> {
+    match sdl {
+        SdlKeyCode::A => Some(KeyCode::A),
+        SdlKeyCode::B => Some(KeyCode::B),
+        SdlKeyCode::C => Some(KeyCode::C),
+        SdlKeyCode::D => Some(KeyCode::D),
+        SdlKeyCode::E => Some(KeyCode::E),
+        SdlKeyCode::F => Some(KeyCode::F),
+        SdlKeyCode::G => Some(KeyCode::G),
+        SdlKeyCode::H => Some(KeyCode::H),
+        SdlKeyCode::I => Some(KeyCode::I),
+        SdlKeyCode::J => Some(KeyCode::J),
+        SdlKeyCode::K => Some(KeyCode::K),
+        SdlKeyCode::L => Some(KeyCode::L),
+        SdlKeyCode::M => Some(KeyCode::M),
+        SdlKeyCode::N => Some(KeyCode::N),
+        SdlKeyCode::O => Some(KeyCode::O),
+        SdlKeyCode::P => Some(KeyCode::P),
+        SdlKeyCode::Q => Some(KeyCode::Q),
+        SdlKeyCode::R => Some(KeyCode::R),
+        SdlKeyCode::S => Some(KeyCode::S),
+        SdlKeyCode::T => Some(KeyCode::T),
+        SdlKeyCode::U => Some(KeyCode::U),
+        SdlKeyCode::V => Some(KeyCode::V),
+        SdlKeyCode::W => Some(KeyCode::W),
+        SdlKeyCode::X => Some(KeyCode::X),
+        SdlKeyCode::Y => Some(KeyCode::Y),
+        SdlKeyCode::Z => Some(KeyCode::Z),
+        SdlKeyCode::Num0 => Some(KeyCode::Num0),
+        SdlKeyCode::Num1 => Some(KeyCode::Num1),
+        SdlKeyCode::Num2 => Some(KeyCode::Num2),
+        SdlKeyCode::Num3 => Some(KeyCode::Num3),
+        SdlKeyCode::Num4 => Some(KeyCode::Num4),
+        SdlKeyCode::Num5 => Some(KeyCode::Num5),
+        SdlKeyCode::Num6 => Some(KeyCode::Num6),
+        SdlKeyCode::Num7 => Some(KeyCode::Num7),
+        SdlKeyCode::Num8 => Some(KeyCode::Num8),
+        SdlKeyCode::Num9 => Some(KeyCode::Num9),
+        SdlKeyCode::Right => Some(KeyCode::Right),
+        SdlKeyCode::Left => Some(KeyCode::Left),
+        SdlKeyCode::Down => Some(KeyCode::Down),
+        SdlKeyCode::Up => Some(KeyCode::Up),
+        SdlKeyCode::Return => Some(KeyCode::Return),
+        SdlKeyCode::Space => Some(KeyCode::Space),
+        _ => None,
     }
 }
