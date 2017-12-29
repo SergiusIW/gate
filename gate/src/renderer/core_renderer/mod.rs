@@ -12,6 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#[cfg(not(target_arch = "wasm32"))]
 mod sdl;
 
+#[cfg(not(target_arch = "wasm32"))]
 pub use self::sdl::*;
+
+#[cfg(target_arch = "wasm32")]
+mod wasm;
+
+#[cfg(target_arch = "wasm32")]
+pub use self::wasm::*;

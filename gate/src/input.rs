@@ -14,6 +14,8 @@
 
 //! Structs related to user input.
 
+#[cfg(target_arch = "wasm32")] use std::mem;
+
 /// Events related to a keyboard key.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum KeyEvent {
@@ -24,6 +26,7 @@ pub enum KeyEvent {
 }
 
 /// Enum for keyboard keys.
+#[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum KeyCode {
     A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
@@ -31,4 +34,12 @@ pub enum KeyCode {
     Right, Left, Down, Up,
     Return,
     Space,
+}
+
+#[cfg(target_arch = "wasm32")]
+impl KeyCode {
+    fn count() -> u8 { KeyCode::Space as u8 + 1 }
+    pub(crate) fn from_u8(id: u8) -> Option<KeyCode> {
+        if id < Self::count() { Some(unsafe { mem::transmute(id) }) } else { None }
+    }
 }

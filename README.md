@@ -136,6 +136,12 @@ in order to run your game successfully.
 Gate requires SDL2, SDL2_Image, and SDL2_Mixer,
 as well as OpenGL version 3.0 or later.
 
+NOTE: Support for building to WebAssembly via the wasm32-unknown-unknown
+build target is in progress.
+This target does not require the installation of SDL2.
+You can build to WebAssembly with the command
+`cargo build --release --target wasm32-unknown-unknown`.
+
 ### License
 
 Collider is licensed under the [Apache 2.0
