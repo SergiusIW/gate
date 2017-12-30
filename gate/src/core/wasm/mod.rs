@@ -15,6 +15,7 @@
 pub mod wasm_imports;
 pub mod wasm_exports;
 
+use std::collections::HashSet;
 use std::cell::RefCell;
 use std::mem;
 use std::io::Cursor;
@@ -67,6 +68,7 @@ struct AppRunner<AS: AppAssetId, AP: App<AS>> {
     info: AppInfo,
     renderer: Option<Renderer<AS>>,
     last_time_sec: Option<f64>,
+    held_keys: HashSet<KeyCode>,
 }
 
 impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
@@ -105,10 +107,22 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
 
     fn input(&mut self, event: KeyEvent, key: KeyCode) {
         let mut audio = Audio::new(CoreAudio { });
-        self.app.input(event, key, &mut audio);
+        let success = if event == KeyEvent::Pressed {
+            self.held_keys.insert(key)
+        } else {
+            self.held_keys.remove(&key)
+        };
+        if success {
+            self.app.input(event, key, &mut audio);
+        }
     }
 }
 
 pub fn run<AS: 'static + AppAssetId, AP: 'static + App<AS>>(info: AppInfo, app: AP) {
-    *APP_RUNNER.r.borrow_mut() = Box::new(AppRunner { app, info, renderer: None, last_time_sec: None });
+    *APP_RUNNER.r.borrow_mut() = Box::new(AppRunner {
+        app, info,
+        renderer: None,
+        last_time_sec: None,
+        held_keys: HashSet::new(),
+    });
 }
