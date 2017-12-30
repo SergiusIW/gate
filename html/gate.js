@@ -115,6 +115,22 @@ const imports = {
 
       gl.drawArrays(gl.TRIANGLES, 0, size / 28);
     },
+    gateWasmLoopMusic: function (id) {
+      if (Module.currentMusic != null) {
+        Module.currentMusic.stop();
+      }
+      Module.currentMusic = Module.musics[id];
+      Module.currentMusic.play();
+    },
+    gateWasmStopMusic: function () {
+      if (Module.currentMusic != null) {
+        Module.currentMusic.stop();
+        Module.currentMusic = null;
+      }
+    },
+    gateWasmPlaySound: function (id) {
+      Module.sounds[id].play();
+    },
     gateWasmTiledAtlasBinSize: function () {
       return Module.tiledAtlas.length;
     },
@@ -212,6 +228,8 @@ fetch("gate_app.wasm").then(response =>
   Module.gateWasmInit = mod.exports.gateWasmInit;
   Module.gateWasmUpdateAndDraw = mod.exports.gateWasmUpdateAndDraw;
   Module.gateWasmKeyEvent = mod.exports.gateWasmKeyEvent;
+  Module.gateWasmMusicCount = mod.exports.gateWasmMusicCount;
+  Module.gateWasmSoundCount = mod.exports.gateWasmSoundCount;
   tryStart();
 });
 
@@ -307,11 +325,25 @@ function initTiledProg () {
   };
 }
 
+function initAudioArray (prefix, count, loop) {
+  var result = new Array(count);
+  for (var i = 0; i < count; i++) {
+    result[i] = new Howl({
+      src: [`assets/${prefix}${i}.ogg`],
+      loop: loop,
+    });
+  }
+  return result;
+}
+
 function tryStart () {
   if (Module.spriteAtlas && Module.tiledAtlas && Module.memory && Module.spriteVert && Module.spriteFrag
       && Module.spriteTex && Module.tiledTex && Module.tiledVert && Module.tiledFrag) {
     initSpriteProg();
     initTiledProg();
+    Module.musics = initAudioArray("music", Module.gateWasmMusicCount(), true);
+    Module.sounds = initAudioArray("sound", Module.gateWasmSoundCount(), false);
+    Module.currentMusic = null;
     Module.gateWasmInit();
     requestAnimationFrame(updateAndDraw);
     document.addEventListener('keydown', e => handleKeyEvent(e.key, true));

@@ -19,9 +19,10 @@ use std::collections::HashSet;
 use std::cell::RefCell;
 use std::mem;
 use std::io::Cursor;
+use std::os::raw::c_int;
 
 use ::{App, Audio};
-use ::asset_id::AppAssetId;
+use ::asset_id::{AppAssetId, IdU16};
 use ::renderer::Renderer;
 use ::app_info::AppInfo;
 use ::input::{KeyEvent, KeyCode};
@@ -32,17 +33,30 @@ use self::wasm_imports::*;
 
 pub struct CoreAudio;
 
-// FIXME implement CoreAudio
 impl CoreAudio {
-    pub fn play_sound(&mut self, _sound: u16) { }
-    pub fn loop_music(&mut self, _music: u16) { }
-    pub fn stop_music(&mut self) { }
+    pub fn play_sound(&mut self, id: u16) {
+        unsafe {
+            gateWasmPlaySound(id as c_int);
+        }
+    }
+    pub fn loop_music(&mut self, id: u16) {
+        unsafe {
+            gateWasmLoopMusic(id as c_int);
+        }
+    }
+    pub fn stop_music(&mut self) {
+        unsafe {
+            gateWasmStopMusic();
+        }
+    }
 }
 
 trait TraitAppRunner {
     fn init(&mut self);
     fn update_and_draw(&mut self, time_sec: f64);
     fn input(&mut self, event: KeyEvent, key: KeyCode);
+    fn music_count(&self) -> u16;
+    fn sound_count(&self) -> u16;
 }
 
 struct DefaultAppRunner;
@@ -50,6 +64,8 @@ impl TraitAppRunner for DefaultAppRunner {
     fn init(&mut self) { panic!("gate::run(...) was not invoked") }
     fn update_and_draw(&mut self, _time_sec: f64) { panic!() }
     fn input(&mut self, _event: KeyEvent, _key: KeyCode) { panic!() }
+    fn music_count(&self) -> u16 { panic!() }
+    fn sound_count(&self) -> u16 { panic!() }
 }
 
 struct StaticAppRunner { r: RefCell<Box<TraitAppRunner>> }
@@ -91,6 +107,9 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         let render_buffer = RenderBuffer::new(&self.info, sprite_atlas, tiled_atlas);
         let core_renderer = CoreRenderer::new(&render_buffer);
         self.renderer = Some(Renderer::<AS>::new(render_buffer, core_renderer));
+
+        let mut audio = Audio::new(CoreAudio { });
+        self.app.start(&mut audio);
     }
 
     fn update_and_draw(&mut self, time_sec: f64) {
@@ -116,6 +135,9 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
             self.app.input(event, key, &mut audio);
         }
     }
+
+    fn music_count(&self) -> u16 { AS::Music::count() }
+    fn sound_count(&self) -> u16 { AS::Sound::count() }
 }
 
 pub fn run<AS: 'static + AppAssetId, AP: 'static + App<AS>>(info: AppInfo, app: AP) {

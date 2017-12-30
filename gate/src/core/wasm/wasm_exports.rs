@@ -37,3 +37,13 @@ pub unsafe extern "C" fn gateWasmKeyEvent(code: c_int, down: bool) {
     let event = if down { KeyEvent::Pressed } else { KeyEvent::Released };
     APP_RUNNER.r.borrow_mut().input(event, code);
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn gateWasmMusicCount() -> c_int {
+    APP_RUNNER.r.borrow().music_count() as c_int
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn gateWasmSoundCount() -> c_int {
+    APP_RUNNER.r.borrow().sound_count() as c_int
+}

@@ -25,6 +25,10 @@ extern {
     pub fn gateWasmDrawTilesToFbo(size: usize, data: *const c_void);
     pub fn gateWasmDrawTilesFromFbo(size: usize, data: *const c_void);
 
+    pub fn gateWasmPlaySound(id: c_int);
+    pub fn gateWasmLoopMusic(id: c_int);
+    pub fn gateWasmStopMusic();
+
     pub fn gateWasmSpriteAtlasBinSize() -> usize;
     pub fn gateWasmSpriteAtlasBinFill(buffer: *mut c_void);
     pub fn gateWasmTiledAtlasBinSize() -> usize;
