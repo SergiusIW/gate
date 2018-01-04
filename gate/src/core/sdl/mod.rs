@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -90,8 +90,9 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
     let mut clock = AppClock::new(timer, &info);
 
     'main: loop {
-        if cfg!(debug_assertions) {
-            renderer.clear((255, 0, 255));
+        unsafe {
+            gl::ClearColor(0., 0., 0., 1.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT);
         }
 
         app.render(&mut renderer);
@@ -109,7 +110,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 fn build_renderer<AS: AppAssetId>(info: &AppInfo, sdl_renderer: &SdlRenderer) -> Renderer<AS> {
     let sprites_atlas = Atlas::new_sprite(BufReader::new(File::open("assets/sprites.atlas").unwrap()));
     let tiles_atlas = Atlas::new_tiled(BufReader::new(File::open("assets/tiles.atlas").unwrap()));
-    let render_buffer = RenderBuffer::new(&info, sprites_atlas, tiles_atlas);
+    let render_buffer = RenderBuffer::new(&info, info.dims.window_pixels, sprites_atlas, tiles_atlas);
 
     let sprites_tex = sdl_renderer.load_texture(Path::new("assets/sprites.png")).unwrap();
     let tiles_tex = sdl_renderer.load_texture(Path::new("assets/tiles.png")).unwrap();

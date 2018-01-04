@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,12 +35,11 @@ pub struct TiledProgram {
 }
 
 impl TiledProgram {
-    pub fn new(game_dims: (f64, f64)) -> TiledProgram {
+    pub fn new(fbo_tex_dims: (u32, u32)) -> TiledProgram {
         let vs = shader_util::compile_shader(VS_TILED_SRC, gl::VERTEX_SHADER);
         let fs = shader_util::compile_shader(FS_TILED_SRC, gl::FRAGMENT_SHADER);
         let handle = shader_util::link_program(vs, fs);
         let vao = TiledProgram::make_vao(handle);
-        let fbo_tex_dims = (TiledProgram::to_fbo_dim(game_dims.0), TiledProgram::to_fbo_dim(game_dims.1));
         let (fbo, fbo_tex) = TiledProgram::make_fbo_and_tex(fbo_tex_dims);
         unsafe {
             TiledProgram {
@@ -105,10 +104,6 @@ impl TiledProgram {
             gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
         }
         (fbo, fbo_tex)
-    }
-
-    fn to_fbo_dim(game_dim: f64) -> u32 {
-        (game_dim - 1e-7).ceil() as u32 + 1
     }
 }
 

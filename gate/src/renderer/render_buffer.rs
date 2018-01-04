@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,8 +31,50 @@ impl Mode {
     }
 }
 
-fn to_fbo_dim(game_dim: f64) -> u32 {
-    (game_dim - 1e-7).ceil() as u32 + 1
+pub(super) struct RenderDims {
+    pub(super) min_aspect_ratio: f64,
+    pub(super) max_aspect_ratio: f64,
+    pub(super) app_dims: (f64, f64),
+    pub(super) full_screen_dims: (u32, u32),
+    pub(super) tiled_fbo_dims: (u32, u32),
+    pub(super) used_screen_dims: (u32, u32),
+    pub(super) app_pixel_scalar: f64,
+}
+
+impl RenderDims {
+    fn new(min_aspect_ratio: f64, max_aspect_ratio: f64, app_height: f64, full_screen_dims: (u32, u32)) -> RenderDims {
+        let ratio = full_screen_dims.0 as f64 / full_screen_dims.1 as f64;
+        let used_screen_dims = if ratio < min_aspect_ratio {
+            let mut h = (full_screen_dims.0 as f64 / min_aspect_ratio).floor() as u32;
+            if (full_screen_dims.1 - h) % 2 != 0 { h -= 1; }
+            (full_screen_dims.0, h)
+        } else if ratio > max_aspect_ratio {
+            let mut w = (full_screen_dims.1 as f64 * max_aspect_ratio).floor() as u32;
+            if (full_screen_dims.0 - w) % 2 != 0 { w -= 1; }
+            (w, full_screen_dims.1)
+        } else {
+            full_screen_dims
+        };
+        let ratio = used_screen_dims.0 as f64 / used_screen_dims.1 as f64;
+        let app_dims = (app_height * ratio, app_height);
+        let app_pixel_scalar = if used_screen_dims.1 == full_screen_dims.1 {
+            full_screen_dims.1 as f64 / app_dims.1
+        } else {
+            full_screen_dims.0 as f64 / app_dims.0
+        };
+        RenderDims {
+            min_aspect_ratio, max_aspect_ratio, app_dims, full_screen_dims, used_screen_dims, app_pixel_scalar,
+            tiled_fbo_dims: (to_fbo_dim(app_height * max_aspect_ratio), to_fbo_dim(app_height)),
+        }
+    }
+
+    pub(super) fn set_full_screen_dims(&mut self, screen_dims: (u32, u32)) {
+        *self = RenderDims::new(self.min_aspect_ratio, self.max_aspect_ratio, self.app_dims.1, screen_dims);
+    }
+}
+
+fn to_fbo_dim(app_dim: f64) -> u32 {
+    (app_dim - 1e-7).ceil() as u32 + 1
 }
 
 pub struct RenderBuffer {
@@ -40,28 +82,18 @@ pub struct RenderBuffer {
     pub(super) tiled_atlas: Atlas,
     pub(super) mode: Mode,
     pub(super) vbo_data: Vec<f32>,
-    pub(super) game_pixel_scalar: f64,
-    pub(super) screen_dims: (u32, u32),
-    pub(super) tiled_fbo_dims: (u32, u32),
+    pub(super) dims: RenderDims,
 }
 
 impl RenderBuffer {
-    pub fn new(info: &AppInfo, sprite_atlas: Atlas, tiled_atlas: Atlas) -> RenderBuffer {
+    pub fn new(info: &AppInfo, screen_dims: (u32, u32), sprite_atlas: Atlas, tiled_atlas: Atlas) -> RenderBuffer {
         RenderBuffer {
             sprite_atlas,
             tiled_atlas,
             mode: Mode::Sprite,
             vbo_data: Vec::new(),
-            game_pixel_scalar: info.dims.window_pixels.1 as f64 / info.dims.app_height as f64,
-            screen_dims: info.dims.window_pixels,
-            tiled_fbo_dims: (to_fbo_dim(info.dims.app_height * info.dims.window_pixels.0 as f64 / info.dims.window_pixels.1 as f64),
-                             to_fbo_dim(info.dims.app_height)),
+            dims: RenderDims::new(info.min_aspect_ratio, info.max_aspect_ratio, info.dims.app_height, screen_dims),
         }
-    }
-
-    pub fn game_dims(&self) -> (f64, f64) {
-        (self.screen_dims.0 as f64 / self.game_pixel_scalar,
-         self.screen_dims.1 as f64 / self.game_pixel_scalar)
     }
 
     fn change_mode(&mut self, r: &mut CoreRenderer, mode: Mode) {
@@ -71,7 +103,7 @@ impl RenderBuffer {
         }
     }
 
-    pub fn flush(&mut self, r: &mut CoreRenderer) {
+    pub(super) fn flush(&mut self, r: &mut CoreRenderer) {
         if !self.vbo_data.is_empty() {
             match self.mode {
                 Mode::Sprite => r.draw_sprites(self),
@@ -86,12 +118,12 @@ impl RenderBuffer {
         }
     }
 
-    pub fn append_sprite(&mut self, r: &mut CoreRenderer, affine: &Affine, sprite_id: u16, flash_ratio: f64) {
+    pub(super) fn append_sprite(&mut self, r: &mut CoreRenderer, affine: &Affine, sprite_id: u16, flash_ratio: f64) {
         self.change_mode(r, Mode::Sprite);
         vbo_packer::append_sprite(self, affine, sprite_id, flash_ratio);
     }
 
-    pub fn append_tile(&mut self, r: &mut CoreRenderer, camera: (f64, f64), affine: &Affine, tile_id: u16) {
+    pub(super) fn append_tile(&mut self, r: &mut CoreRenderer, camera: (f64, f64), affine: &Affine, tile_id: u16) {
         self.change_mode(r, Mode::Tiled(camera));
         vbo_packer::append_tile(self, affine, tile_id);
     }

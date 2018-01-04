@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ pub fn append_sprite(r: &mut RenderBuffer, affine: &Affine, sprite_id: u16, flas
     assert!(r.mode == Mode::Sprite);
 
     let img_coords = r.sprite_atlas.images[&sprite_id];
-    let affine = affine.post_scale(r.game_pixel_scalar);
+    let affine = affine.post_scale(r.dims.app_pixel_scalar);
     let flash_ratio = (flash_ratio as f32).max(0.0).min(1.0);
     let inv_tex_dims = (1.0 / r.sprite_atlas.dims.0, 1.0 / r.sprite_atlas.dims.1);
 
@@ -38,7 +38,7 @@ pub fn append_sprite(r: &mut RenderBuffer, affine: &Affine, sprite_id: u16, flas
     let dst_lb = (dst_lt.0, dst_rb.1);
     let dst_rt = (dst_rb.0, dst_lt.1);
 
-    let affine = affine.post_scale_axes(2.0 / r.screen_dims.0 as f64, 2.0 / r.screen_dims.1 as f64);
+    let affine = affine.post_scale_axes(2.0 / r.dims.full_screen_dims.0 as f64, 2.0 / r.dims.full_screen_dims.1 as f64);
     let aff_lt = affine.apply_f32(dst_lt);
     let aff_rb = affine.apply_f32(dst_rb);
     let aff_lb = affine.apply_f32(dst_lb);
@@ -82,10 +82,10 @@ pub fn append_tile(r: &mut RenderBuffer, affine: &Affine, tile_id: u16) {
     let dst_lb = (dst_lt.0, dst_rb.1);
     let dst_rt = (dst_rb.0, dst_lt.1);
 
-    let fbo_camera = fbo_camera(camera, r.tiled_fbo_dims);
+    let fbo_camera = fbo_camera(camera, r.dims.tiled_fbo_dims);
     let affine = affine.post_translate(fbo_camera.0 - camera.0, fbo_camera.1 - camera.1)
-                       .post_scale_axes(2.0 / r.tiled_fbo_dims.0 as f64,
-                                        2.0 / r.tiled_fbo_dims.1 as f64);
+                       .post_scale_axes(2.0 / r.dims.tiled_fbo_dims.0 as f64,
+                                        2.0 / r.dims.tiled_fbo_dims.1 as f64);
     let aff_lt = affine.apply_f32(dst_lt);
     let aff_rb = affine.apply_f32(dst_rb);
     let aff_lb = affine.apply_f32(dst_lb);
@@ -127,25 +127,27 @@ fn fbo_camera_coord(mut camera: f64, fbo_dim: u32) -> f64 {
 pub fn append_tile_fbo(r: &mut RenderBuffer) {
     let camera = r.mode.tiled_camera();
 
-    let s = (1.0 / r.tiled_fbo_dims.0 as f32, 1.0 / r.tiled_fbo_dims.1 as f32);
+    let s = (1.0 / r.dims.tiled_fbo_dims.0 as f32, 1.0 / r.dims.tiled_fbo_dims.1 as f32);
     let pad = (
-        (0.5 / r.game_pixel_scalar).min(0.499) as f32 * s.0,
-        (0.5 / r.game_pixel_scalar).min(0.499) as f32 * s.1,
+        (0.5 / r.dims.app_pixel_scalar).min(0.499) as f32 * s.0,
+        (0.5 / r.dims.app_pixel_scalar).min(0.499) as f32 * s.1,
     );
-    let camera = fbo_camera(camera, r.tiled_fbo_dims);
+    let camera = fbo_camera(camera, r.dims.tiled_fbo_dims);
     let camera = (0.5 + s.0 * camera.0 as f32, 0.5 + s.1 * camera.1 as f32);
-    let game_dims = r.game_dims();
-    let half_dims = (s.0 * game_dims.0 as f32 * 0.5, s.1 * game_dims.1 as f32 * 0.5);
+    let half_dims = (s.0 * r.dims.app_dims.0 as f32 * 0.5, s.1 * r.dims.app_dims.1 as f32 * 0.5);
     let lb = (camera.0 - half_dims.0, camera.1 - half_dims.1);
     let rt = (camera.0 + half_dims.0, camera.1 + half_dims.1);
     let lt = (lb.0, rt.1);
     let rb = (rt.0, lb.1);
 
+    let w_ratio = r.dims.used_screen_dims.0 as f32 / r.dims.full_screen_dims.0 as f32;
+    let h_ratio = r.dims.used_screen_dims.1 as f32 / r.dims.full_screen_dims.1 as f32;
+
     let vbo_data = &mut r.vbo_data;
-    add_sprite_vertex(vbo_data, pad, 0.0, lb, (-1.0, -1.0));
-    add_sprite_vertex(vbo_data, pad, 0.0, rb, ( 1.0, -1.0));
-    add_sprite_vertex(vbo_data, pad, 0.0, lt, (-1.0,  1.0));
-    add_sprite_vertex(vbo_data, pad, 0.0, rb, ( 1.0, -1.0));
-    add_sprite_vertex(vbo_data, pad, 0.0, lt, (-1.0,  1.0));
-    add_sprite_vertex(vbo_data, pad, 0.0, rt, ( 1.0,  1.0));
+    add_sprite_vertex(vbo_data, pad, 0.0, lb, (-w_ratio, -h_ratio));
+    add_sprite_vertex(vbo_data, pad, 0.0, rb, ( w_ratio, -h_ratio));
+    add_sprite_vertex(vbo_data, pad, 0.0, lt, (-w_ratio,  h_ratio));
+    add_sprite_vertex(vbo_data, pad, 0.0, rb, ( w_ratio, -h_ratio));
+    add_sprite_vertex(vbo_data, pad, 0.0, lt, (-w_ratio,  h_ratio));
+    add_sprite_vertex(vbo_data, pad, 0.0, rt, ( w_ratio,  h_ratio));
 }

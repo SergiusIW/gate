@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@
 //!                    .build();
 //! ```
 
+// TODO have default for window_pixels in AppInfo, and remove AppDims struct
 /// Specifies window and app dimensions.
 #[derive(Clone)]
 pub struct AppDims {
@@ -44,6 +45,8 @@ pub struct AppDims {
 #[derive(Clone)]
 pub struct AppInfo {
     pub(crate) dims: AppDims,
+    pub(crate) min_aspect_ratio: f64,
+    pub(crate) max_aspect_ratio: f64,
     pub(crate) title: &'static str,
     pub(crate) target_fps: f64,
     pub(crate) print_workload_info: bool,
@@ -60,6 +63,8 @@ impl AppInfo {
         AppInfoBuilder {
             info: AppInfo {
                 dims,
+                min_aspect_ratio: 4. / 3.,
+                max_aspect_ratio: 16. / 9.,
                 title: "untitled app",
                 target_fps: 60.,
                 print_workload_info: false,
@@ -75,6 +80,15 @@ pub struct AppInfoBuilder {
 }
 
 impl AppInfoBuilder {
+    /// Specifies the minimum and maximum aspect ratio for the game, enforced by
+    /// letterboxing/pillarboxing if necessary (default is 4/3 to 16/9).
+    pub fn aspect_ratio_range(&mut self, min_ratio: f64, max_ratio: f64) -> &mut Self {
+        assert!(0.2 < min_ratio && min_ratio < max_ratio && max_ratio < 5.0, "invalid aspect ratios");
+        self.info.min_aspect_ratio = min_ratio;
+        self.info.max_aspect_ratio = max_ratio;
+        self
+    }
+
     /// Specifies a window title (default is "untitled app").
     pub fn title(&mut self, title: &'static str) -> &mut Self { self.info.title = title; self }
 

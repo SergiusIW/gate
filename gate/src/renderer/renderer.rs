@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,6 +65,10 @@ impl<A: AppAssetId> Renderer<A> {
 
     pub(crate) fn flush(&mut self) {
         self.b.flush(&mut self.c);
+    }
+
+    pub(crate) fn set_screen_dims(&mut self, dims: (u32, u32)) {
+        self.b.dims.set_full_screen_dims(dims);
     }
 }
 

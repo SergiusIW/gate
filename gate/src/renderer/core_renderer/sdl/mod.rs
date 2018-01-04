@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,11 +41,17 @@ impl CoreRenderer {
         unsafe {
             gl::GenBuffers(1, &mut vbo);
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+            gl::Scissor(
+                (r.dims.full_screen_dims.0 - r.dims.used_screen_dims.0) as i32 / 2,
+                (r.dims.full_screen_dims.1 - r.dims.used_screen_dims.1) as i32 / 2,
+                r.dims.used_screen_dims.0 as i32,
+                r.dims.used_screen_dims.1 as i32,
+            );
         }
         CoreRenderer {
             vbo, sprites_tex, tiles_tex,
             sprite_program: SpriteProgram::new(),
-            tiled_program: TiledProgram::new(r.game_dims()),
+            tiled_program: TiledProgram::new(r.dims.tiled_fbo_dims),
         }
     }
 }
@@ -53,13 +59,16 @@ impl CoreRenderer {
 impl CoreRenderer {
     pub(in renderer) fn clear(&mut self, color: (u8, u8, u8)) {
         unsafe {
+            gl::Enable(gl::SCISSOR_TEST);
             gl::ClearColor(color.0 as f32 / 255., color.1 as f32 / 255., color.2 as f32 / 255., 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
+            gl::Disable(gl::SCISSOR_TEST);
         }
     }
 
     pub(in renderer) fn draw_sprites(&mut self, r: &mut RenderBuffer) {
         unsafe {
+            gl::Enable(gl::SCISSOR_TEST);
             gl::UseProgram(self.sprite_program.handle);
 
             gl::ActiveTexture(gl::TEXTURE0);
@@ -80,6 +89,7 @@ impl CoreRenderer {
             gl::BindVertexArray(0);
             self.sprites_tex.gl_unbind_texture();
             gl::UseProgram(0);
+            gl::Disable(gl::SCISSOR_TEST);
         }
         r.vbo_data.clear();
     }
@@ -116,10 +126,11 @@ impl CoreRenderer {
     pub(in renderer) fn draw_tiles_from_fbo(&mut self, r: &mut RenderBuffer) {
         unsafe {
             gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+            gl::Enable(gl::SCISSOR_TEST);
 
             gl::UseProgram(self.sprite_program.handle);
 
-            gl::Viewport(0, 0, r.screen_dims.0 as GLint, r.screen_dims.1 as GLint);
+            gl::Viewport(0, 0, r.dims.full_screen_dims.0 as GLint, r.dims.full_screen_dims.1 as GLint);
 
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, self.tiled_program.fbo_tex);
@@ -139,6 +150,7 @@ impl CoreRenderer {
             gl::BindVertexArray(0);
             gl::BindTexture(gl::TEXTURE_2D, 0);
             gl::UseProgram(0);
+            gl::Disable(gl::SCISSOR_TEST);
         }
     }
 }
