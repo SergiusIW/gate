@@ -39,7 +39,9 @@ pub struct Renderer<A: AppAssetId> { b: RenderBuffer, c: CoreRenderer, phantom: 
 
 impl<A: AppAssetId> Renderer<A> {
     pub(crate) fn new(buffer: RenderBuffer, core_renderer: CoreRenderer) -> Renderer<A> {
-        Renderer { b: buffer, c: core_renderer, phantom: PhantomData }
+        let mut result = Renderer { b: buffer, c: core_renderer, phantom: PhantomData };
+        result.set_scissor();
+        result
     }
 
     /// Clears the screen with the given `color` in rgb (red-green-blue) format.
@@ -63,12 +65,31 @@ impl<A: AppAssetId> Renderer<A> {
         TiledRenderer { r: self, camera: (camera_x, camera_y) }
     }
 
+    /// Returns the app width, which is restricted by the app height and the aspect ratio range
+    /// specified in `AppInfo`.
+    pub fn app_width(&self) -> f64 { self.b.dims.app_dims.0 }
+
+    /// Returns the app height, which is a constant specified in `AppInfo`.
+    pub fn app_height(&self) -> f64 { self.b.dims.app_dims.1 }
+
     pub(crate) fn flush(&mut self) {
         self.b.flush(&mut self.c);
     }
 
     pub(crate) fn set_screen_dims(&mut self, dims: (u32, u32)) {
-        self.b.dims.set_full_screen_dims(dims);
+        if dims != self.b.dims.full_screen_dims {
+            self.b.dims.set_full_screen_dims(dims);
+            self.set_scissor();
+        }
+    }
+
+    fn set_scissor(&mut self) {
+        self.c.set_scissor(
+            (self.b.dims.full_screen_dims.0 - self.b.dims.used_screen_dims.0) / 2,
+            (self.b.dims.full_screen_dims.1 - self.b.dims.used_screen_dims.1) / 2,
+            self.b.dims.used_screen_dims.0,
+            self.b.dims.used_screen_dims.1,
+        );
     }
 }
 

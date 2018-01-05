@@ -41,12 +41,6 @@ impl CoreRenderer {
         unsafe {
             gl::GenBuffers(1, &mut vbo);
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-            gl::Scissor(
-                (r.dims.full_screen_dims.0 - r.dims.used_screen_dims.0) as i32 / 2,
-                (r.dims.full_screen_dims.1 - r.dims.used_screen_dims.1) as i32 / 2,
-                r.dims.used_screen_dims.0 as i32,
-                r.dims.used_screen_dims.1 as i32,
-            );
         }
         CoreRenderer {
             vbo, sprites_tex, tiles_tex,
@@ -57,6 +51,12 @@ impl CoreRenderer {
 }
 
 impl CoreRenderer {
+    pub(in renderer) fn set_scissor(&mut self, x: u32, y: u32, w: u32, h: u32) {
+        unsafe {
+            gl::Scissor(x as i32, y as i32, w as i32, h as i32);
+        }
+    }
+
     pub(in renderer) fn clear(&mut self, color: (u8, u8, u8)) {
         unsafe {
             gl::Enable(gl::SCISSOR_TEST);

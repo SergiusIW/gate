@@ -84,6 +84,7 @@ impl AppInfoBuilder {
     /// letterboxing/pillarboxing if necessary (default is 4/3 to 16/9).
     pub fn aspect_ratio_range(&mut self, min_ratio: f64, max_ratio: f64) -> &mut Self {
         assert!(0.2 < min_ratio && min_ratio < max_ratio && max_ratio < 5.0, "invalid aspect ratios");
+        // TODO ensure there is a large enough gap between min_ratio and max_ratio, so that pixel rounding isn't an issue
         self.info.min_aspect_ratio = min_ratio;
         self.info.max_aspect_ratio = max_ratio;
         self

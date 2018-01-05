@@ -44,6 +44,8 @@ use ::asset_id::{AppAssetId, IdU16};
 use self::app_clock::AppClock;
 use self::event_handler::EventHandler;
 
+const MIN_WINDOW_SIZE: u32 = 100;
+
 lazy_static! {
     static ref APP_CREATED: AtomicBool = AtomicBool::new(false);
 }
@@ -68,7 +70,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
     let mut event_handler = EventHandler::new(sdl_context.event_pump().unwrap());
 
     let window = video.window(info.title, info.dims.window_pixels.0, info.dims.window_pixels.1)
-        .position_centered().opengl()
+        .position_centered().opengl().resizable()
         .build().unwrap();
 
     let mut sdl_renderer = window.renderer()
@@ -95,8 +97,12 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
 
-        app.render(&mut renderer);
-        renderer.flush();
+        let screen_dims = sdl_renderer.window().unwrap().size();
+        if screen_dims.0 >= MIN_WINDOW_SIZE && screen_dims.1 >= MIN_WINDOW_SIZE {
+            renderer.set_screen_dims(screen_dims);
+            app.render(&mut renderer);
+            renderer.flush();
+        }
         sdl_renderer.present();
         gl_error_check();
 

@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -104,7 +104,7 @@
 //! Some of these will involve breaking changes.
 //!
 //! * Loading assets on the fly
-//! * Changing resolution or fullscreen mode mid-game
+//! * Entering fullscreen mode
 //! * Support for displaying text
 //! * Adding XBox controller input
 //! * Generating enums/handles for user-specific assets, and loading those assets
