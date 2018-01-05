@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ use std::os::raw::{c_void, c_int};
 
 extern {
     pub fn gateWasmSetTiledFboDims(w: c_int, h: c_int);
+    pub fn gateWasmSetScissor(x: c_int, y: c_int, w: c_int, h: c_int);
 
     pub fn gateWasmClear(r: f32, g: f32, b: f32);
     pub fn gateWasmDrawSprites(size: usize, data: *const c_void);

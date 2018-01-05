@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,11 +33,17 @@ var Module = {};
 
 const imports = {
   env: {
+    gateWasmSetScissor: function (x, y, w, h) {
+      gl.scissor(x, y, w, h)
+    },
     gateWasmClear: function (r, g, b) {
+      gl.enable(gl.SCISSOR_TEST);
       gl.clearColor(r, g, b, 1.0);
       gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.disable(gl.SCISSOR_TEST);
     },
     gateWasmDrawSprites: function (size, dataPtr) {
+      gl.enable(gl.SCISSOR_TEST);
       gl.useProgram(Module.spriteProg.prog);
 
       gl.activeTexture(gl.TEXTURE0);
@@ -50,6 +56,7 @@ const imports = {
       gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(Module.memory.buffer), gl.STREAM_DRAW, dataPtr, size);
 
       gl.drawArrays(gl.TRIANGLES, 0, size / 28);
+      gl.disable(gl.SCISSOR_TEST);
     },
     gateWasmSetTiledFboDims: function (w, h) {
       Module.tiledFboTexW = w;
@@ -99,6 +106,7 @@ const imports = {
     },
     gateWasmDrawTilesFromFbo: function (size, dataPtr) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.enable(gl.SCISSOR_TEST);
 
       gl.useProgram(Module.spriteProg.prog);
 
@@ -114,6 +122,7 @@ const imports = {
       gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(Module.memory.buffer), gl.STREAM_DRAW, dataPtr, size);
 
       gl.drawArrays(gl.TRIANGLES, 0, size / 28);
+      gl.disable(gl.SCISSOR_TEST);
     },
     gateWasmLoopMusic: function (id) {
       if (Module.currentMusic != null) {
@@ -226,6 +235,7 @@ fetch("gate_app.wasm").then(response =>
   const mod = results.instance;
   Module.memory = mod.exports.memory;
   Module.gateWasmInit = mod.exports.gateWasmInit;
+  Module.gateWasmOnResize = mod.exports.gateWasmOnResize;
   Module.gateWasmUpdateAndDraw = mod.exports.gateWasmUpdateAndDraw;
   Module.gateWasmKeyEvent = mod.exports.gateWasmKeyEvent;
   Module.gateWasmMusicCount = mod.exports.gateWasmMusicCount;
@@ -345,9 +355,11 @@ function tryStart () {
     Module.sounds = initAudioArray("sound", Module.gateWasmSoundCount(), false);
     Module.currentMusic = null;
     Module.gateWasmInit();
+    Module.gateWasmOnResize(canvas.width, canvas.height)
     requestAnimationFrame(updateAndDraw);
     document.addEventListener('keydown', e => handleKeyEvent(e.key, true));
     document.addEventListener('keyup', e => handleKeyEvent(e.key, false));
+    window.addEventListener('resize', resizeCanvas, false);
   }
 }
 
@@ -362,3 +374,13 @@ function handleKeyEvent(codeStr, down) {
     Module.gateWasmKeyEvent(code, down);
   }
 }
+
+function resizeCanvas() {
+  canvas.width = Math.max(window.innerWidth, 100);
+  canvas.height = Math.max(window.innerHeight, 100);
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  if (Module.gateWasmOnResize) {
+    Module.gateWasmOnResize(canvas.width, canvas.height)
+  }
+}
+resizeCanvas();

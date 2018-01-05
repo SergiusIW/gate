@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,13 +23,19 @@ pub struct CoreRenderer { }
 impl CoreRenderer {
     pub fn new(r: &RenderBuffer) -> CoreRenderer {
         unsafe {
-            gateWasmSetTiledFboDims(r.tiled_fbo_dims.0 as c_int, r.tiled_fbo_dims.1 as c_int);
+            gateWasmSetTiledFboDims(r.dims.tiled_fbo_dims.0 as c_int, r.dims.tiled_fbo_dims.1 as c_int);
         }
         CoreRenderer { }
     }
 }
 
 impl CoreRenderer {
+    pub(in renderer) fn set_scissor(&mut self, x: u32, y: u32, w: u32, h: u32) {
+        unsafe {
+            gateWasmSetScissor(x as c_int, y as c_int, w as c_int, h as c_int);
+        }
+    }
+
     pub(in renderer) fn clear(&mut self, color: (u8, u8, u8)) {
         unsafe {
             gateWasmClear(color.0 as f32 / 255., color.1 as f32 / 255., color.2 as f32 / 255.);

@@ -1,22 +1,17 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Gate App</title>
     <style>
-      canvas {
-	    border: 2px solid black;
-	    background-color: black;
-      }
-      video {
-	    display: none;
-      }
+    * { margin:0; padding:0; }
+    html, body { width:100%; height:100%; }
+    canvas { display:block; background-color: black; }
+    video { display: none; }
     </style>
   </head>
 
   <body>
-    <!-- FIXME notify gate of the dimensions of the canvas -->
-    <canvas id="gate-canvas" width="800" height="600"></canvas>
+    <canvas id="gate-canvas"></canvas>
   </body>
 
   <script src="howler.js"></script>

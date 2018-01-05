@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,11 @@ use super::APP_RUNNER;
 #[no_mangle]
 pub unsafe extern "C" fn gateWasmInit() {
     APP_RUNNER.r.borrow_mut().init();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn gateWasmOnResize(w: c_int, h: c_int) {
+    APP_RUNNER.r.borrow_mut().resize((w as u32, h as u32));
 }
 
 #[no_mangle]

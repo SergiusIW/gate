@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,6 +53,7 @@ impl CoreAudio {
 
 trait TraitAppRunner {
     fn init(&mut self);
+    fn resize(&mut self, dims: (u32, u32));
     fn update_and_draw(&mut self, time_sec: f64);
     fn input(&mut self, event: KeyEvent, key: KeyCode);
     fn music_count(&self) -> u16;
@@ -62,10 +63,11 @@ trait TraitAppRunner {
 struct DefaultAppRunner;
 impl TraitAppRunner for DefaultAppRunner {
     fn init(&mut self) { panic!("gate::run(...) was not invoked") }
-    fn update_and_draw(&mut self, _time_sec: f64) { panic!() }
-    fn input(&mut self, _event: KeyEvent, _key: KeyCode) { panic!() }
-    fn music_count(&self) -> u16 { panic!() }
-    fn sound_count(&self) -> u16 { panic!() }
+    fn resize(&mut self, _dims: (u32, u32)) { panic!("gate::run(...) was not invoked") }
+    fn update_and_draw(&mut self, _time_sec: f64) { panic!("gate::run(...) was not invoked") }
+    fn input(&mut self, _event: KeyEvent, _key: KeyCode) { panic!("gate::run(...) was not invoked") }
+    fn music_count(&self) -> u16 { panic!("gate::run(...) was not invoked") }
+    fn sound_count(&self) -> u16 { panic!("gate::run(...) was not invoked") }
 }
 
 struct StaticAppRunner { r: RefCell<Box<TraitAppRunner>> }
@@ -104,12 +106,16 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         }
         let tiled_atlas = Atlas::new_tiled(Cursor::new(atlas_buf));
 
-        let render_buffer = RenderBuffer::new(&self.info, sprite_atlas, tiled_atlas);
+        let render_buffer = RenderBuffer::new(&self.info, self.info.dims.window_pixels, sprite_atlas, tiled_atlas);
         let core_renderer = CoreRenderer::new(&render_buffer);
         self.renderer = Some(Renderer::<AS>::new(render_buffer, core_renderer));
 
         let mut audio = Audio::new(CoreAudio { });
         self.app.start(&mut audio);
+    }
+
+    fn resize(&mut self, dims: (u32, u32)) {
+        self.renderer.as_mut().unwrap().set_screen_dims(dims);
     }
 
     fn update_and_draw(&mut self, time_sec: f64) {
