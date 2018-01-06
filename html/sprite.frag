@@ -46,9 +46,10 @@ vec4 blend(vec4 color_a, vec4 color_b, float ratio_a, float ratio_b) {
 }
 
 void main() {
+    vec2 tex_vert_ave = 0.5 * (fs_tex_vert_lt + fs_tex_vert_rb);
     vec2 pad = PAD / tex_dims;
-    vec2 padded_tex_vert_lt = fs_tex_vert_lt + pad;
-    vec2 padded_tex_vert_rb = fs_tex_vert_rb - pad;
+    vec2 padded_tex_vert_lt = min(fs_tex_vert_lt + pad, tex_vert_ave);
+    vec2 padded_tex_vert_rb = max(fs_tex_vert_rb - pad, tex_vert_ave);
     vec4 lt_color = sample_tex(padded_tex_vert_lt);
     vec4 rt_color = sample_tex(vec2(padded_tex_vert_rb[0], padded_tex_vert_lt[1]));
     vec4 lb_color = sample_tex(vec2(padded_tex_vert_lt[0], padded_tex_vert_rb[1]));
