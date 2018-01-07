@@ -1,4 +1,4 @@
-#version 300 es
+#version 100
 
 // Copyright 2017-2018 Matthew D. Michelotti
 //
@@ -18,18 +18,17 @@ precision highp float;
 
 uniform sampler2D tex;
 uniform vec2 tex_dims;
-in vec2 fs_tex_vert_lt; // left-top vertex of sampling region
-in vec2 fs_tex_vert_rb; // right-bottom vertex of sampling region
-in float fs_flash_ratio;
 
-out vec4 out_color;
+varying vec2 fs_tex_vert_lt; // left-top vertex of sampling region
+varying vec2 fs_tex_vert_rb; // right-bottom vertex of sampling region
+varying float fs_flash_ratio;
 
 const float PAD = 1.0 / 40.0;
 
 // assumes texture sampling is nearest
 
 vec4 sample_tex(vec2 vert) {
-    vec4 result = texture(tex, vert);
+    vec4 result = texture2D(tex, vert);
     result = vec4(fs_flash_ratio + (1.0 - fs_flash_ratio) * vec3(result[0], result[1], result[2]), result[3]);
     return result * result;
 }
@@ -59,5 +58,5 @@ void main() {
     vec4 t_color = blend(lt_color, rt_color, ratio_a[0], ratio_b[0]);
     vec4 b_color = blend(lb_color, rb_color, ratio_a[0], ratio_b[0]);
     vec4 result_color = blend(t_color, b_color, ratio_a[1], ratio_b[1]);
-    out_color = vec4(sqrt(vec3(result_color[0], result_color[1], result_color[2])), result_color[3]);
+    gl_FragColor = vec4(sqrt(vec3(result_color[0], result_color[1], result_color[2])), result_color[3]);
 }

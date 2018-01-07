@@ -1,4 +1,4 @@
-#version 300 es
+#version 100
 
 // Copyright 2017-2018 Matthew D. Michelotti
 //
@@ -17,10 +17,8 @@
 precision highp float;
 
 uniform sampler2D tex;
-in vec2 fs_tex_vert;
-
-out vec4 out_color;
+varying vec2 fs_tex_vert;
 
 void main() {
-    out_color = texture(tex, fs_tex_vert);
+    gl_FragColor = texture2D(tex, fs_tex_vert);
 }

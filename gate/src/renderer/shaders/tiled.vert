@@ -1,4 +1,4 @@
-#version 300 es
+#version 100
 
 // Copyright 2017-2018 Matthew D. Michelotti
 //
@@ -14,10 +14,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-in vec2 vert;
-in vec2 vs_tex_vert;
+attribute vec2 vert;
+attribute vec2 vs_tex_vert;
 
-out vec2 fs_tex_vert;
+varying vec2 fs_tex_vert;
 
 void main() {
     fs_tex_vert = vs_tex_vert;

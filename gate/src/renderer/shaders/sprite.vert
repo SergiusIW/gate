@@ -1,4 +1,4 @@
-#version 300 es
+#version 100
 
 // Copyright 2017-2018 Matthew D. Michelotti
 //
@@ -14,14 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-in vec2 vert;
-in vec2 vs_tex_vert_lt; // pass in vs_tex_vert - 0.5 / scale_xy
-in vec2 vs_tex_vert_rb; // pass in vs_tex_vert + 0.5 / scale_xy
-in float vs_flash_ratio;
+attribute vec2 vert;
+attribute vec2 vs_tex_vert_lt; // pass in vs_tex_vert - 0.5 / scale_xy
+attribute vec2 vs_tex_vert_rb; // pass in vs_tex_vert + 0.5 / scale_xy
+attribute float vs_flash_ratio;
 
-out vec2 fs_tex_vert_lt;
-out vec2 fs_tex_vert_rb;
-out float fs_flash_ratio;
+varying vec2 fs_tex_vert_lt;
+varying vec2 fs_tex_vert_rb;
+varying float fs_flash_ratio;
 
 void main() {
     fs_tex_vert_lt = vs_tex_vert_lt;

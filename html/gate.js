@@ -14,6 +14,8 @@
 
 // FIXME cleanup this code
 
+const floatSize = 4;
+
 // FIXME add missing keycodes
 const keycodes = {
   "ArrowLeft": 37,
@@ -23,13 +25,25 @@ const keycodes = {
 
 var canvas = document.getElementById("gate-canvas");
 
-var gl = canvas.getContext("webgl2");
+var gl = canvas.getContext("webgl");
 gl.enable(gl.BLEND);
 gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 var vbo = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
 
 var Module = {};
+
+function setSpriteAttribPointers () {
+  gl.vertexAttribPointer(Module.spriteProg.attribs.vert, 2, gl.FLOAT, false, 7 * floatSize, 0);
+  gl.vertexAttribPointer(Module.spriteProg.attribs.vsTexVertLt, 2, gl.FLOAT, false, 7 * floatSize, 2 * floatSize);
+  gl.vertexAttribPointer(Module.spriteProg.attribs.vsTexVertRb, 2, gl.FLOAT, false, 7 * floatSize, 4 * floatSize);
+  gl.vertexAttribPointer(Module.spriteProg.attribs.vsFlashRatio, 1, gl.FLOAT, false, 7 * floatSize, 6 * floatSize);
+}
+
+function setTiledAttribPointers () {
+  gl.vertexAttribPointer(Module.tiledProg.attribs.vert, 2, gl.FLOAT, false, 4 * floatSize, 0);
+  gl.vertexAttribPointer(Module.tiledProg.attribs.vsTexVert, 2, gl.FLOAT, false, 4 * floatSize, 2 * floatSize);
+}
 
 const imports = {
   env: {
@@ -51,9 +65,9 @@ const imports = {
       gl.uniform1i(Module.spriteProg.uniformTex, 0);
       gl.uniform2f(Module.spriteProg.uniformTexDims, Module.spriteTexWidth, Module.spriteTexHeight);
 
-      gl.bindVertexArray(Module.spriteProg.vao);
+      setSpriteAttribPointers();
 
-      gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(Module.memory.buffer), gl.STREAM_DRAW, dataPtr, size);
+      gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(Module.memory.buffer, dataPtr, size), gl.STREAM_DRAW);
 
       gl.drawArrays(gl.TRIANGLES, 0, size / 28);
       gl.disable(gl.SCISSOR_TEST);
@@ -78,7 +92,6 @@ const imports = {
       gl.bindTexture(gl.TEXTURE_2D, null);
 
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, Module.tiledFboTex, 0);
-      gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
       if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
         throw "error building framebuffer";
       }
@@ -98,9 +111,9 @@ const imports = {
       gl.bindTexture(gl.TEXTURE_2D, Module.tiledTex);
       gl.uniform1i(Module.tiledProg.uniformTex, 0);
 
-      gl.bindVertexArray(Module.tiledProg.vao);
+      setTiledAttribPointers();
 
-      gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(Module.memory.buffer), gl.STREAM_DRAW, dataPtr, size);
+      gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(Module.memory.buffer, dataPtr, size), gl.STREAM_DRAW);
 
       gl.drawArrays(gl.TRIANGLES, 0, size / 16);
     },
@@ -117,9 +130,9 @@ const imports = {
       gl.uniform1i(Module.spriteProg.uniformTex, 0);
       gl.uniform2f(Module.spriteProg.uniformTexDims, Module.tiledFboTexW, Module.tiledFboTexH);
 
-      gl.bindVertexArray(Module.spriteProg.vao);
+      setSpriteAttribPointers();
 
-      gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(Module.memory.buffer), gl.STREAM_DRAW, dataPtr, size);
+      gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(Module.memory.buffer, dataPtr, size), gl.STREAM_DRAW);
 
       gl.drawArrays(gl.TRIANGLES, 0, size / 28);
       gl.disable(gl.SCISSOR_TEST);
@@ -244,32 +257,20 @@ function linkShaderProgram (vertShader, fragShader) {
   return prog;
 }
 
-function makeSpriteVao (spriteProg) {
-  const attribVert = gl.getAttribLocation(spriteProg, "vert");
-  const attribVsTexVertLt = gl.getAttribLocation(spriteProg, "vs_tex_vert_lt");
-  const attribVsTexVertRb = gl.getAttribLocation(spriteProg, "vs_tex_vert_rb");
-  const attribVsFlashRatio = gl.getAttribLocation(spriteProg, "vs_flash_ratio");
+function makeSpriteAttribs (spriteProg) {
+  const attribs = {
+    vert: gl.getAttribLocation(spriteProg, "vert"),
+    vsTexVertLt: gl.getAttribLocation(spriteProg, "vs_tex_vert_lt"),
+    vsTexVertRb: gl.getAttribLocation(spriteProg, "vs_tex_vert_rb"),
+    vsFlashRatio: gl.getAttribLocation(spriteProg, "vs_flash_ratio"),
+  };
 
-  var vao = gl.createVertexArray();
-  gl.bindVertexArray(vao);
+  gl.enableVertexAttribArray(attribs.vert);
+  gl.enableVertexAttribArray(attribs.vsTexVertLt);
+  gl.enableVertexAttribArray(attribs.vsTexVertRb);
+  gl.enableVertexAttribArray(attribs.vsFlashRatio);
 
-  const floatSize = 4;
-
-  gl.enableVertexAttribArray(attribVert);
-  gl.vertexAttribPointer(attribVert, 2, gl.FLOAT, false, 7 * floatSize, 0);
-
-  gl.enableVertexAttribArray(attribVsTexVertLt);
-  gl.vertexAttribPointer(attribVsTexVertLt, 2, gl.FLOAT, false, 7 * floatSize, 2 * floatSize);
-
-  gl.enableVertexAttribArray(attribVsTexVertRb);
-  gl.vertexAttribPointer(attribVsTexVertRb, 2, gl.FLOAT, false, 7 * floatSize, 4 * floatSize);
-
-  gl.enableVertexAttribArray(attribVsFlashRatio);
-  gl.vertexAttribPointer(attribVsFlashRatio, 1, gl.FLOAT, false, 7 * floatSize, 6 * floatSize);
-
-  gl.bindVertexArray(null);
-
-  return vao;
+  return attribs;
 }
 
 function initSpriteProg () {
@@ -278,30 +279,22 @@ function initSpriteProg () {
   const prog = linkShaderProgram(Module.spriteVert, Module.spriteFrag);
   Module.spriteProg = {
     prog: prog,
-    vao: makeSpriteVao(prog),
+    attribs: makeSpriteAttribs(prog),
     uniformTex: gl.getUniformLocation(prog, "tex"),
     uniformTexDims: gl.getUniformLocation(prog, "tex_dims"),
   };
 }
 
-function makeTiledVao (tiledProg) {
-  const attribVert = gl.getAttribLocation(tiledProg, "vert");
-  const attribVsTexVert = gl.getAttribLocation(tiledProg, "vs_tex_vert");
+function makeTiledAttribs (tiledProg) {
+  const attribs = {
+    vert: gl.getAttribLocation(tiledProg, "vert"),
+    vsTexVert: gl.getAttribLocation(tiledProg, "vs_tex_vert"),
+  };
 
-  var vao = gl.createVertexArray();
-  gl.bindVertexArray(vao);
+  gl.enableVertexAttribArray(attribs.vert);
+  gl.enableVertexAttribArray(attribs.vsTexVert);
 
-  const floatSize = 4;
-
-  gl.enableVertexAttribArray(attribVert);
-  gl.vertexAttribPointer(attribVert, 2, gl.FLOAT, false, 4 * floatSize, 0);
-
-  gl.enableVertexAttribArray(attribVsTexVert);
-  gl.vertexAttribPointer(attribVsTexVert, 2, gl.FLOAT, false, 4 * floatSize, 2 * floatSize);
-
-  gl.bindVertexArray(null);
-
-  return vao;
+  return attribs;
 }
 
 function initTiledProg () {
@@ -310,7 +303,7 @@ function initTiledProg () {
   const prog = linkShaderProgram(Module.tiledVert, Module.tiledFrag);
   Module.tiledProg = {
     prog: prog,
-    vao: makeTiledVao(prog),
+    attribs: makeTiledAttribs(prog),
     uniformTex: gl.getUniformLocation(prog, "tex"),
   };
 }
