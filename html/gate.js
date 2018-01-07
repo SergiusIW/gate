@@ -26,12 +26,17 @@ const keycodes = {
 var canvas = document.getElementById("gate-canvas");
 
 var gl = canvas.getContext("webgl");
+if (!gl) {
+    alert("Unable to initialize WebGL");
+    throw "Unable to initialize WebGL";
+}
 gl.enable(gl.BLEND);
 gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 var vbo = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
 
 var Module = {};
+Module.loadingAudioCount = 0;
 
 function setSpriteAttribPointers () {
   gl.vertexAttribPointer(Module.spriteProg.attribs.vert, 2, gl.FLOAT, false, 7 * floatSize, 0);
@@ -309,11 +314,16 @@ function initTiledProg () {
 }
 
 function initAudioArray (prefix, count, loop) {
+  Module.loadingAudioCount += count;
   var result = new Array(count);
   for (var i = 0; i < count; i++) {
     result[i] = new Howl({
       src: [`assets/${prefix}${i}.ogg`],
       loop: loop,
+      onload: function () {
+        Module.loadingAudioCount -= 1;
+        tryStart2();
+      },
     });
   }
   return result;
@@ -325,17 +335,23 @@ function tryStart () {
     initTiledProg();
     Module.musics = initAudioArray("music", Module.gateWasmMusicCount(), true);
     Module.sounds = initAudioArray("sound", Module.gateWasmSoundCount(), false);
+    tryStart2();
+  }
+}
+
+function tryStart2 () {
+  if (Module.loadingAudioCount == 0) {
     Module.currentMusic = null;
     Module.gateWasmInit();
-    Module.gateWasmOnResize(canvas.width, canvas.height)
+    Module.gateWasmOnResize(canvas.width, canvas.height);
     requestAnimationFrame(updateAndDraw);
     document.addEventListener('keydown', e => handleKeyEvent(e.key, true));
     document.addEventListener('keyup', e => handleKeyEvent(e.key, false));
-    window.addEventListener('resize', resizeCanvas, false);
   }
 }
 
 function updateAndDraw(now) {
+  resizeCanvas();
   Module.gateWasmUpdateAndDraw(now);
   requestAnimationFrame(updateAndDraw);
 }
@@ -348,14 +364,15 @@ function handleKeyEvent(codeStr, down) {
 }
 
 function resizeCanvas() {
-  canvas.width = Math.max(window.innerWidth, 100);
-  canvas.height = Math.max(window.innerHeight, 100);
-  gl.viewport(0, 0, canvas.width, canvas.height);
-  if (Module.gateWasmOnResize) {
-    Module.gateWasmOnResize(canvas.width, canvas.height)
+  const newWidth = Math.max(window.innerWidth, 100);
+  const newHeight = Math.max(window.innerHeight, 100);
+  if (canvas.width != newWidth || canvas.height != newHeight) {
+    canvas.width = newWidth;
+    canvas.height = newHeight;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    Module.gateWasmOnResize(canvas.width, canvas.height);
   }
 }
-resizeCanvas();
 
 function readCStr(ptr) {
   const memory = new Uint8Array(Module.memory.buffer);
