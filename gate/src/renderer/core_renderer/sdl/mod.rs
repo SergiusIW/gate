@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[macro_use] mod shader_util;
+mod shader_util;
 mod sprite_program;
 mod tiled_program;
 

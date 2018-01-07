@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,9 +19,7 @@ use gl::types::*;
 use gl;
 
 use super::shader_util;
-
-const VS_PIXEL_SRC: *const c_char = include_c_str!("sprite.vert");
-const FS_PIXEL_SRC: *const c_char = include_c_str!("sprite.frag");
+use renderer::shaders;
 
 pub struct SpriteProgram {
     pub handle: GLuint,
@@ -34,8 +32,8 @@ pub struct SpriteProgram {
 
 impl SpriteProgram {
     pub fn new() -> SpriteProgram {
-        let vs = shader_util::compile_shader(VS_PIXEL_SRC, gl::VERTEX_SHADER);
-        let fs = shader_util::compile_shader(FS_PIXEL_SRC, gl::FRAGMENT_SHADER);
+        let vs = shader_util::compile_shader(shaders::VS_SPRITE_SRC, gl::VERTEX_SHADER);
+        let fs = shader_util::compile_shader(shaders::FS_SPRITE_SRC, gl::FRAGMENT_SHADER);
         let handle = shader_util::link_program(vs, fs);
         let vao = SpriteProgram::make_vao(handle);
         unsafe {

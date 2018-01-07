@@ -1,4 +1,6 @@
-// Copyright 2017 Matthew D. Michelotti
+#version 300 es
+
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#version 130
+precision highp float;
 
 uniform sampler2D tex;
 uniform vec2 tex_dims;
@@ -22,9 +24,9 @@ in float fs_flash_ratio;
 
 out vec4 out_color;
 
+const float PAD = 1.0 / 40.0;
+
 // assumes texture sampling is nearest
-// TODO play it safer when tex_vert_lt or tex_vert_rb lies on a pixel boundary,
-//      or verify that we don't need to play it safer, regardless of OpenGL version or OS
 
 vec4 sample_tex(vec2 vert) {
     vec4 result = texture(tex, vert);
@@ -43,10 +45,14 @@ vec4 blend(vec4 color_a, vec4 color_b, float ratio_a, float ratio_b) {
 }
 
 void main() {
-    vec4 lt_color = sample_tex(fs_tex_vert_lt);
-    vec4 rt_color = sample_tex(vec2(fs_tex_vert_rb[0], fs_tex_vert_lt[1]));
-    vec4 lb_color = sample_tex(vec2(fs_tex_vert_lt[0], fs_tex_vert_rb[1]));
-    vec4 rb_color = sample_tex(fs_tex_vert_rb);
+    vec2 tex_vert_ave = 0.5 * (fs_tex_vert_lt + fs_tex_vert_rb);
+    vec2 pad = PAD / tex_dims;
+    vec2 padded_tex_vert_lt = min(fs_tex_vert_lt + pad, tex_vert_ave);
+    vec2 padded_tex_vert_rb = max(fs_tex_vert_rb - pad, tex_vert_ave);
+    vec4 lt_color = sample_tex(padded_tex_vert_lt);
+    vec4 rt_color = sample_tex(vec2(padded_tex_vert_rb[0], padded_tex_vert_lt[1]));
+    vec4 lb_color = sample_tex(vec2(padded_tex_vert_lt[0], padded_tex_vert_rb[1]));
+    vec4 rb_color = sample_tex(padded_tex_vert_rb);
     vec2 tex_vert_mid = floor(fs_tex_vert_rb * tex_dims) / tex_dims;
     vec2 ratio_a = (tex_vert_mid - fs_tex_vert_lt) / (fs_tex_vert_rb - fs_tex_vert_lt);
     vec2 ratio_b = 1.0 - ratio_a;

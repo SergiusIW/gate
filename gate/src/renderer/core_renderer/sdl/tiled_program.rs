@@ -19,9 +19,7 @@ use gl::types::*;
 use gl;
 
 use super::shader_util;
-
-const VS_TILED_SRC: *const c_char = include_c_str!("tiled.vert");
-const FS_TILED_SRC: *const c_char = include_c_str!("tiled.frag");
+use renderer::shaders;
 
 pub struct TiledProgram {
     pub handle: GLuint,
@@ -36,8 +34,8 @@ pub struct TiledProgram {
 
 impl TiledProgram {
     pub fn new(fbo_tex_dims: (u32, u32)) -> TiledProgram {
-        let vs = shader_util::compile_shader(VS_TILED_SRC, gl::VERTEX_SHADER);
-        let fs = shader_util::compile_shader(FS_TILED_SRC, gl::FRAGMENT_SHADER);
+        let vs = shader_util::compile_shader(shaders::VS_TILED_SRC, gl::VERTEX_SHADER);
+        let fs = shader_util::compile_shader(shaders::FS_TILED_SRC, gl::FRAGMENT_SHADER);
         let handle = shader_util::link_program(vs, fs);
         let vao = TiledProgram::make_vao(handle);
         let (fbo, fbo_tex) = TiledProgram::make_fbo_and_tex(fbo_tex_dims);

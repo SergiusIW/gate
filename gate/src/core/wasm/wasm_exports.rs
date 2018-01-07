@@ -15,9 +15,10 @@
 //! This module contains methods exported to the gate javascript code for WebAssembly.
 //! DO NOT USE DIRECTLY!
 
-use std::os::raw::c_int;
+use std::os::raw::{c_int, c_char};
 
 use ::input::{KeyEvent, KeyCode};
+use ::renderer::shaders;
 use super::APP_RUNNER;
 
 #[no_mangle]
@@ -51,4 +52,24 @@ pub unsafe extern "C" fn gateWasmMusicCount() -> c_int {
 #[no_mangle]
 pub unsafe extern "C" fn gateWasmSoundCount() -> c_int {
     APP_RUNNER.r.borrow().sound_count() as c_int
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn gateWasmSpriteVertSrc() -> *const c_char {
+    shaders::VS_SPRITE_SRC
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn gateWasmSpriteFragSrc() -> *const c_char {
+    shaders::FS_SPRITE_SRC
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn gateWasmTiledVertSrc() -> *const c_char {
+    shaders::VS_TILED_SRC
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn gateWasmTiledFragSrc() -> *const c_char {
+    shaders::FS_TILED_SRC
 }

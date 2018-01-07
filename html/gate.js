@@ -175,34 +175,6 @@ fetch("assets/tiles.atlas").then(response =>
   tryStart();
 });
 
-fetch("sprite.vert").then(response =>
-  response.text()
-).then(text => {
-  Module.spriteVert = loadShader(gl.VERTEX_SHADER, text);
-  tryStart();
-});
-
-fetch("sprite.frag").then(response =>
-  response.text()
-).then(text => {
-  Module.spriteFrag = loadShader(gl.FRAGMENT_SHADER, text);
-  tryStart();
-});
-
-fetch("tiled.vert").then(response =>
-  response.text()
-).then(text => {
-  Module.tiledVert = loadShader(gl.VERTEX_SHADER, text);
-  tryStart();
-});
-
-fetch("tiled.frag").then(response =>
-  response.text()
-).then(text => {
-  Module.tiledFrag = loadShader(gl.FRAGMENT_SHADER, text);
-  tryStart();
-});
-
 const spriteImage = new Image();
 spriteImage.onload = function () {
   Module.spriteTexWidth = spriteImage.width;
@@ -240,6 +212,10 @@ fetch("gate_app.wasm").then(response =>
   Module.gateWasmKeyEvent = mod.exports.gateWasmKeyEvent;
   Module.gateWasmMusicCount = mod.exports.gateWasmMusicCount;
   Module.gateWasmSoundCount = mod.exports.gateWasmSoundCount;
+  Module.gateWasmSpriteVertSrc = mod.exports.gateWasmSpriteVertSrc;
+  Module.gateWasmSpriteFragSrc = mod.exports.gateWasmSpriteFragSrc;
+  Module.gateWasmTiledVertSrc = mod.exports.gateWasmTiledVertSrc;
+  Module.gateWasmTiledFragSrc = mod.exports.gateWasmTiledFragSrc;
   tryStart();
 });
 
@@ -297,6 +273,8 @@ function makeSpriteVao (spriteProg) {
 }
 
 function initSpriteProg () {
+  Module.spriteVert = loadShader(gl.VERTEX_SHADER, readCStr(Module.gateWasmSpriteVertSrc()));
+  Module.spriteFrag = loadShader(gl.FRAGMENT_SHADER, readCStr(Module.gateWasmSpriteFragSrc()));
   const prog = linkShaderProgram(Module.spriteVert, Module.spriteFrag);
   Module.spriteProg = {
     prog: prog,
@@ -327,6 +305,8 @@ function makeTiledVao (tiledProg) {
 }
 
 function initTiledProg () {
+  Module.tiledVert = loadShader(gl.VERTEX_SHADER, readCStr(Module.gateWasmTiledVertSrc()));
+  Module.tiledFrag = loadShader(gl.FRAGMENT_SHADER, readCStr(Module.gateWasmTiledFragSrc()));
   const prog = linkShaderProgram(Module.tiledVert, Module.tiledFrag);
   Module.tiledProg = {
     prog: prog,
@@ -347,8 +327,7 @@ function initAudioArray (prefix, count, loop) {
 }
 
 function tryStart () {
-  if (Module.spriteAtlas && Module.tiledAtlas && Module.memory && Module.spriteVert && Module.spriteFrag
-      && Module.spriteTex && Module.tiledTex && Module.tiledVert && Module.tiledFrag) {
+  if (Module.spriteAtlas && Module.tiledAtlas && Module.memory && Module.spriteTex && Module.tiledTex) {
     initSpriteProg();
     initTiledProg();
     Module.musics = initAudioArray("music", Module.gateWasmMusicCount(), true);
@@ -384,3 +363,10 @@ function resizeCanvas() {
   }
 }
 resizeCanvas();
+
+function readCStr(ptr) {
+  const memory = new Uint8Array(Module.memory.buffer);
+  var endPtr = ptr;
+  for (endPtr = ptr; memory[endPtr] !== 0; endPtr++);
+  return new TextDecoder("UTF-8").decode(memory.subarray(ptr, endPtr));
+}

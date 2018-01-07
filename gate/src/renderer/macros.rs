@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#version 130
+macro_rules! c_str {
+    ($s:expr) => (
+        concat!($s, "\0") as *const str as *const [c_char] as *const c_char
+    );
+}
 
-in vec2 vert;
-in vec2 vs_tex_vert;
-
-out vec2 fs_tex_vert;
-
-void main() {
-    fs_tex_vert = vs_tex_vert;
-    gl_Position = vec4(vert, 0, 1);
+macro_rules! include_c_str {
+    ($f:expr) => (
+        c_str!(include_str!($f))
+    );
 }

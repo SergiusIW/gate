@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,18 +17,6 @@ use std::{ptr, str};
 
 use gl::types::*;
 use gl;
-
-macro_rules! c_str {
-    ($s:expr) => (
-        concat!($s, "\0") as *const str as *const [c_char] as *const c_char
-    );
-}
-
-macro_rules! include_c_str {
-    ($f:expr) => (
-        c_str!(include_str!($f))
-    );
-}
 
 pub fn compile_shader(src: *const c_char, ty: GLenum) -> GLuint {
     unsafe {

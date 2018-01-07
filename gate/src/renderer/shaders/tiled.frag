@@ -1,7 +1,6 @@
 #version 300 es
-precision highp float;
 
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +14,7 @@ precision highp float;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// FIXME avoid duplicating shader code in the codebase
+precision highp float;
 
 uniform sampler2D tex;
 in vec2 fs_tex_vert;

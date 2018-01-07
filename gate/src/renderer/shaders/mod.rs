@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,20 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#version 130
+use std::os::raw::c_char;
 
-in vec2 vert;
-in vec2 vs_tex_vert_lt; // pass in vs_tex_vert - 0.5 / scale_xy
-in vec2 vs_tex_vert_rb; // pass in vs_tex_vert + 0.5 / scale_xy
-in float vs_flash_ratio;
+pub const VS_SPRITE_SRC: *const c_char = include_c_str!("sprite.vert");
+pub const FS_SPRITE_SRC: *const c_char = include_c_str!("sprite.frag");
 
-out vec2 fs_tex_vert_lt;
-out vec2 fs_tex_vert_rb;
-out float fs_flash_ratio;
-
-void main() {
-    fs_tex_vert_lt = vs_tex_vert_lt;
-    fs_tex_vert_rb = vs_tex_vert_rb;
-    fs_flash_ratio = vs_flash_ratio;
-    gl_Position = vec4(vert, 0, 1);
-}
+pub const VS_TILED_SRC: *const c_char = include_c_str!("tiled.vert");
+pub const FS_TILED_SRC: *const c_char = include_c_str!("tiled.frag");

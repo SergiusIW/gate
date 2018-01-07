@@ -1,6 +1,6 @@
 #version 300 es
 
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,20 +14,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// FIXME avoid duplicating shader code in the codebase
-
 in vec2 vert;
-in vec2 vs_tex_vert_lt; // pass in vs_tex_vert - 0.5 / scale_xy
-in vec2 vs_tex_vert_rb; // pass in vs_tex_vert + 0.5 / scale_xy
-in float vs_flash_ratio;
+in vec2 vs_tex_vert;
 
-out vec2 fs_tex_vert_lt;
-out vec2 fs_tex_vert_rb;
-out float fs_flash_ratio;
+out vec2 fs_tex_vert;
 
 void main() {
-    fs_tex_vert_lt = vs_tex_vert_lt;
-    fs_tex_vert_rb = vs_tex_vert_rb;
-    fs_flash_ratio = vs_flash_ratio;
+    fs_tex_vert = vs_tex_vert;
     gl_Position = vec4(vert, 0, 1);
 }
