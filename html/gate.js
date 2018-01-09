@@ -16,12 +16,30 @@
 
 const floatSize = 4;
 
-// FIXME add missing keycodes
-const keycodes = {
-  "ArrowLeft": 37,
-  "ArrowUp": 39,
-  "ArrowRight": 36,
-};
+function makeKeycodesMap () {
+  var result = {};
+  const keycodesArray = [
+    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+    "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+    "ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp",
+    "Enter", " ",
+  ];
+  for (var i = 0; i < keycodesArray.length; i++) {
+    result[keycodesArray[i]] = i;
+  }
+  const keycodesArray2 = [
+    "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+    "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+    ")", "!", "@", "#", "$", "%", "^", "&", "*", "(",
+  ];
+  for (var i = 0; i < keycodesArray2.length; i++) {
+    result[keycodesArray2[i]] = i;
+  }
+  return result;
+}
+
+const keycodes = makeKeycodesMap();
 
 var canvas = document.getElementById("gate-canvas");
 
