@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,6 +53,7 @@ extern crate regex;
 mod rect_packer;
 mod atlas;
 mod asset_packer;
+mod html;
 
 pub use asset_packer::AssetPacker;
 

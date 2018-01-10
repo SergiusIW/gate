@@ -197,14 +197,14 @@ const imports = {
   }
 };
 
-fetch("assets/sprites.atlas").then(response =>
+fetch("sprites.atlas").then(response =>
   response.arrayBuffer()
 ).then(bytes => {
   Module.spriteAtlas = new Uint8Array(bytes);
   tryStart();
 });
 
-fetch("assets/tiles.atlas").then(response =>
+fetch("tiles.atlas").then(response =>
   response.arrayBuffer()
 ).then(bytes => {
   Module.tiledAtlas = new Uint8Array(bytes);
@@ -222,7 +222,7 @@ spriteImage.onload = function () {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   tryStart();
 };
-spriteImage.src = "assets/sprites.png";
+spriteImage.src = "sprites.png";
 
 const tilesImage = new Image();
 tilesImage.onload = function () {
@@ -233,7 +233,7 @@ tilesImage.onload = function () {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   tryStart();
 };
-tilesImage.src = "assets/tiles.png";
+tilesImage.src = "tiles.png";
 
 fetch("gate_app.wasm").then(response =>
   response.arrayBuffer()
@@ -336,7 +336,7 @@ function initAudioArray (prefix, count, loop) {
   var result = new Array(count);
   for (var i = 0; i < count; i++) {
     result[i] = new Howl({
-      src: [`assets/${prefix}${i}.ogg`],
+      src: [`${prefix}${i}.ogg`],
       loop: loop,
       onload: function () {
         Module.loadingAudioCount -= 1;

@@ -1,4 +1,4 @@
-// Copyright 2017 Matthew D. Michelotti
+// Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ use std::io::{self, Write};
 use std::ffi::OsStr;
 
 use atlas::form_atlas;
+use html;
 use ::rerun_print;
 
 // TODO have more careful checks on input
@@ -35,16 +36,17 @@ pub struct AssetPacker {
     tiles: Option<Vec<String>>,
     music: Option<Vec<String>>,
     sounds: Option<Vec<String>>,
+    js: bool,
 }
 
 impl AssetPacker {
     /// Constructs a new `AssetPacker` where packed asset files will be written to `assets_dir`.
     ///
-    /// The `assets_dir` must be a directory named "assets" relative to
+    /// Except when building to WASM,
+    /// the `assets_dir` must be a directory named "assets" relative to
     /// the current directory used when the Gate application is run.
     /// This is usually in the base directory of the Rust project.
     pub fn new(assets_dir: &Path) -> AssetPacker {
-        assert!(assets_dir.file_name() == Some(OsStr::new("assets")), "assets_dir.file_name() must be 'assets'");
         fs::create_dir_all(assets_dir).expect("failed to create assets directory");
         AssetPacker {
             assets_dir: assets_dir.to_path_buf(),
@@ -53,6 +55,7 @@ impl AssetPacker {
             check_rerun: false,
             music: None,
             sounds: None,
+            js: false,
         }
     }
 
@@ -136,6 +139,32 @@ impl AssetPacker {
         self.sounds.as_ref().unwrap()
     }
 
+    /// Creates a "gate.js" and "index.html" file in the assets directory for use with then
+    /// WASM target architecture.
+    ///
+    /// Build a gate app for WASM using the command
+    /// `cargo build --release --target wasm32-unknown-unknown`.
+    /// Aside from the html and javascript file, you will also need to manually copy
+    /// the built wasm file to the assets directory after the build is complete.
+    /// Specifically, copy the file "target/wasm32-unknown-unknown/release/my_app.wasm"
+    /// to "my_assets_dir/gate_app.wasm".
+    /// You will also need a copy of "howler.js" (see <https://howlerjs.com/>).
+    pub fn gen_javascript_and_html(&mut self) {
+        self.gen_javascript();
+        create_file(&self.assets_dir, "index.html", html::INDEX_HTML, self.check_rerun);
+    }
+
+    /// Like `gen_javascript_and_html`, but omits the "index.html" file.
+    ///
+    /// Use this if you are providing your own html file, which gives you the flexibility to e.g.
+    /// add a title to the page. Although you may want to generate the html file once
+    /// during development to use as a reference.
+    pub fn gen_javascript(&mut self) {
+        assert!(!self.js, "javascript has already been generated");
+        self.js = true;
+        create_file(&self.assets_dir, "gate.js", html::GATE_JS, self.check_rerun);
+    }
+
     /// Generates Rust enums to use as handles for all of the packed assets.
     ///
     /// The generated code will consist of four enums:
@@ -171,6 +200,12 @@ impl AssetPacker {
         file.write_all(code.as_bytes())?;
         Ok(())
     }
+}
+
+fn create_file(out_dir: &Path, filename: &str, contents: &str, check_rerun: bool) {
+    let out_path = out_dir.join(filename);
+    File::create(&out_path).unwrap().write_all(contents.as_bytes()).unwrap();
+    rerun_print(check_rerun, &out_path);
 }
 
 fn enumerate_files(in_dir: &Path, out_dir: &Path, prefix: &str, extension: &str, check_rerun: bool) -> Vec<String> {
