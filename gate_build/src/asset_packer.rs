@@ -139,7 +139,7 @@ impl AssetPacker {
         self.sounds.as_ref().unwrap()
     }
 
-    /// Creates a "gate.js" and "index.html" file in the assets directory for use with then
+    /// Creates a "gate.js" and "index.html" file in the assets directory for use with the
     /// WASM target architecture.
     ///
     /// Build a gate app for WASM using the command
@@ -157,7 +157,7 @@ impl AssetPacker {
     /// Like `gen_javascript_and_html`, but omits the "index.html" file.
     ///
     /// Use this if you are providing your own html file, which gives you the flexibility to e.g.
-    /// add a title to the page. Although you may want to generate the html file once
+    /// add a title to the page. Although, you may want to generate the html file once
     /// during development to use as a reference.
     pub fn gen_javascript(&mut self) {
         assert!(!self.js, "javascript has already been generated");
