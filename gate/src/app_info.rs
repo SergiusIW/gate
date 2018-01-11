@@ -28,23 +28,11 @@
 //!                    .build();
 //! ```
 
-// TODO have default for window_pixels in AppInfo, and remove AppDims struct
-/// Specifies window and app dimensions.
-#[derive(Clone)]
-pub struct AppDims {
-    /// Window width and height (respectively), in pixels.
-    pub window_pixels: (u32, u32),
-
-    /// Height of the screen in conceptual "app pixels", which defines the units used by the renderers.
-    ///
-    /// The choice of this is important for the `TiledRenderer` in particular.
-    pub app_height: f64,
-}
-
 /// A struct for specifying initialization information for running an `App`.
 #[derive(Clone)]
 pub struct AppInfo {
-    pub(crate) dims: AppDims,
+    pub(crate) app_height: f64,
+    pub(crate) window_pixels: (u32, u32),
     pub(crate) min_aspect_ratio: f64,
     pub(crate) max_aspect_ratio: f64,
     pub(crate) title: &'static str,
@@ -54,15 +42,20 @@ pub struct AppInfo {
 }
 
 impl AppInfo {
-    /// Returns a builder, initialized with the required value `AppDims`.
-    pub fn builder(dims: AppDims) -> AppInfoBuilder {
-        assert!(dims.window_pixels.0 >= 10 && dims.window_pixels.0 <= 3000, "unrealistic window width {}", dims.window_pixels.0);
-        assert!(dims.window_pixels.1 >= 10 && dims.window_pixels.1 <= 3000, "unrealistic window height {}", dims.window_pixels.1);
-        assert!(dims.app_height >= 1e-30 && dims.app_height <= 3000., "unrealistic app height {}", dims.app_height);
+    /// Returns a builder, initialized with the required value `app_height`.
+    ///
+    /// The `app_height` is the height of the screen in conceptual "app pixels",
+    /// which defines the units used by the renderers.
+    /// Even if the window is resized and the aspect ratio changed,
+    /// the app height will always remain the same.
+    /// The choice of this is important for the `TiledRenderer` in particular.
+    pub fn with_app_height(app_height: f64) -> AppInfoBuilder {
+        assert!(app_height >= 1e-30 && app_height <= 3000., "unrealistic app height {}", app_height);
 
         AppInfoBuilder {
             info: AppInfo {
-                dims,
+                app_height,
+                window_pixels: (800, 600),
                 min_aspect_ratio: 4. / 3.,
                 max_aspect_ratio: 16. / 9.,
                 title: "untitled app",
@@ -81,7 +74,7 @@ pub struct AppInfoBuilder {
 
 impl AppInfoBuilder {
     /// Specifies the minimum and maximum aspect ratio for the game, enforced by
-    /// letterboxing/pillarboxing if necessary (default is 4/3 to 16/9).
+    /// letterboxing/pillarboxing if necessary (default is `4/3` to `16/9`).
     pub fn aspect_ratio_range(&mut self, min_ratio: f64, max_ratio: f64) -> &mut Self {
         assert!(0.2 < min_ratio && min_ratio < max_ratio && max_ratio < 5.0, "invalid aspect ratios");
         // TODO ensure there is a large enough gap between min_ratio and max_ratio, so that pixel rounding isn't an issue
@@ -92,6 +85,14 @@ impl AppInfoBuilder {
 
     /// Specifies a window title (default is "untitled app").
     pub fn title(&mut self, title: &'static str) -> &mut Self { self.info.title = title; self }
+
+    /// Specifies the intial width and height of the window (default is width `800` height `600`).
+    pub fn window_pixels(&mut self, width: u32, height: u32) -> &mut Self {
+        assert!(width >= 10 && width <= 3000, "unrealistic window width {}", width);
+        assert!(height >= 10 && height <= 3000, "unrealistic window height {}", height);
+        self.info.window_pixels = (width, height);
+        self
+    }
 
     /// Specifies the target frames-per-second (default is `60.`).
     pub fn target_fps(&mut self, target_fps: f64) -> &mut Self {

@@ -86,8 +86,7 @@
 //! }
 //!
 //! fn main() {
-//!     let info = AppInfo::builder(AppDims { window_pixels: (500, 500), app_height: 100. })
-//!                        .title("My Game").build();
+//!     let info = AppInfo::with_app_height(100.).title("My Game").build();
 //!     gate::run(info, MyGame { angle: 0., delta: 90_f64.to_radians() });
 //! }
 //! ```

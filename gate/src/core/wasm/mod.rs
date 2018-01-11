@@ -106,7 +106,7 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         }
         let tiled_atlas = Atlas::new_tiled(Cursor::new(atlas_buf));
 
-        let render_buffer = RenderBuffer::new(&self.info, self.info.dims.window_pixels, sprite_atlas, tiled_atlas);
+        let render_buffer = RenderBuffer::new(&self.info, self.info.window_pixels, sprite_atlas, tiled_atlas);
         let core_renderer = CoreRenderer::new(&render_buffer);
         self.renderer = Some(Renderer::<AS>::new(render_buffer, core_renderer));
 

@@ -92,7 +92,7 @@ impl RenderBuffer {
             tiled_atlas,
             mode: Mode::Sprite,
             vbo_data: Vec::new(),
-            dims: RenderDims::new(info.min_aspect_ratio, info.max_aspect_ratio, info.dims.app_height, screen_dims),
+            dims: RenderDims::new(info.min_aspect_ratio, info.max_aspect_ratio, info.app_height, screen_dims),
         }
     }
 

@@ -69,7 +69,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
     let timer = sdl_context.timer().unwrap();
     let mut event_handler = EventHandler::new(sdl_context.event_pump().unwrap());
 
-    let window = video.window(info.title, info.dims.window_pixels.0, info.dims.window_pixels.1)
+    let window = video.window(info.title, info.window_pixels.0, info.window_pixels.1)
         .position_centered().opengl().resizable()
         .build().unwrap();
 
@@ -116,7 +116,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 fn build_renderer<AS: AppAssetId>(info: &AppInfo, sdl_renderer: &SdlRenderer) -> Renderer<AS> {
     let sprites_atlas = Atlas::new_sprite(BufReader::new(File::open("assets/sprites.atlas").unwrap()));
     let tiles_atlas = Atlas::new_tiled(BufReader::new(File::open("assets/tiles.atlas").unwrap()));
-    let render_buffer = RenderBuffer::new(&info, info.dims.window_pixels, sprites_atlas, tiles_atlas);
+    let render_buffer = RenderBuffer::new(&info, info.window_pixels, sprites_atlas, tiles_atlas);
 
     let sprites_tex = sdl_renderer.load_texture(Path::new("assets/sprites.png")).unwrap();
     let tiles_tex = sdl_renderer.load_texture(Path::new("assets/tiles.png")).unwrap();
