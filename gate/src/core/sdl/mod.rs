@@ -18,7 +18,6 @@ mod event_handler;
 
 pub use self::core_audio::CoreAudio;
 
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::ffi::CStr;
 use std::path::Path;
 use std::fs::File;
@@ -43,17 +42,9 @@ use renderer::atlas::Atlas;
 use ::asset_id::{AppAssetId, IdU16};
 use self::app_clock::AppClock;
 use self::event_handler::EventHandler;
+use super::mark_app_created_flag;
 
 const MIN_WINDOW_SIZE: u32 = 100;
-
-lazy_static! {
-    static ref APP_CREATED: AtomicBool = AtomicBool::new(false);
-}
-
-fn mark_app_created_flag() {
-    let previously_created = APP_CREATED.swap(true, Ordering::Relaxed);
-    assert!(!previously_created, "Cannot construct more than one App.");
-}
 
 pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
     mark_app_created_flag();

@@ -23,3 +23,14 @@ mod wasm;
 
 #[cfg(target_arch = "wasm32")]
 pub use self::wasm::*;
+
+use std::sync::atomic::{AtomicBool, Ordering};
+
+lazy_static! {
+    static ref APP_CREATED: AtomicBool = AtomicBool::new(false);
+}
+
+fn mark_app_created_flag() {
+    let previously_created = APP_CREATED.swap(true, Ordering::Relaxed);
+    assert!(!previously_created, "Cannot construct more than one App.");
+}

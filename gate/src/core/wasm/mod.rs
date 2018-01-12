@@ -30,6 +30,7 @@ use ::renderer::atlas::Atlas;
 use ::renderer::render_buffer::RenderBuffer;
 use ::renderer::core_renderer::CoreRenderer;
 use self::wasm_imports::*;
+use super::mark_app_created_flag;
 
 pub struct CoreAudio;
 
@@ -147,6 +148,7 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
 }
 
 pub fn run<AS: 'static + AppAssetId, AP: 'static + App<AS>>(info: AppInfo, app: AP) {
+    mark_app_created_flag();
     *APP_RUNNER.r.borrow_mut() = Box::new(AppRunner {
         app, info,
         renderer: None,
