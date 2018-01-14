@@ -96,6 +96,11 @@ impl CoreRenderer {
 
     pub(in renderer) fn draw_tiles_to_fbo(&mut self, r: &mut RenderBuffer) {
         unsafe {
+            // TODO why does binding and unbinding sprite texture prevent graphical artifacts?
+            //      (artifacts only occur when resizing if tiles are drawn before any sprites)
+            self.sprites_tex.gl_bind_texture();
+            self.sprites_tex.gl_unbind_texture();
+
             gl::BindFramebuffer(gl::FRAMEBUFFER, self.tiled_program.fbo);
 
             gl::ClearColor(0.0, 0.0, 0.0, 0.0);

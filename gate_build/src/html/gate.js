@@ -362,6 +362,7 @@ function tryStart2 () {
     Module.currentMusic = null;
     Module.gateWasmInit();
     Module.gateWasmOnResize(canvas.width, canvas.height);
+    setSpriteAttribPointers();
     requestAnimationFrame(updateAndDraw);
     document.addEventListener('keydown', e => handleKeyEvent(e.key, true));
     document.addEventListener('keyup', e => handleKeyEvent(e.key, false));

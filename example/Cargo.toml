@@ -1,0 +1,13 @@
+# Note: the gate dependencies below specify a relative path, but in practice
+# you should use the latest version on crates.io
+
+[package]
+name = "example"
+version = "0.1.0"
+authors = ["Matthew Michelotti <matthew@matthewmichelotti.com>"]
+
+[dependencies]
+gate = { path = "../gate" }
+
+[build-dependencies]
+gate_build = { path = "../gate_build" }

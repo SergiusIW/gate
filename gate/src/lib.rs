@@ -43,7 +43,7 @@
 //! extern crate gate;
 //!
 //! use gate::{App, Audio};
-//! use gate::app_info::{AppInfo, AppDims};
+//! use gate::app_info::AppInfo;
 //! use gate::input::{KeyEvent, KeyCode};
 //! use gate::renderer::{Renderer, Affine};
 //!
