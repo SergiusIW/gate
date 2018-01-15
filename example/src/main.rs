@@ -22,6 +22,9 @@ use gate::renderer::{Renderer, Affine};
 mod asset_id { include!(concat!(env!("OUT_DIR"), "/asset_id.rs")); }
 use asset_id::{AssetId, SpriteId, TileId, MusicId, SoundId};
 
+// Note: the assets that we placed in the src_assets directory can be referenced using the
+//       SpriteId, TileId, MusicId, and SoundId enums
+
 struct HeldDisc { value: u8, pos: (f64, f64) }
 
 fn disc_sprite(value: u8) -> SpriteId {

@@ -34,68 +34,7 @@
 //!
 //! #Example usage
 //!
-//! The below example supposes that in the build script we invoked functionality of "gate_build" to
-//! pack assets for a sprite `MySprite`, a tile `MyTile`, music `MyMusic`, and a sound `MySound`,
-//! and generated enums in the file "asset_id.rs".
-//! See the "gate_build" crate for more details.
-//!
-//! ```rust,ignore
-//! extern crate gate;
-//!
-//! use gate::{App, Audio};
-//! use gate::app_info::AppInfo;
-//! use gate::input::{KeyEvent, KeyCode};
-//! use gate::renderer::{Renderer, Affine};
-//!
-//! mod asset_id { include!(concat!(env!("OUT_DIR"), "/asset_id.rs")); }
-//! use asset_id::{AssetId, SpriteId, TileId, MusicId, SoundId};
-//!
-//! struct MyGame { angle: f64, delta: f64 }
-//!
-//! impl App<AssetId> for MyGame {
-//!     fn start(&mut self, audio: &mut Audio<AssetId>) {
-//!         audio.loop_music(MusicId::MyMusic);
-//!     }
-//!
-//!     fn advance(&mut self, seconds: f64, _: &mut Audio<AssetId>) -> bool {
-//!         self.angle += seconds * self.delta;
-//!         true // continue the game
-//!     }
-//!
-//!     fn input(&mut self, evt: KeyEvent, key: KeyCode, audio: &mut Audio<AssetId>) -> bool {
-//!         if (evt, key) == (KeyEvent::Pressed, KeyCode::Return) {
-//!             self.delta *= -1.;
-//!             audio.play_sound(SoundId::MySound);
-//!         }
-//!         true // continue the game
-//!     }
-//!
-//!     fn render(&mut self, renderer: &mut Renderer<AssetId>) {
-//!         { // drawing tiles
-//!             let mut renderer = renderer.tiled_mode(32., 32.);
-//!             for x in 0..5u32 { for y in 0..5u32 {
-//!                 let affine = Affine::translate(x as f64 * 16., y as f64 * 16.);
-//!                 renderer.draw(&affine, TileId::MyTile);
-//!             }}
-//!         }
-//!         { // drawing sprites
-//!             let mut renderer = renderer.sprite_mode();
-//!             renderer.draw(&Affine::rotate(self.angle), SpriteId::MySprite);
-//!         }
-//!     }
-//! }
-//!
-//! fn main() {
-//!     let info = AppInfo::with_app_height(100.).title("My Game").build();
-//!     gate::run(info, MyGame { angle: 0., delta: 90_f64.to_radians() });
-//! }
-//! ```
-//!
-//! Note that Gate currently depends on SDL2,
-//! so you will need to [install SDL2 development libraries](https://github.com/Rust-SDL2/rust-sdl2#sdl20-development-libraries)
-//! in order to run your game successfully.
-//! Gate requires SDL2, SDL2_Image, and SDL2_Mixer,
-//! as well as OpenGL version 3.0 or later.
+//! For a full example, see <https://github.com/SergiusIW/gate/tree/master/example>.
 //!
 //! #Future changes
 //!

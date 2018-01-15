@@ -1,4 +1,4 @@
-# Note: the gate dependencies below specify a relative path, but in practice
+# Note: the Gate dependencies below specify a relative path, but in practice
 # you should use the latest version on crates.io
 
 [package]

@@ -1,0 +1,42 @@
+# Gate Example
+
+This module contains a complete example Gate app based on the Tower of Hanoi.
+
+### Building
+
+Since the gate backend depends on on SDL2, you first need to
+[install the SDL2 development libraries](https://github.com/Rust-SDL2/rust-sdl2#sdl20-development-libraries).
+Gate requires SDL2, SDL2_Image, and SDL2_Mixer,
+as well as OpenGL version 3.0 or later.
+
+Once SDL2 is set up, you can build and run the app simply using: ```cargo run```
+
+Note that when you build the project with `cargo`, it will pack textures
+and place assets in the `assets` directory, as specified by `build.rs`.
+
+### Building for WebAssembly
+
+Gate also allows building to the WebAssembly target.
+This build target does not require SDL2.
+To build, run the command:
+
+```
+cargo build --release --target wasm32-unknown-unknown
+```
+
+Since there is no post-build script to copy files, you will also need to
+copy the built `wasm` binary from the target directory to the `html` directory
+that was created during the pre-build process.
+It should be copied to `html/gate_app.wasm`.
+The `wasm` binary will be found in:
+
+```
+target/wasm32-unknown-unknown/release/example.wasm
+```
+
+The WebAssembly also requires [howler.js](https://howlerjs.com/),
+so you will also need to place this file in the `html` directory.
+
+Once these two files are copied over, the game can be played by
+opening the `html/index.html` file in a web browser.
+The web browser must have WebAssembly and WebGl support.
