@@ -43,7 +43,7 @@ struct TowerGame { pillars: Vec<Vec<u8>>, held: Option<HeldDisc> }
 
 impl App<AssetId> for TowerGame {
     fn start(&mut self, audio: &mut Audio<AssetId>) {
-        //audio.loop_music(MusicId::BgMusic);
+        audio.loop_music(MusicId::Tick);
     }
 
     fn advance(&mut self, seconds: f64, _audio: &mut Audio<AssetId>) -> bool {
@@ -66,18 +66,18 @@ impl App<AssetId> for TowerGame {
                 if let Some(held) = self.held.take() {
                     if pillar.last().map_or(true, |&v| v > held.value) {
                         pillar.push(held.value);
-                        //audio.play_sound(SoundId::Shuffle);
+                        audio.play_sound(SoundId::Shuffle);
                     } else {
                         self.held = Some(held);
-                        //audio.play_sound(SoundId::Error);
+                        audio.play_sound(SoundId::Error);
                     }
                 } else {
                     if let Some(value) = pillar.pop() {
                         let pos = disc_pos(index, pillar.len());
                         self.held = Some(HeldDisc { value, pos });
-                        //audio.play_sound(SoundId::Shuffle);
+                        audio.play_sound(SoundId::Shuffle);
                     } else {
-                        //audio.play_sound(SoundId::Error);
+                        audio.play_sound(SoundId::Error);
                     }
                 }
             }
