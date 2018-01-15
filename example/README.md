@@ -22,6 +22,9 @@ and place assets in the `assets/` directory, as specified by `build.rs`.
 
 Gate also allows building to the WebAssembly target.
 This build target does not require SDL2.
+Building to WebAssembly currently requires use of the nightly
+rust compiler, as well as adding a new compiler target
+(see <https://www.hellorust.com/setup/wasm-target/>).
 To build, run the command:
 
 ```

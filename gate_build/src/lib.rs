@@ -18,7 +18,7 @@
 //! The `AssetPacker` of Gate-Build should be invoked in a build script in a Gate application.
 //! Rust enums are generated to reference the packed assets.
 //!
-//! #Example build script
+//! # Example build script
 //!
 //! In the below example, the user should place sprite png files in the "sprites" directory,
 //! tile png files in the "tiles" directory, music ogg files in the "music" directory,

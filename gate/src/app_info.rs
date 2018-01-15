@@ -15,12 +15,12 @@
 //! Contains `AppInfo` (and related structs), a struct for specifying intialization
 //! information for running an `App`.
 //!
-//! #Example
+//! # Example
 //!
 //! ```rust
-//! use gate::app_info::{AppInfo, AppDims};
+//! use gate::app_info::AppInfo;
 //!
-//! let info = AppInfo::builder(AppDims { window_pixels: (500, 500), app_height: 100. })
+//! let info = AppInfo::with_app_height(100.)
 //!                    .title("My Game")
 //!                    .target_fps(30.)
 //!                    .print_workload_info()

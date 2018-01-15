@@ -32,11 +32,11 @@
 //! This will generate texture atlases and enums to reference assets.
 //! See the "gate_build" crate for more details.
 //!
-//! #Example usage
+//! # Example usage
 //!
 //! For a full example, see <https://github.com/SergiusIW/gate/tree/master/example>.
 //!
-//! #Future changes
+//! # Future changes
 //!
 //! There are a number of new features I am planning to add to Gate in the future.
 //! Some of these will involve breaking changes.
