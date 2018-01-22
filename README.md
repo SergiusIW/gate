@@ -46,7 +46,7 @@ There are a number of new features I am planning to add to Gate in the future.
 Some of these will involve breaking changes.
 
 * Loading assets on the fly
-* Changing resolution or fullscreen mode mid-game
+* Entering fullscreen mode
 * Support for displaying text
 * Adding XBox controller input
 * Generating enums/handles for user-specific assets, and loading those assets
