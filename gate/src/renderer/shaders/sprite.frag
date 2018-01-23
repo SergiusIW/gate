@@ -23,40 +23,13 @@ varying vec2 fs_tex_vert_lt; // left-top vertex of sampling region
 varying vec2 fs_tex_vert_rb; // right-bottom vertex of sampling region
 varying float fs_flash_ratio;
 
-const float PAD = 1.0 / 40.0;
-
-// assumes texture sampling is nearest
-
-vec4 sample_tex(vec2 vert) {
-    vec4 result = texture2D(tex, vert);
-    result = vec4(fs_flash_ratio + (1.0 - fs_flash_ratio) * vec3(result[0], result[1], result[2]), result[3]);
-    return result * result;
-}
-
-vec4 blend(vec4 color_a, vec4 color_b, float ratio_a, float ratio_b) {
-    if (color_a[3] == 0.0) {
-        return vec4(color_b[0], color_b[1], color_b[2], ratio_b * color_b[3]);
-    } else if (color_b[3] == 0.0) {
-        return vec4(color_a[0], color_a[1], color_a[2], ratio_a * color_a[3]);
-    } else {
-        return ratio_a * color_a + ratio_b * color_b;
-    }
-}
+const vec3 WHITE = vec3(1.0, 1.0, 1.0);
 
 void main() {
-    vec2 tex_vert_ave = 0.5 * (fs_tex_vert_lt + fs_tex_vert_rb);
-    vec2 pad = PAD / tex_dims;
-    vec2 padded_tex_vert_lt = min(fs_tex_vert_lt + pad, tex_vert_ave);
-    vec2 padded_tex_vert_rb = max(fs_tex_vert_rb - pad, tex_vert_ave);
-    vec4 lt_color = sample_tex(padded_tex_vert_lt);
-    vec4 rt_color = sample_tex(vec2(padded_tex_vert_rb[0], padded_tex_vert_lt[1]));
-    vec4 lb_color = sample_tex(vec2(padded_tex_vert_lt[0], padded_tex_vert_rb[1]));
-    vec4 rb_color = sample_tex(padded_tex_vert_rb);
-    vec2 tex_vert_mid = floor(fs_tex_vert_rb * tex_dims) / tex_dims;
-    vec2 ratio_a = (tex_vert_mid - fs_tex_vert_lt) / (fs_tex_vert_rb - fs_tex_vert_lt);
-    vec2 ratio_b = 1.0 - ratio_a;
-    vec4 t_color = blend(lt_color, rt_color, ratio_a[0], ratio_b[0]);
-    vec4 b_color = blend(lb_color, rb_color, ratio_a[0], ratio_b[0]);
-    vec4 result_color = blend(t_color, b_color, ratio_a[1], ratio_b[1]);
-    gl_FragColor = vec4(sqrt(vec3(result_color[0], result_color[1], result_color[2])), result_color[3]);
+    vec2 low = fs_tex_vert_lt * tex_dims; // TODO do this ahead of time, not in shader
+    vec2 high = fs_tex_vert_rb * tex_dims; // TODO do this ahead of time, not in shader
+    vec2 mid = floor(high);
+    vec2 sample_coords = mid + 0.5 - max((mid - low) / (high - low), 0.0);
+    vec4 color = texture2D(tex, sample_coords / tex_dims);
+    gl_FragColor = vec4(mix(vec3(color[0], color[1], color[2]), WHITE * color[3], fs_flash_ratio), color[3]);
 }

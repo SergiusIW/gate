@@ -18,7 +18,7 @@ use std::io::{self, Write};
 use std::ffi::OsStr;
 use std::str::FromStr;
 
-use image::{self, RgbaImage, Rgba, GenericImage};
+use image::{self, RgbaImage, GenericImage};
 use byteorder::BigEndian;
 use regex::Regex;
 
@@ -83,6 +83,15 @@ impl AtlasRegion {
     }
 }
 
+fn pre_multiply_alpha(image: &mut RgbaImage) {
+    for (_, _, pixel) in image.enumerate_pixels_mut() {
+        let alpha = pixel[3] as f64 / 255.;
+        for color_index in 0..3 {
+            pixel[color_index] = (alpha * pixel[color_index] as f64).round() as u8
+        }
+    }
+}
+
 struct Atlas {
     regions: Vec<(String, AtlasRegion)>,
     image: RgbaImage,
@@ -111,6 +120,7 @@ impl Atlas {
                 render_sprite(&mut image, &sprite, region.atlas_rect, region.raw_sprite_rect);
                 regions.push((name, region));
             }
+            pre_multiply_alpha(&mut image);
             Atlas { regions, image }
         })
     }
@@ -165,9 +175,6 @@ fn render_sprite(atlas: &mut RgbaImage, sprite: &RgbaImage, dst_rect: Rect, src_
     for row in 0..dst_rect.dims.0 {
         for col in 0..dst_rect.dims.1 {
             let mut out_color = *sprite.get_pixel(src_rect.pos.1 + col, src_rect.pos.0 + row);
-            assert!(out_color[3] == 0 || out_color[3] == 255,
-                    "image with partial transparency not supported by pixel-art shader");
-            if out_color[3] == 0 { out_color = Rgba { data: [0, 0, 0, 0] } };
             *atlas.get_pixel_mut(dst_rect.pos.1 + col, dst_rect.pos.0 + row) = out_color;
         }
     }
