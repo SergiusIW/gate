@@ -58,7 +58,7 @@ Module.loadingAudioCount = 0;
 
 function setSpriteAttribPointers () {
   gl.vertexAttribPointer(Module.spriteProg.attribs.vert, 2, gl.FLOAT, false, 7 * floatSize, 0);
-  gl.vertexAttribPointer(Module.spriteProg.attribs.vsTexVertLt, 2, gl.FLOAT, false, 7 * floatSize, 2 * floatSize);
+  gl.vertexAttribPointer(Module.spriteProg.attribs.vsInvTexSampleDims, 2, gl.FLOAT, false, 7 * floatSize, 2 * floatSize);
   gl.vertexAttribPointer(Module.spriteProg.attribs.vsTexVertRb, 2, gl.FLOAT, false, 7 * floatSize, 4 * floatSize);
   gl.vertexAttribPointer(Module.spriteProg.attribs.vsFlashRatio, 1, gl.FLOAT, false, 7 * floatSize, 6 * floatSize);
 }
@@ -86,7 +86,7 @@ const imports = {
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, Module.spriteTex);
       gl.uniform1i(Module.spriteProg.uniformTex, 0);
-      gl.uniform2f(Module.spriteProg.uniformTexDims, Module.spriteTexWidth, Module.spriteTexHeight);
+      gl.uniform2f(Module.spriteProg.uniformInvTexDims, 1.0 / Module.spriteTexWidth, 1.0 / Module.spriteTexHeight);
 
       setSpriteAttribPointers();
 
@@ -151,7 +151,7 @@ const imports = {
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, Module.tiledFboTex);
       gl.uniform1i(Module.spriteProg.uniformTex, 0);
-      gl.uniform2f(Module.spriteProg.uniformTexDims, Module.tiledFboTexW, Module.tiledFboTexH);
+      gl.uniform2f(Module.spriteProg.uniformInvTexDims, 1.0 / Module.tiledFboTexW, 1.0 / Module.tiledFboTexH);
 
       setSpriteAttribPointers();
 
@@ -283,13 +283,13 @@ function linkShaderProgram (vertShader, fragShader) {
 function makeSpriteAttribs (spriteProg) {
   const attribs = {
     vert: gl.getAttribLocation(spriteProg, "vert"),
-    vsTexVertLt: gl.getAttribLocation(spriteProg, "vs_tex_vert_lt"),
+    vsInvTexSampleDims: gl.getAttribLocation(spriteProg, "vs_inv_tex_sample_dims"),
     vsTexVertRb: gl.getAttribLocation(spriteProg, "vs_tex_vert_rb"),
     vsFlashRatio: gl.getAttribLocation(spriteProg, "vs_flash_ratio"),
   };
 
   gl.enableVertexAttribArray(attribs.vert);
-  gl.enableVertexAttribArray(attribs.vsTexVertLt);
+  gl.enableVertexAttribArray(attribs.vsInvTexSampleDims);
   gl.enableVertexAttribArray(attribs.vsTexVertRb);
   gl.enableVertexAttribArray(attribs.vsFlashRatio);
 
@@ -304,7 +304,7 @@ function initSpriteProg () {
     prog: prog,
     attribs: makeSpriteAttribs(prog),
     uniformTex: gl.getUniformLocation(prog, "tex"),
-    uniformTexDims: gl.getUniformLocation(prog, "tex_dims"),
+    uniformInvTexDims: gl.getUniformLocation(prog, "inv_tex_dims"),
   };
 }
 

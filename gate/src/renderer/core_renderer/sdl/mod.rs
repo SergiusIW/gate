@@ -74,8 +74,8 @@ impl CoreRenderer {
             gl::ActiveTexture(gl::TEXTURE0);
             self.sprites_tex.gl_bind_texture();
             gl::Uniform1i(self.sprite_program.uniform_tex, 0); // binds to GL_TEXTURE0
-            gl::Uniform2f(self.sprite_program.uniform_tex_dims,
-                          r.sprite_atlas.dims.0, r.sprite_atlas.dims.1);
+            gl::Uniform2f(self.sprite_program.uniform_inv_tex_dims,
+                          1. / r.sprite_atlas.dims.0, 1. / r.sprite_atlas.dims.1);
 
             gl::BindVertexArray(self.sprite_program.vao);
 
@@ -140,8 +140,8 @@ impl CoreRenderer {
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, self.tiled_program.fbo_tex);
             gl::Uniform1i(self.sprite_program.uniform_tex, 0); // binds to GL_TEXTURE0
-            gl::Uniform2f(self.sprite_program.uniform_tex_dims,
-                          self.tiled_program.fbo_tex_dims.0 as f32, self.tiled_program.fbo_tex_dims.1 as f32);
+            gl::Uniform2f(self.sprite_program.uniform_inv_tex_dims,
+                          1. / self.tiled_program.fbo_tex_dims.0 as f32, 1. / self.tiled_program.fbo_tex_dims.1 as f32);
 
             gl::BindVertexArray(self.sprite_program.vao);
 

@@ -27,7 +27,7 @@ pub struct SpriteProgram {
     vs: GLuint,
     fs: GLuint,
     pub uniform_tex: GLint,
-    pub uniform_tex_dims: GLint,
+    pub uniform_inv_tex_dims: GLint,
 }
 
 impl SpriteProgram {
@@ -40,7 +40,7 @@ impl SpriteProgram {
             SpriteProgram {
                 handle, vao, vs, fs,
                 uniform_tex: gl::GetUniformLocation(handle, c_str!("tex")),
-                uniform_tex_dims: gl::GetUniformLocation(handle, c_str!("tex_dims")),
+                uniform_inv_tex_dims: gl::GetUniformLocation(handle, c_str!("inv_tex_dims")),
             }
         }
     }
@@ -49,7 +49,7 @@ impl SpriteProgram {
         let mut vao = 0;
         unsafe {
             let attrib_vert = gl::GetAttribLocation(program_handle, c_str!("vert"));
-            let attrib_vs_tex_vert_lt = gl::GetAttribLocation(program_handle, c_str!("vs_tex_vert_lt"));
+            let attrib_vs_inv_tex_sample_dims = gl::GetAttribLocation(program_handle, c_str!("vs_inv_tex_sample_dims"));
             let attrib_vs_tex_vert_rb = gl::GetAttribLocation(program_handle, c_str!("vs_tex_vert_rb"));
             let attrib_vs_flash_ratio = gl::GetAttribLocation(program_handle, c_str!("vs_flash_ratio"));
 
@@ -61,8 +61,8 @@ impl SpriteProgram {
             gl::EnableVertexAttribArray(attrib_vert as GLuint);
             gl::VertexAttribPointer(attrib_vert as GLuint, 2, gl::FLOAT, gl::FALSE, 7*mem::size_of::<GLfloat>() as i32, ptr::null());
 
-            gl::EnableVertexAttribArray(attrib_vs_tex_vert_lt as GLuint);
-            gl::VertexAttribPointer(attrib_vs_tex_vert_lt as GLuint, 2, gl::FLOAT, gl::TRUE, 7*mem::size_of::<GLfloat>() as i32,
+            gl::EnableVertexAttribArray(attrib_vs_inv_tex_sample_dims as GLuint);
+            gl::VertexAttribPointer(attrib_vs_inv_tex_sample_dims as GLuint, 2, gl::FLOAT, gl::TRUE, 7*mem::size_of::<GLfloat>() as i32,
                                     (2 * mem::size_of::<GLfloat>()) as *const c_void);
 
             gl::EnableVertexAttribArray(attrib_vs_tex_vert_rb as GLuint);

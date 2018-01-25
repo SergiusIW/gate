@@ -17,19 +17,17 @@
 precision highp float;
 
 uniform sampler2D tex;
-uniform vec2 tex_dims;
+uniform vec2 inv_tex_dims; // inverse of tex dimensions
 
-varying vec2 fs_tex_vert_lt; // left-top vertex of sampling region
-varying vec2 fs_tex_vert_rb; // right-bottom vertex of sampling region
+varying vec2 fs_inv_tex_sample_dims; // inverse width-height of sampling region, in tex pixels
+varying vec2 fs_tex_vert_rb; // right-bottom vertex of sampling region, in tex pixels
 varying float fs_flash_ratio;
 
-const vec3 WHITE = vec3(1.0, 1.0, 1.0);
+const vec4 WHITE = vec4(1.0, 1.0, 1.0, 1.0);
 
 void main() {
-    vec2 low = fs_tex_vert_lt * tex_dims; // TODO do this ahead of time, not in shader
-    vec2 high = fs_tex_vert_rb * tex_dims; // TODO do this ahead of time, not in shader
-    vec2 mid = floor(high);
-    vec2 sample_coords = mid + 0.5 - max((mid - low) / (high - low), 0.0);
-    vec4 color = texture2D(tex, sample_coords / tex_dims);
-    gl_FragColor = vec4(mix(vec3(color[0], color[1], color[2]), WHITE * color[3], fs_flash_ratio), color[3]);
+    vec2 mid = floor(fs_tex_vert_rb);
+    vec2 sample_coords = mid - 0.5 + min((fs_tex_vert_rb - mid) * fs_inv_tex_sample_dims, 1.0);
+    vec4 color = texture2D(tex, sample_coords * inv_tex_dims);
+    gl_FragColor = mix(color, WHITE * color[3], fs_flash_ratio);
 }

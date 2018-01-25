@@ -21,15 +21,14 @@ pub fn append_sprite(r: &mut RenderBuffer, affine: &Affine, sprite_id: u16, flas
     let img_coords = r.sprite_atlas.images[&sprite_id];
     let affine = affine.post_scale(r.dims.app_pixel_scalar);
     let flash_ratio = (flash_ratio as f32).max(0.0).min(1.0);
-    let inv_tex_dims = (1.0 / r.sprite_atlas.dims.0, 1.0 / r.sprite_atlas.dims.1);
 
     let pad = (
-        (0.5 / affine.mat().col_0().len()).min(0.499) as f32 * inv_tex_dims.0,
-        (0.5 / affine.mat().col_1().len()).min(0.499) as f32 * inv_tex_dims.1,
+        0.5 / affine.mat().col_0().len() as f32,
+        0.5 / affine.mat().col_1().len() as f32,
     );
 
-    let lt = (img_coords.lt.0 * inv_tex_dims.0, img_coords.lt.1 * inv_tex_dims.1);
-    let rb = (img_coords.rb.0 * inv_tex_dims.0, img_coords.rb.1 * inv_tex_dims.1);
+    let lt = img_coords.lt;
+    let rb = img_coords.rb;
     let lb = (lt.0, rb.1);
     let rt = (rb.0, lt.1);
 
@@ -56,8 +55,8 @@ pub fn append_sprite(r: &mut RenderBuffer, affine: &Affine, sprite_id: u16, flas
 fn add_sprite_vertex(vbo_data: &mut Vec<f32>, pad: (f32, f32), flash_ratio: f32, src: (f32, f32), dst: (f32, f32)) {
     vbo_data.push(dst.0);
     vbo_data.push(dst.1);
-    vbo_data.push(src.0 - pad.0);
-    vbo_data.push(src.1 - pad.1);
+    vbo_data.push(0.5 / pad.0);
+    vbo_data.push(0.5 / pad.1);
     vbo_data.push(src.0 + pad.0);
     vbo_data.push(src.1 + pad.1);
     vbo_data.push(flash_ratio);
@@ -127,14 +126,14 @@ fn fbo_camera_coord(mut camera: f64, fbo_dim: u32) -> f64 {
 pub fn append_tile_fbo(r: &mut RenderBuffer) {
     let camera = r.mode.tiled_camera();
 
-    let s = (1.0 / r.dims.tiled_fbo_dims.0 as f32, 1.0 / r.dims.tiled_fbo_dims.1 as f32);
     let pad = (
-        (0.5 / r.dims.app_pixel_scalar).min(0.499) as f32 * s.0,
-        (0.5 / r.dims.app_pixel_scalar).min(0.499) as f32 * s.1,
+        0.5 / r.dims.app_pixel_scalar as f32,
+        0.5 / r.dims.app_pixel_scalar as f32,
     );
     let camera = fbo_camera(camera, r.dims.tiled_fbo_dims);
-    let camera = (0.5 + s.0 * camera.0 as f32, 0.5 + s.1 * camera.1 as f32);
-    let half_dims = (s.0 * r.dims.app_dims.0 as f32 * 0.5, s.1 * r.dims.app_dims.1 as f32 * 0.5);
+    let camera = (0.5 * r.dims.tiled_fbo_dims.0 as f32 + camera.0 as f32,
+                  0.5 * r.dims.tiled_fbo_dims.1 as f32 + camera.1 as f32);
+    let half_dims = (r.dims.app_dims.0 as f32 * 0.5, r.dims.app_dims.1 as f32 * 0.5);
     let lb = (camera.0 - half_dims.0, camera.1 - half_dims.1);
     let rt = (camera.0 + half_dims.0, camera.1 + half_dims.1);
     let lt = (lb.0, rt.1);
