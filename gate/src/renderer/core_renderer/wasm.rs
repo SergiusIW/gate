@@ -56,7 +56,7 @@ impl CoreRenderer {
 
     pub(in renderer) fn draw_tiles_from_fbo(&mut self, r: &mut RenderBuffer) {
         unsafe {
-            gateWasmDrawTilesFromFbo(mem::size_of::<f32>() * r.vbo_data.len(), mem::transmute(&r.vbo_data[0]));
+            gateWasmDrawTilesFromFbo(mem::size_of::<f32>() * r.vbo_data.len(), mem::transmute(&r.vbo_data[0]), r.dims.app_pixel_scalar as f32);
         }
     }
 }

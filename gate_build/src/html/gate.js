@@ -68,6 +68,11 @@ function setTiledAttribPointers () {
   gl.vertexAttribPointer(Module.tiledProg.attribs.vsTexVert, 2, gl.FLOAT, false, 4 * floatSize, 2 * floatSize);
 }
 
+function setFromTiledAttribPointers () {
+  gl.vertexAttribPointer(Module.fromTiledProg.attribs.vert, 2, gl.FLOAT, false, 4 * floatSize, 0);
+  gl.vertexAttribPointer(Module.fromTiledProg.attribs.vsTexVertRb, 2, gl.FLOAT, false, 4 * floatSize, 2 * floatSize);
+}
+
 const imports = {
   env: {
     gateWasmSetScissor: function (x, y, w, h) {
@@ -140,24 +145,25 @@ const imports = {
 
       gl.drawArrays(gl.TRIANGLES, 0, size / 16);
     },
-    gateWasmDrawTilesFromFbo: function (size, dataPtr) {
+    gateWasmDrawTilesFromFbo: function (size, dataPtr, appPixelScalar) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       gl.enable(gl.SCISSOR_TEST);
 
-      gl.useProgram(Module.spriteProg.prog);
+      gl.useProgram(Module.fromTiledProg.prog);
 
       gl.viewport(0, 0, canvas.width, canvas.height);
 
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, Module.tiledFboTex);
-      gl.uniform1i(Module.spriteProg.uniformTex, 0);
-      gl.uniform2f(Module.spriteProg.uniformInvTexDims, 1.0 / Module.tiledFboTexW, 1.0 / Module.tiledFboTexH);
+      gl.uniform1i(Module.fromTiledProg.uniformTex, 0);
+      gl.uniform2f(Module.fromTiledProg.uniformInvTexDims, 1.0 / Module.tiledFboTexW, 1.0 / Module.tiledFboTexH);
+      gl.uniform1f(Module.fromTiledProg.uniformInvTexSampleDim, appPixelScalar);
 
-      setSpriteAttribPointers();
+      setFromTiledAttribPointers();
 
       gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(Module.memory.buffer, dataPtr, size), gl.STREAM_DRAW);
 
-      gl.drawArrays(gl.TRIANGLES, 0, size / 28);
+      gl.drawArrays(gl.TRIANGLES, 0, size / 16);
       gl.disable(gl.SCISSOR_TEST);
     },
     gateWasmLoopMusic: function (id) {
@@ -252,6 +258,8 @@ fetch("gate_app.wasm").then(response =>
   Module.gateWasmSpriteFragSrc = mod.exports.gateWasmSpriteFragSrc;
   Module.gateWasmTiledVertSrc = mod.exports.gateWasmTiledVertSrc;
   Module.gateWasmTiledFragSrc = mod.exports.gateWasmTiledFragSrc;
+  Module.gateWasmFromTiledVertSrc = mod.exports.gateWasmFromTiledVertSrc;
+  Module.gateWasmFromTiledFragSrc = mod.exports.gateWasmFromTiledFragSrc;
   tryStart();
 });
 
@@ -331,6 +339,31 @@ function initTiledProg () {
   };
 }
 
+function makeFromTiledAttribs (fromTiledProg) {
+  const attribs = {
+    vert: gl.getAttribLocation(fromTiledProg, "vert"),
+    vsTexVertRb: gl.getAttribLocation(fromTiledProg, "vs_tex_vert_rb"),
+  };
+
+  gl.enableVertexAttribArray(attribs.vert);
+  gl.enableVertexAttribArray(attribs.vsTexVertRb);
+
+  return attribs;
+}
+
+function initFromTiledProg () {
+  Module.fromTiledVert = loadShader(gl.VERTEX_SHADER, readCStr(Module.gateWasmFromTiledVertSrc()));
+  Module.fromTiledFrag = loadShader(gl.FRAGMENT_SHADER, readCStr(Module.gateWasmFromTiledFragSrc()));
+  const prog = linkShaderProgram(Module.fromTiledVert, Module.fromTiledFrag);
+  Module.fromTiledProg = {
+    prog: prog,
+    attribs: makeFromTiledAttribs(prog),
+    uniformTex: gl.getUniformLocation(prog, "tex"),
+    uniformInvTexDims: gl.getUniformLocation(prog, "inv_tex_dims"),
+    uniformInvTexSampleDim: gl.getUniformLocation(prog, "inv_tex_sample_dim"),
+  };
+}
+
 function initAudioArray (prefix, count, loop) {
   Module.loadingAudioCount += count;
   var result = new Array(count);
@@ -351,6 +384,7 @@ function tryStart () {
   if (Module.spriteAtlas && Module.tiledAtlas && Module.memory && Module.spriteTex && Module.tiledTex) {
     initSpriteProg();
     initTiledProg();
+    initFromTiledProg();
     Module.musics = initAudioArray("music", Module.gateWasmMusicCount(), true);
     Module.sounds = initAudioArray("sound", Module.gateWasmSoundCount(), false);
     tryStart2();

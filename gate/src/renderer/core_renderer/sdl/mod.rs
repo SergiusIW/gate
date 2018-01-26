@@ -15,6 +15,7 @@
 mod shader_util;
 mod sprite_program;
 mod tiled_program;
+mod from_tiled_program;
 
 use std::mem;
 
@@ -26,11 +27,13 @@ use gl;
 use ::renderer::render_buffer::RenderBuffer;
 use self::sprite_program::SpriteProgram;
 use self::tiled_program::TiledProgram;
+use self::from_tiled_program::FromTiledProgram;
 
 pub struct CoreRenderer {
     vbo: GLuint,
     sprite_program: SpriteProgram,
     tiled_program: TiledProgram,
+    from_tiled_program: FromTiledProgram,
     sprites_tex: Texture,
     tiles_tex: Texture,
 }
@@ -46,6 +49,7 @@ impl CoreRenderer {
             vbo, sprites_tex, tiles_tex,
             sprite_program: SpriteProgram::new(),
             tiled_program: TiledProgram::new(r.dims.tiled_fbo_dims),
+            from_tiled_program: FromTiledProgram::new(),
         }
     }
 }
@@ -133,24 +137,25 @@ impl CoreRenderer {
             gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
             gl::Enable(gl::SCISSOR_TEST);
 
-            gl::UseProgram(self.sprite_program.handle);
+            gl::UseProgram(self.from_tiled_program.handle);
 
             gl::Viewport(0, 0, r.dims.full_screen_dims.0 as GLint, r.dims.full_screen_dims.1 as GLint);
 
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, self.tiled_program.fbo_tex);
-            gl::Uniform1i(self.sprite_program.uniform_tex, 0); // binds to GL_TEXTURE0
-            gl::Uniform2f(self.sprite_program.uniform_inv_tex_dims,
+            gl::Uniform1i(self.from_tiled_program.uniform_tex, 0); // binds to GL_TEXTURE0
+            gl::Uniform2f(self.from_tiled_program.uniform_inv_tex_dims,
                           1. / self.tiled_program.fbo_tex_dims.0 as f32, 1. / self.tiled_program.fbo_tex_dims.1 as f32);
+            gl::Uniform1f(self.from_tiled_program.uniform_inv_tex_sample_dim, r.dims.app_pixel_scalar as f32);
 
-            gl::BindVertexArray(self.sprite_program.vao);
+            gl::BindVertexArray(self.from_tiled_program.vao);
 
             gl::BufferData(gl::ARRAY_BUFFER,
                            (mem::size_of::<GLfloat>() * r.vbo_data.len()) as GLsizeiptr,
                            mem::transmute(&r.vbo_data[0]),
                            gl::STREAM_DRAW);
 
-            gl::DrawArrays(gl::TRIANGLES, 0, r.vbo_data.len() as GLint / 7);
+            gl::DrawArrays(gl::TRIANGLES, 0, r.vbo_data.len() as GLint / 4);
 
             gl::BindVertexArray(0);
             gl::BindTexture(gl::TEXTURE_2D, 0);

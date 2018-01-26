@@ -1,3 +1,5 @@
+#version 100
+
 // Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +14,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::os::raw::c_char;
+precision highp float;
 
-pub const VS_SPRITE_SRC: *const c_char = include_c_str!("sprite.vert");
-pub const FS_SPRITE_SRC: *const c_char = include_c_str!("sprite.frag");
+uniform sampler2D tex;
+uniform vec2 inv_tex_dims; // inverse of tex dimensions
+uniform float inv_tex_sample_dim; // inverse width-height of sampling region, in tex pixels
 
-pub const VS_TILED_SRC: *const c_char = include_c_str!("tiled.vert");
-pub const FS_TILED_SRC: *const c_char = include_c_str!("tiled.frag");
+varying vec2 fs_tex_vert_rb; // right-bottom vertex of sampling region, in tex pixels
 
-pub const VS_FROM_TILED_SRC: *const c_char = include_c_str!("from_tiled.vert");
-pub const FS_FROM_TILED_SRC: *const c_char = include_c_str!("from_tiled.frag");
+void main() {
+    vec2 mid = floor(fs_tex_vert_rb);
+    vec2 sample_coords = mid - 0.5 + min((fs_tex_vert_rb - mid) * inv_tex_sample_dim, 1.0);
+    gl_FragColor = texture2D(tex, sample_coords * inv_tex_dims);
+}

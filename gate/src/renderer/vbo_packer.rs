@@ -126,10 +126,7 @@ fn fbo_camera_coord(mut camera: f64, fbo_dim: u32) -> f64 {
 pub fn append_tile_fbo(r: &mut RenderBuffer) {
     let camera = r.mode.tiled_camera();
 
-    let pad = (
-        0.5 / r.dims.app_pixel_scalar as f32,
-        0.5 / r.dims.app_pixel_scalar as f32,
-    );
+    let pad = 0.5 / r.dims.app_pixel_scalar as f32;
     let camera = fbo_camera(camera, r.dims.tiled_fbo_dims);
     let camera = (0.5 * r.dims.tiled_fbo_dims.0 as f32 + camera.0 as f32,
                   0.5 * r.dims.tiled_fbo_dims.1 as f32 + camera.1 as f32);
@@ -143,10 +140,17 @@ pub fn append_tile_fbo(r: &mut RenderBuffer) {
     let h_ratio = r.dims.used_screen_dims.1 as f32 / r.dims.full_screen_dims.1 as f32;
 
     let vbo_data = &mut r.vbo_data;
-    add_sprite_vertex(vbo_data, pad, 0.0, lb, (-w_ratio, -h_ratio));
-    add_sprite_vertex(vbo_data, pad, 0.0, rb, ( w_ratio, -h_ratio));
-    add_sprite_vertex(vbo_data, pad, 0.0, lt, (-w_ratio,  h_ratio));
-    add_sprite_vertex(vbo_data, pad, 0.0, rb, ( w_ratio, -h_ratio));
-    add_sprite_vertex(vbo_data, pad, 0.0, lt, (-w_ratio,  h_ratio));
-    add_sprite_vertex(vbo_data, pad, 0.0, rt, ( w_ratio,  h_ratio));
+    add_from_tiled_vertex(vbo_data, pad, lb, (-w_ratio, -h_ratio));
+    add_from_tiled_vertex(vbo_data, pad, rb, ( w_ratio, -h_ratio));
+    add_from_tiled_vertex(vbo_data, pad, lt, (-w_ratio,  h_ratio));
+    add_from_tiled_vertex(vbo_data, pad, rb, ( w_ratio, -h_ratio));
+    add_from_tiled_vertex(vbo_data, pad, lt, (-w_ratio,  h_ratio));
+    add_from_tiled_vertex(vbo_data, pad, rt, ( w_ratio,  h_ratio));
+}
+
+fn add_from_tiled_vertex(vbo_data: &mut Vec<f32>, pad: f32, src: (f32, f32), dst: (f32, f32)) {
+    vbo_data.push(dst.0);
+    vbo_data.push(dst.1);
+    vbo_data.push(src.0 + pad);
+    vbo_data.push(src.1 + pad);
 }

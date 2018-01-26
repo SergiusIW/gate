@@ -24,7 +24,7 @@ extern {
     pub fn gateWasmClear(r: f32, g: f32, b: f32);
     pub fn gateWasmDrawSprites(size: usize, data: *const c_void);
     pub fn gateWasmDrawTilesToFbo(size: usize, data: *const c_void);
-    pub fn gateWasmDrawTilesFromFbo(size: usize, data: *const c_void);
+    pub fn gateWasmDrawTilesFromFbo(size: usize, data: *const c_void, app_pixel_scalar: f32);
 
     pub fn gateWasmPlaySound(id: c_int);
     pub fn gateWasmLoopMusic(id: c_int);

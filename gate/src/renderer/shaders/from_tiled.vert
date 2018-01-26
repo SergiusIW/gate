@@ -1,3 +1,5 @@
+#version 100
+
 // Copyright 2017-2018 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +14,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::os::raw::c_char;
+attribute vec2 vert;
+attribute vec2 vs_tex_vert_rb;
 
-pub const VS_SPRITE_SRC: *const c_char = include_c_str!("sprite.vert");
-pub const FS_SPRITE_SRC: *const c_char = include_c_str!("sprite.frag");
+varying vec2 fs_tex_vert_rb;
 
-pub const VS_TILED_SRC: *const c_char = include_c_str!("tiled.vert");
-pub const FS_TILED_SRC: *const c_char = include_c_str!("tiled.frag");
-
-pub const VS_FROM_TILED_SRC: *const c_char = include_c_str!("from_tiled.vert");
-pub const FS_FROM_TILED_SRC: *const c_char = include_c_str!("from_tiled.frag");
+void main() {
+    fs_tex_vert_rb = vs_tex_vert_rb;
+    gl_Position = vec4(vert, 0, 1);
+}
