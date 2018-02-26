@@ -16,7 +16,7 @@ extern crate gate;
 
 use gate::{App, Audio};
 use gate::app_info::AppInfo;
-use gate::input::{KeyEvent, KeyCode};
+use gate::input::{InputEvent, KeyCode};
 use gate::renderer::{Renderer, Affine};
 
 mod asset_id { include!(concat!(env!("OUT_DIR"), "/asset_id.rs")); }
@@ -56,8 +56,8 @@ impl App<AssetId> for TowerGame {
         true // continue the game
     }
 
-    fn input(&mut self, evt: KeyEvent, key: KeyCode, audio: &mut Audio<AssetId>) -> bool {
-        if evt == KeyEvent::Pressed {
+    fn input(&mut self, evt: InputEvent, audio: &mut Audio<AssetId>) -> bool {
+        if let InputEvent::KeyPressed(key) = evt {
             let index = match key {
                 KeyCode::Num1 => Some(0),
                 KeyCode::Num2 => Some(1),

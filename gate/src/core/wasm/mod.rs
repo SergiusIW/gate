@@ -25,7 +25,7 @@ use ::{App, Audio};
 use ::asset_id::{AppAssetId, IdU16};
 use ::renderer::Renderer;
 use ::app_info::AppInfo;
-use ::input::{KeyEvent, KeyCode};
+use ::input::{InputEvent, KeyCode, MouseButton};
 use ::renderer::atlas::Atlas;
 use ::renderer::render_buffer::RenderBuffer;
 use ::renderer::core_renderer::CoreRenderer;
@@ -56,7 +56,7 @@ trait TraitAppRunner {
     fn init(&mut self);
     fn resize(&mut self, dims: (u32, u32));
     fn update_and_draw(&mut self, time_sec: f64);
-    fn input(&mut self, event: KeyEvent, key: KeyCode);
+    fn input(&mut self, event: InputEvent);
     fn music_count(&self) -> u16;
     fn sound_count(&self) -> u16;
 }
@@ -66,7 +66,7 @@ impl TraitAppRunner for DefaultAppRunner {
     fn init(&mut self) { panic!("gate::run(...) was not invoked") }
     fn resize(&mut self, _dims: (u32, u32)) { panic!("gate::run(...) was not invoked") }
     fn update_and_draw(&mut self, _time_sec: f64) { panic!("gate::run(...) was not invoked") }
-    fn input(&mut self, _event: KeyEvent, _key: KeyCode) { panic!("gate::run(...) was not invoked") }
+    fn input(&mut self, _event: InputEvent) { panic!("gate::run(...) was not invoked") }
     fn music_count(&self) -> u16 { panic!("gate::run(...) was not invoked") }
     fn sound_count(&self) -> u16 { panic!("gate::run(...) was not invoked") }
 }
@@ -88,6 +88,7 @@ struct AppRunner<AS: AppAssetId, AP: App<AS>> {
     renderer: Option<Renderer<AS>>,
     last_time_sec: Option<f64>,
     held_keys: HashSet<KeyCode>,
+    held_mouse: HashSet<MouseButton>,
 }
 
 impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
@@ -131,15 +132,33 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         self.renderer.as_mut().unwrap().flush();
     }
 
-    fn input(&mut self, event: KeyEvent, key: KeyCode) {
+    fn input(&mut self, event: InputEvent) {
         let mut audio = Audio::new(CoreAudio { });
-        let success = if event == KeyEvent::Pressed {
-            self.held_keys.insert(key)
-        } else {
-            self.held_keys.remove(&key)
+
+        let success = match event {
+            InputEvent::KeyPressed(key) => self.held_keys.insert(key),
+            InputEvent::KeyReleased(key) => self.held_keys.remove(&key),
+            InputEvent::MousePressed(button, _, _) => self.held_mouse.insert(button),
+            InputEvent::MouseReleased(button, _, _) => self.held_mouse.remove(&button),
+            InputEvent::MouseMotion(_,_) => true
         };
         if success {
-            self.app.input(event, key, &mut audio);
+            let event = match event {
+                InputEvent::MousePressed(button, x, y) => {
+                    let (x, y) = self.renderer.as_ref().unwrap().window_dims_to_app_dims(x, y);
+                    InputEvent::MousePressed(button, x, y)
+                },
+                InputEvent::MouseReleased(button, x, y) => {
+                    let (x, y) = self.renderer.as_ref().unwrap().window_dims_to_app_dims(x, y);
+                    InputEvent::MouseReleased(button, x, y)
+                },
+                InputEvent::MouseMotion(x, y) => {
+                    let (x, y) = self.renderer.as_ref().unwrap().window_dims_to_app_dims(x, y);
+                    InputEvent::MouseMotion(x, y)
+                },
+                e => e,
+            };
+            self.app.input(event, &mut audio);
         }
     }
 
@@ -154,5 +173,6 @@ pub fn run<AS: 'static + AppAssetId, AP: 'static + App<AS>>(info: AppInfo, app: 
         renderer: None,
         last_time_sec: None,
         held_keys: HashSet::new(),
+        held_mouse: HashSet::new(),
     });
 }

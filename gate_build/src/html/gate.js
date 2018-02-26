@@ -43,6 +43,11 @@ const keycodes = makeKeycodesMap();
 
 var canvas = document.getElementById("gate-canvas");
 
+canvas.oncontextmenu = function (e) {
+    // allows right click on the canvas
+    e.preventDefault();
+};
+
 var gl = canvas.getContext("webgl");
 if (!gl) {
     alert("Unable to initialize WebGL");
@@ -248,10 +253,13 @@ fetch("gate_app.wasm").then(response =>
 ).then(results => {
   const mod = results.instance;
   Module.memory = mod.exports.memory;
+  Module.main = mod.exports.main;
   Module.gateWasmInit = mod.exports.gateWasmInit;
   Module.gateWasmOnResize = mod.exports.gateWasmOnResize;
   Module.gateWasmUpdateAndDraw = mod.exports.gateWasmUpdateAndDraw;
   Module.gateWasmKeyEvent = mod.exports.gateWasmKeyEvent;
+  Module.gateWasmMouseEvent = mod.exports.gateWasmMouseEvent;
+  Module.gateWasmMouseMotionEvent = mod.exports.gateWasmMouseMotionEvent;
   Module.gateWasmMusicCount = mod.exports.gateWasmMusicCount;
   Module.gateWasmSoundCount = mod.exports.gateWasmSoundCount;
   Module.gateWasmSpriteVertSrc = mod.exports.gateWasmSpriteVertSrc;
@@ -382,6 +390,7 @@ function initAudioArray (prefix, count, loop) {
 
 function tryStart () {
   if (Module.spriteAtlas && Module.tiledAtlas && Module.memory && Module.spriteTex && Module.tiledTex) {
+    Module.main();
     initSpriteProg();
     initTiledProg();
     initFromTiledProg();
@@ -400,6 +409,9 @@ function tryStart2 () {
     requestAnimationFrame(updateAndDraw);
     document.addEventListener('keydown', e => handleKeyEvent(e.key, true));
     document.addEventListener('keyup', e => handleKeyEvent(e.key, false));
+    document.addEventListener('mousedown', e => handleClickEvent(e, true));
+    document.addEventListener('mouseup', e => handleClickEvent(e, false));
+    document.addEventListener('mousemove', e => handleMouseMotionEvent(e));
   }
 }
 
@@ -414,6 +426,22 @@ function handleKeyEvent(codeStr, down) {
   if (code != undefined) {
     Module.gateWasmKeyEvent(code, down);
   }
+}
+
+function handleClickEvent(e, down) {
+  Module.gateWasmMouseEvent(
+    e.button,
+    e.clientX,
+    e.clientY,
+    down
+  );
+}
+
+function handleMouseMotionEvent(e) {
+  Module.gateWasmMouseMotionEvent(
+    e.clientX,
+    e.clientY
+  );
 }
 
 function resizeCanvas() {

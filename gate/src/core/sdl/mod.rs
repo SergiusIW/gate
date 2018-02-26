@@ -99,7 +99,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 
         let elapsed = clock.step();
 
-        if !event_handler.process_events(&mut app, &mut audio) { break }
+        if !event_handler.process_events(&mut app, &mut audio, &renderer) { break }
         if !app.advance(elapsed, &mut audio) { break; }
     }
 }

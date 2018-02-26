@@ -17,12 +17,18 @@
 #[cfg(target_arch = "wasm32")] use std::mem;
 
 /// Events related to a keyboard key.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub enum KeyEvent {
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum InputEvent {
     /// Key is pressed down.
-    Pressed,
+    KeyPressed(KeyCode),
     /// A pressed down key is released.
-    Released,
+    KeyReleased(KeyCode),
+    /// A mouse button is pressed down
+    MousePressed(MouseButton, f64, f64),
+    /// A pressed down mouse button is released
+    MouseReleased(MouseButton, f64, f64),
+    /// The mouse cursor has been moved
+    MouseMotion(f64, f64),
 }
 
 /// Enum for keyboard keys.
@@ -40,6 +46,23 @@ pub enum KeyCode {
 impl KeyCode {
     fn count() -> u8 { KeyCode::Space as u8 + 1 }
     pub(crate) fn from_u8(id: u8) -> Option<KeyCode> {
+        if id < Self::count() { Some(unsafe { mem::transmute(id) }) } else { None }
+    }
+}
+
+/// Enum for mouse buttons
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum MouseButton {
+    Left,
+    Middle,
+    Right,
+}
+
+#[cfg(target_arch = "wasm32")]
+impl MouseButton {
+    fn count() -> u8 { MouseButton::Right as u8 + 1 }
+    pub(crate) fn from_u8(id: u8) -> Option<MouseButton> {
         if id < Self::count() { Some(unsafe { mem::transmute(id) }) } else { None }
     }
 }
