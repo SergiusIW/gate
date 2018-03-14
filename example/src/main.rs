@@ -16,7 +16,7 @@ extern crate gate;
 
 use gate::{App, Audio};
 use gate::app_info::AppInfo;
-use gate::input::{KeyEvent, KeyCode};
+use gate::input::{InputEvent, KeyCode, MouseButton};
 use gate::renderer::{Renderer, Affine};
 
 mod asset_id { include!(concat!(env!("OUT_DIR"), "/asset_id.rs")); }
@@ -56,32 +56,34 @@ impl App<AssetId> for TowerGame {
         true // continue the game
     }
 
-    fn input(&mut self, evt: KeyEvent, key: KeyCode, audio: &mut Audio<AssetId>) -> bool {
-        if evt == KeyEvent::Pressed {
-            let index = match key {
-                KeyCode::Num1 => Some(0),
-                KeyCode::Num2 => Some(1),
-                KeyCode::Num3 => Some(2),
-                _ => None,
-            };
-            if let Some(index) = index {
-                let pillar = &mut self.pillars[index];
-                if let Some(held) = self.held.take() {
-                    if pillar.last().map_or(true, |&v| v > held.value) {
-                        pillar.push(held.value);
-                        audio.play_sound(SoundId::Shuffle);
-                    } else {
-                        self.held = Some(held);
-                        audio.play_sound(SoundId::Error);
-                    }
+    fn input(&mut self, evt: InputEvent, audio: &mut Audio<AssetId>) -> bool {
+        let index = match evt {
+            InputEvent::KeyPressed(KeyCode::Num1) => Some(0),
+            InputEvent::KeyPressed(KeyCode::Num2) => Some(1),
+            InputEvent::KeyPressed(KeyCode::Num3) => Some(2),
+            InputEvent::MouseReleased(MouseButton::Left, x, _) if x > -21. && x <= -7. => Some(0),
+            InputEvent::MouseReleased(MouseButton::Left, x, _) if x > -7. && x < 7. => Some(1),
+            InputEvent::MouseReleased(MouseButton::Left, x, _) if x >= 7. && x < 21. => Some(2),
+            _ => None,
+        };
+
+        if let Some(index) = index {
+            let pillar = &mut self.pillars[index];
+            if let Some(held) = self.held.take() {
+                if pillar.last().map_or(true, |&v| v > held.value) {
+                    pillar.push(held.value);
+                    audio.play_sound(SoundId::Shuffle);
                 } else {
-                    if let Some(value) = pillar.pop() {
-                        let pos = disc_pos(index, pillar.len());
-                        self.held = Some(HeldDisc { value, pos });
-                        audio.play_sound(SoundId::Shuffle);
-                    } else {
-                        audio.play_sound(SoundId::Error);
-                    }
+                    self.held = Some(held);
+                    audio.play_sound(SoundId::Error);
+                }
+            } else {
+                if let Some(value) = pillar.pop() {
+                    let pos = disc_pos(index, pillar.len());
+                    self.held = Some(HeldDisc { value, pos });
+                    audio.play_sound(SoundId::Shuffle);
+                } else {
+                    audio.play_sound(SoundId::Error);
                 }
             }
         }

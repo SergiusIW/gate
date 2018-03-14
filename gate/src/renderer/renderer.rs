@@ -72,6 +72,20 @@ impl<A: AppAssetId> Renderer<A> {
     /// Returns the app height, which is a constant specified in `AppInfo`.
     pub fn app_height(&self) -> f64 { self.b.dims.app_dims.1 }
 
+    pub fn window_dims_to_app_dims(&self, window_x: f64, window_y: f64) -> (f64, f64) {
+        let used_screen_width = self.b.dims.used_screen_dims.0 as f64;
+        let full_screen_width = self.b.dims.full_screen_dims.0 as f64;
+        let gutter_left = (full_screen_width - used_screen_width) / 2.;
+        let x = (window_x - gutter_left) * self.app_width() / used_screen_width - self.app_width() / 2.;
+        
+        let used_screen_height = self.b.dims.used_screen_dims.1 as f64;
+        let full_screen_height = self.b.dims.full_screen_dims.1 as f64;
+        let gutter_top = (full_screen_height - used_screen_height) / 2.;
+        let y = -((window_y - gutter_top) * self.app_height() / used_screen_height - self.app_height() / 2.);
+
+        (x, y)
+    }
+
     pub(crate) fn flush(&mut self) {
         self.b.flush(&mut self.c);
     }

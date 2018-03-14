@@ -69,7 +69,7 @@ use std::marker::PhantomData;
 
 use core::CoreAudio;
 use ::asset_id::{AppAssetId, IdU16};
-use ::input::{KeyEvent, KeyCode};
+use ::input::InputEvent;
 use ::renderer::Renderer;
 use ::app_info::AppInfo;
 
@@ -88,7 +88,7 @@ pub trait App<A: AppAssetId> {
     fn advance(&mut self, seconds: f64, audio: &mut Audio<A>) -> bool;
 
     /// Invoked when user input is received (currently only keyboard presses/releases).
-    fn input(&mut self, event: KeyEvent, key: KeyCode, audio: &mut Audio<A>) -> bool;
+    fn input(&mut self, event: InputEvent, audio: &mut Audio<A>) -> bool;
 
     /// Render the app in its current state.
     fn render(&mut self, renderer: &mut Renderer<A>);

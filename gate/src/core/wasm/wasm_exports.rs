@@ -17,7 +17,7 @@
 
 use std::os::raw::{c_int, c_char};
 
-use ::input::{KeyEvent, KeyCode};
+use ::input::{InputEvent, KeyCode, MouseButton};
 use ::renderer::shaders;
 use super::APP_RUNNER;
 
@@ -40,8 +40,22 @@ pub unsafe extern "C" fn gateWasmUpdateAndDraw(time_millis: f64) {
 pub unsafe extern "C" fn gateWasmKeyEvent(code: c_int, down: bool) {
     assert!(code >= 0 && code <= 255);
     let code = KeyCode::from_u8(code as u8).unwrap();
-    let event = if down { KeyEvent::Pressed } else { KeyEvent::Released };
-    APP_RUNNER.r.borrow_mut().input(event, code);
+    let event = if down { InputEvent::KeyPressed(code) } else { InputEvent::KeyReleased(code) };
+    APP_RUNNER.r.borrow_mut().input(event);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn gateWasmMouseEvent(button: c_int, x: c_int, y: c_int, down: bool) {
+    assert!(button >= 0 && button <= 2);
+    let button = MouseButton::from_u8(button as u8).unwrap();
+    let event = if down { InputEvent::MousePressed(button, x as f64, y as f64) } else { InputEvent::MouseReleased(button, x as f64, y as f64) };
+    APP_RUNNER.r.borrow_mut().input(event);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn gateWasmMouseMotionEvent(x: c_int, y: c_int) {
+    let event = InputEvent::MouseMotion(x as f64, y as f64);
+    APP_RUNNER.r.borrow_mut().input(event);
 }
 
 #[no_mangle]

@@ -17,30 +17,37 @@ use std::collections::HashSet;
 use sdl2::EventPump;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode as SdlKeyCode;
+use sdl2::mouse::MouseButton as SdlMouseButton;
 
 use ::App;
 use ::Audio;
 use ::asset_id::AppAssetId;
-use ::input::{KeyEvent, KeyCode};
+use ::input::{InputEvent, KeyCode, MouseButton};
+use ::renderer::Renderer;
 
 pub struct EventHandler {
     pump: EventPump,
     held_keys: HashSet<KeyCode>,
+    held_mouse: HashSet<MouseButton>
 }
 
 impl EventHandler {
     pub fn new(pump: EventPump) -> EventHandler {
-        EventHandler { pump, held_keys: HashSet::new() }
+        EventHandler {
+            pump,
+            held_keys: HashSet::new(),
+            held_mouse: HashSet::new(),
+        }
     }
 
-    pub fn process_events<AS: AppAssetId, AP: App<AS>>(&mut self, app: &mut AP, audio: &mut Audio<AS>) -> bool {
+    pub fn process_events<AS: AppAssetId, AP: App<AS>>(&mut self, app: &mut AP, audio: &mut Audio<AS>, renderer: &Renderer<AS>) -> bool {
         for event in self.pump.poll_iter() {
             match event {
                 Event::Quit { .. } => return false,
                 Event::KeyDown { keycode: Some(keycode), .. } => {
                     if let Some(keycode) = sdl_to_gate_key(keycode) {
                         if self.held_keys.insert(keycode) {
-                            let continuing = app.input(KeyEvent::Pressed, keycode, audio);
+                            let continuing = app.input(InputEvent::KeyPressed(keycode), audio);
                             if !continuing { return false }
                         }
                     }
@@ -48,10 +55,33 @@ impl EventHandler {
                 Event::KeyUp { keycode: Some(keycode), .. } => {
                     if let Some(keycode) = sdl_to_gate_key(keycode) {
                         if self.held_keys.remove(&keycode) {
-                            let continuing = app.input(KeyEvent::Released, keycode, audio);
+                            let continuing = app.input(InputEvent::KeyReleased(keycode), audio);
                             if !continuing { return false }
                         }
                     }
+                },
+                Event::MouseButtonDown { x, y, mouse_btn, ..} => {
+                    if let Some(btn) = sdl_to_gate_mouse_button(mouse_btn) {
+                        if self.held_mouse.insert(btn) {
+                            let (x, y) = renderer.window_dims_to_app_dims(x as f64, y as f64);
+                            let continuing = app.input(InputEvent::MousePressed(btn, x, y), audio);
+                            if !continuing { return false }
+                        }
+                    }
+                },
+                Event::MouseButtonUp { x, y, mouse_btn, ..} => {
+                    if let Some(btn) = sdl_to_gate_mouse_button(mouse_btn) {
+                        if self.held_mouse.remove(&btn) {
+                            let (x, y) = renderer.window_dims_to_app_dims(x as f64, y as f64);
+                            let continuing = app.input(InputEvent::MouseReleased(btn, x, y), audio);
+                            if !continuing { return false }
+                        }
+                    }
+                },
+                Event::MouseMotion { x, y, ..} => {
+                    let (x, y) = renderer.window_dims_to_app_dims(x as f64, y as f64);
+                    let continuing = app.input(InputEvent::MouseMotion(x, y), audio);
+                    if !continuing { return false }
                 },
                 _ => {},
             }
@@ -104,6 +134,15 @@ fn sdl_to_gate_key(sdl: SdlKeyCode) -> Option<KeyCode> {
         SdlKeyCode::Up => Some(KeyCode::Up),
         SdlKeyCode::Return => Some(KeyCode::Return),
         SdlKeyCode::Space => Some(KeyCode::Space),
+        _ => None,
+    }
+}
+
+fn sdl_to_gate_mouse_button(sdl: SdlMouseButton) -> Option<MouseButton> {
+    match sdl {
+        SdlMouseButton::Left => Some(MouseButton::Left),
+        SdlMouseButton::Middle => Some(MouseButton::Middle),
+        SdlMouseButton::Right => Some(MouseButton::Right),
         _ => None,
     }
 }
