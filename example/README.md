@@ -22,10 +22,14 @@ and place assets in the `assets/` directory, as specified by `build.rs`.
 
 Gate also allows building to the WebAssembly target.
 This build target does not require SDL2.
-Building to WebAssembly currently requires use of the nightly
-rust compiler, as well as adding a new compiler target
-(see <https://www.hellorust.com/setup/wasm-target/>).
-To build, run the command:
+Building to WebAssembly requires the `wasm32-unknown-unknown` compiler target,
+which can be added to rustup with the command:
+
+```
+rustup target add wasm32-unknown-unknown
+```
+
+To build this example, run the command:
 
 ```
 cargo build --release --target wasm32-unknown-unknown
@@ -49,3 +53,8 @@ opening the `html/index.html` file in a web browser.
 The web browser must have WebAssembly and WebGl support.
 Depending on the browser, it may not fetch the files correctly
 unless you spin up a local web server.
+
+Although the `wasm32-unknown-unknown` target is now part of the stable release
+channel, the target itself is not considered stable. This example is working for
+Stable Rust version 1.25.0. It may break in the future, requiring additional
+changes to the Gate library.
