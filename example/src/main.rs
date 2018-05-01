@@ -14,7 +14,7 @@
 
 extern crate gate;
 
-use gate::{App, Audio};
+use gate::{App, AppContext};
 use gate::app_info::AppInfo;
 use gate::input::{KeyEvent, KeyCode};
 use gate::renderer::{Renderer, Affine};
@@ -45,18 +45,17 @@ fn disc_pos(pillar_index: usize, height_index: usize) -> (f64, f64) {
 struct TowerGame { pillars: Vec<Vec<u8>>, held: Option<HeldDisc> }
 
 impl App<AssetId> for TowerGame {
-    fn start(&mut self, audio: &mut Audio<AssetId>) {
-        audio.loop_music(MusicId::Tick);
+    fn start(&mut self, ctx: &mut AppContext<AssetId>) {
+        ctx.loop_music(MusicId::Tick);
     }
 
-    fn advance(&mut self, seconds: f64, _audio: &mut Audio<AssetId>) -> bool {
+    fn advance(&mut self, seconds: f64, _ctx: &mut AppContext<AssetId>) {
         if let Some(held) = self.held.as_mut() {
             held.pos.1 = (held.pos.1 + seconds * 200.).min(35.);
         }
-        true // continue the game
     }
 
-    fn input(&mut self, evt: KeyEvent, key: KeyCode, audio: &mut Audio<AssetId>) -> bool {
+    fn input(&mut self, evt: KeyEvent, key: KeyCode, ctx: &mut AppContext<AssetId>) {
         if evt == KeyEvent::Pressed {
             let index = match key {
                 KeyCode::Num1 => Some(0),
@@ -69,23 +68,22 @@ impl App<AssetId> for TowerGame {
                 if let Some(held) = self.held.take() {
                     if pillar.last().map_or(true, |&v| v > held.value) {
                         pillar.push(held.value);
-                        audio.play_sound(SoundId::Shuffle);
+                        ctx.play_sound(SoundId::Shuffle);
                     } else {
                         self.held = Some(held);
-                        audio.play_sound(SoundId::Error);
+                        ctx.play_sound(SoundId::Error);
                     }
                 } else {
                     if let Some(value) = pillar.pop() {
                         let pos = disc_pos(index, pillar.len());
                         self.held = Some(HeldDisc { value, pos });
-                        audio.play_sound(SoundId::Shuffle);
+                        ctx.play_sound(SoundId::Shuffle);
                     } else {
-                        audio.play_sound(SoundId::Error);
+                        ctx.play_sound(SoundId::Error);
                     }
                 }
             }
         }
-        true // continue the game
     }
 
     fn render(&mut self, renderer: &mut Renderer<AssetId>) {

@@ -33,7 +33,7 @@ use sdl2::render::{Renderer as SdlRenderer};
 use gl;
 use gl::types::*;
 
-use ::{Audio, App};
+use ::{AppContext, App};
 use app_info::AppInfo;
 use renderer::Renderer;
 use renderer::core_renderer::CoreRenderer;
@@ -74,11 +74,11 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 
     gl_error_check();
 
-    let mut audio = Audio::new(CoreAudio::new(AS::Sound::count()));
+    let mut ctx = AppContext::new(CoreAudio::new(AS::Sound::count()));
 
     if info.print_gl_info { print_gl_info(); }
 
-    app.start(&mut audio);
+    app.start(&mut ctx);
 
     let mut clock = AppClock::new(timer, &info);
 
@@ -99,8 +99,10 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 
         let elapsed = clock.step();
 
-        if !event_handler.process_events(&mut app, &mut audio) { break }
-        if !app.advance(elapsed, &mut audio) { break; }
+        event_handler.process_events(&mut app, &mut ctx);
+        if ctx.close_requested { break; }
+        app.advance(elapsed, &mut ctx);
+        if ctx.close_requested { break; }
     }
 }
 

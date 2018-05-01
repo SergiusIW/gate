@@ -19,7 +19,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode as SdlKeyCode;
 
 use ::App;
-use ::Audio;
+use ::AppContext;
 use ::asset_id::AppAssetId;
 use ::input::{KeyEvent, KeyCode};
 
@@ -33,30 +33,28 @@ impl EventHandler {
         EventHandler { pump, held_keys: HashSet::new() }
     }
 
-    pub fn process_events<AS: AppAssetId, AP: App<AS>>(&mut self, app: &mut AP, audio: &mut Audio<AS>) -> bool {
+    pub fn process_events<AS: AppAssetId, AP: App<AS>>(&mut self, app: &mut AP, ctx: &mut AppContext<AS>) {
         for event in self.pump.poll_iter() {
             match event {
-                Event::Quit { .. } => return false,
+                Event::Quit { .. } => ctx.close(),
                 Event::KeyDown { keycode: Some(keycode), .. } => {
                     if let Some(keycode) = sdl_to_gate_key(keycode) {
                         if self.held_keys.insert(keycode) {
-                            let continuing = app.input(KeyEvent::Pressed, keycode, audio);
-                            if !continuing { return false }
+                            app.input(KeyEvent::Pressed, keycode, ctx);
                         }
                     }
                 },
                 Event::KeyUp { keycode: Some(keycode), .. } => {
                     if let Some(keycode) = sdl_to_gate_key(keycode) {
                         if self.held_keys.remove(&keycode) {
-                            let continuing = app.input(KeyEvent::Released, keycode, audio);
-                            if !continuing { return false }
+                            app.input(KeyEvent::Released, keycode, ctx);
                         }
                     }
                 },
                 _ => {},
             }
+            if ctx.close_requested { break; }
         }
-        true
     }
 }
 

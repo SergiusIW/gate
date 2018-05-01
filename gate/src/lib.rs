@@ -82,23 +82,28 @@ pub fn run<AS: 'static + AppAssetId, AP: 'static + App<AS>>(info: AppInfo, app: 
 /// Trait that a user can implement to specify application behavior, passed into `gate::run(...)`.
 pub trait App<A: AppAssetId> {
     /// Invoked when the application is first started, default behavior is a no-op.
-    fn start(&mut self, _audio: &mut Audio<A>) {}
+    fn start(&mut self, _ctx: &mut AppContext<A>) {}
 
     /// Advances the app state by a given amount of `seconds` (usually a fraction of a second).
-    fn advance(&mut self, seconds: f64, audio: &mut Audio<A>) -> bool;
+    fn advance(&mut self, seconds: f64, ctx: &mut AppContext<A>);
 
     /// Invoked when user input is received (currently only keyboard presses/releases).
-    fn input(&mut self, event: KeyEvent, key: KeyCode, audio: &mut Audio<A>) -> bool;
+    fn input(&mut self, event: KeyEvent, key: KeyCode, ctx: &mut AppContext<A>);
 
     /// Render the app in its current state.
     fn render(&mut self, renderer: &mut Renderer<A>);
 }
 
-/// Struct for audio playback.
-pub struct Audio<A: AppAssetId> { core: CoreAudio, phantom: PhantomData<A> }
+pub struct AppContext<A: AppAssetId> { core: CoreAudio, close_requested: bool, phantom: PhantomData<A> }
 
-impl<A: AppAssetId> Audio<A> {
-    pub(crate) fn new(core: CoreAudio) -> Audio<A> { Audio { core, phantom: PhantomData } }
+impl<A: AppAssetId> AppContext<A> {
+    pub(crate) fn new(audio: CoreAudio) -> AppContext<A> {
+        AppContext {
+            core: audio,
+            close_requested: false,
+            phantom: PhantomData,
+        }
+    }
 
     /// Plays the given sound effect once.
     pub fn play_sound(&mut self, sound: A::Sound) { self.core.play_sound(sound.id_u16()); }
@@ -108,4 +113,6 @@ impl<A: AppAssetId> Audio<A> {
 
     /// Stops the currently playing music, if any.
     pub fn stop_music(&mut self) { self.core.stop_music(); }
+
+    pub fn close(&mut self) { self.close_requested = true; }
 }

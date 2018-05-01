@@ -21,7 +21,7 @@ use std::mem;
 use std::io::Cursor;
 use std::os::raw::c_int;
 
-use ::{App, Audio};
+use ::{App, AppContext};
 use ::asset_id::{AppAssetId, IdU16};
 use ::renderer::Renderer;
 use ::app_info::AppInfo;
@@ -113,8 +113,8 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         let core_renderer = CoreRenderer::new(&render_buffer);
         self.renderer = Some(Renderer::<AS>::new(render_buffer, core_renderer));
 
-        let mut audio = Audio::new(CoreAudio { });
-        self.app.start(&mut audio);
+        let mut ctx = AppContext::new(CoreAudio { });
+        self.app.start(&mut ctx);
     }
 
     fn resize(&mut self, dims: (u32, u32)) {
@@ -122,10 +122,10 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
     }
 
     fn update_and_draw(&mut self, time_sec: f64) {
-        let mut audio = Audio::new(CoreAudio { });
+        let mut ctx = AppContext::new(CoreAudio { });
         let elapsed = self.last_time_sec.map(|x| time_sec - x).unwrap_or(0.0).max(0.0).min(0.1);
         if elapsed > 0.0 {
-            self.app.advance(elapsed, &mut audio);
+            self.app.advance(elapsed, &mut ctx);
         }
         self.last_time_sec = Some(time_sec);
 
@@ -134,14 +134,14 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
     }
 
     fn input(&mut self, event: KeyEvent, key: KeyCode) {
-        let mut audio = Audio::new(CoreAudio { });
+        let mut ctx = AppContext::new(CoreAudio { });
         let success = if event == KeyEvent::Pressed {
             self.held_keys.insert(key)
         } else {
             self.held_keys.remove(&key)
         };
         if success {
-            self.app.input(event, key, &mut audio);
+            self.app.input(event, key, &mut ctx);
         }
     }
 
