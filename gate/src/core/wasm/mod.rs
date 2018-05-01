@@ -16,7 +16,7 @@ pub mod wasm_imports;
 pub mod wasm_exports;
 
 use std::collections::HashSet;
-use std::cell::RefCell;
+use std::cell::{self, RefCell};
 use std::mem;
 use std::io::Cursor;
 use std::os::raw::c_int;
@@ -61,17 +61,7 @@ trait TraitAppRunner {
     fn sound_count(&self) -> u16;
 }
 
-struct DefaultAppRunner;
-impl TraitAppRunner for DefaultAppRunner {
-    fn init(&mut self) { panic!("gate::run(...) was not invoked") }
-    fn resize(&mut self, _dims: (u32, u32)) { panic!("gate::run(...) was not invoked") }
-    fn update_and_draw(&mut self, _time_sec: f64) { panic!("gate::run(...) was not invoked") }
-    fn input(&mut self, _event: KeyEvent, _key: KeyCode) { panic!("gate::run(...) was not invoked") }
-    fn music_count(&self) -> u16 { panic!("gate::run(...) was not invoked") }
-    fn sound_count(&self) -> u16 { panic!("gate::run(...) was not invoked") }
-}
-
-struct StaticAppRunner { r: RefCell<Box<TraitAppRunner>> }
+struct StaticAppRunner { r: RefCell<Option<Box<TraitAppRunner>>> }
 
 // NOTE: StaticAppRunner is not really safe to access concurrently, this was just the easiest way
 //       I could find to make it a static variable without artifically requiring `App` to
@@ -79,7 +69,19 @@ struct StaticAppRunner { r: RefCell<Box<TraitAppRunner>> }
 unsafe impl Sync for StaticAppRunner {}
 
 lazy_static! {
-    static ref APP_RUNNER: StaticAppRunner = StaticAppRunner { r: RefCell::new(Box::new(DefaultAppRunner {})) };
+    static ref APP_RUNNER: StaticAppRunner = StaticAppRunner { r: RefCell::new(None) };
+}
+
+fn app_runner_is_defined() -> bool {
+    APP_RUNNER.r.borrow().is_some()
+}
+
+fn app_runner_borrow_mut() -> cell::RefMut<'static, TraitAppRunner> {
+    cell::RefMut::map(APP_RUNNER.r.borrow_mut(), |x| &mut **x.as_mut().unwrap())
+}
+
+fn app_runner_borrow() -> cell::Ref<'static, TraitAppRunner> {
+    cell::Ref::map(APP_RUNNER.r.borrow(), |x| &**x.as_ref().unwrap())
 }
 
 struct AppRunner<AS: AppAssetId, AP: App<AS>> {
@@ -149,10 +151,10 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
 
 pub fn run<AS: 'static + AppAssetId, AP: 'static + App<AS>>(info: AppInfo, app: AP) {
     mark_app_created_flag();
-    *APP_RUNNER.r.borrow_mut() = Box::new(AppRunner {
+    *APP_RUNNER.r.borrow_mut() = Some(Box::new(AppRunner {
         app, info,
         renderer: None,
         last_time_sec: None,
         held_keys: HashSet::new(),
-    });
+    }));
 }

@@ -248,6 +248,8 @@ fetch("gate_app.wasm").then(response =>
 ).then(results => {
   const mod = results.instance;
   Module.memory = mod.exports.memory;
+  Module.main = mod.exports.main;
+  Module.gateWasmIsAppDefined = mod.exports.gateWasmIsAppDefined;
   Module.gateWasmInit = mod.exports.gateWasmInit;
   Module.gateWasmOnResize = mod.exports.gateWasmOnResize;
   Module.gateWasmUpdateAndDraw = mod.exports.gateWasmUpdateAndDraw;
@@ -382,6 +384,13 @@ function initAudioArray (prefix, count, loop) {
 
 function tryStart () {
   if (Module.spriteAtlas && Module.tiledAtlas && Module.memory && Module.spriteTex && Module.tiledTex) {
+    if (!Module.gateWasmIsAppDefined()) {
+      Module.main();
+      if (!Module.gateWasmIsAppDefined()) {
+        alert("gate::run(...) was not invoked in main");
+        throw "gate::run(...) was not invoked in main";
+      }
+    }
     initSpriteProg();
     initTiledProg();
     initFromTiledProg();

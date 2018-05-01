@@ -19,21 +19,21 @@ use std::os::raw::{c_int, c_char};
 
 use ::input::{KeyEvent, KeyCode};
 use ::renderer::shaders;
-use super::APP_RUNNER;
+use super::{app_runner_is_defined, app_runner_borrow, app_runner_borrow_mut};
 
 #[no_mangle]
 pub unsafe extern "C" fn gateWasmInit() {
-    APP_RUNNER.r.borrow_mut().init();
+    app_runner_borrow_mut().init();
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn gateWasmOnResize(w: c_int, h: c_int) {
-    APP_RUNNER.r.borrow_mut().resize((w as u32, h as u32));
+    app_runner_borrow_mut().resize((w as u32, h as u32));
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn gateWasmUpdateAndDraw(time_millis: f64) {
-    APP_RUNNER.r.borrow_mut().update_and_draw(time_millis / 1000.0);
+    app_runner_borrow_mut().update_and_draw(time_millis / 1000.0);
 }
 
 #[no_mangle]
@@ -41,17 +41,22 @@ pub unsafe extern "C" fn gateWasmKeyEvent(code: c_int, down: bool) {
     assert!(code >= 0 && code <= 255);
     let code = KeyCode::from_u8(code as u8).unwrap();
     let event = if down { KeyEvent::Pressed } else { KeyEvent::Released };
-    APP_RUNNER.r.borrow_mut().input(event, code);
+    app_runner_borrow_mut().input(event, code);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn gateWasmIsAppDefined() -> c_int {
+    if app_runner_is_defined() { 1 } else { 0 }
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn gateWasmMusicCount() -> c_int {
-    APP_RUNNER.r.borrow().music_count() as c_int
+    app_runner_borrow().music_count() as c_int
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn gateWasmSoundCount() -> c_int {
-    APP_RUNNER.r.borrow().sound_count() as c_int
+    app_runner_borrow().sound_count() as c_int
 }
 
 #[no_mangle]
