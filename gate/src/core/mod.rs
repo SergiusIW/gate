@@ -26,9 +26,7 @@ pub use self::wasm::*;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 
-lazy_static! {
-    static ref APP_CREATED: AtomicBool = AtomicBool::new(false);
-}
+static APP_CREATED: AtomicBool = AtomicBool::new(false);
 
 fn mark_app_created_flag() {
     let previously_created = APP_CREATED.swap(true, Ordering::Relaxed);

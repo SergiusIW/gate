@@ -10,7 +10,6 @@ keywords = ["2D", "game"]
 license = "Apache-2.0"
 
 [dependencies]
-lazy_static = "0.2.8"
 byteorder = "1.1.0"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

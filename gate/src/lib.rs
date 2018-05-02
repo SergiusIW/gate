@@ -54,7 +54,6 @@
 
 #[cfg(not(target_arch = "wasm32"))] extern crate sdl2;
 #[cfg(not(target_arch = "wasm32"))] extern crate gl;
-#[macro_use] extern crate lazy_static;
 extern crate byteorder;
 
 pub mod asset_id;

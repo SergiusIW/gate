@@ -68,9 +68,7 @@ struct StaticAppRunner { r: RefCell<Option<Box<TraitAppRunner>>> }
 //       implement `Send`. Do not access concurrently.
 unsafe impl Sync for StaticAppRunner {}
 
-lazy_static! {
-    static ref APP_RUNNER: StaticAppRunner = StaticAppRunner { r: RefCell::new(None) };
-}
+static APP_RUNNER: StaticAppRunner = StaticAppRunner { r: RefCell::new(None) };
 
 fn app_runner_is_defined() -> bool {
     APP_RUNNER.r.borrow().is_some()
