@@ -93,17 +93,23 @@ pub trait App<A: AppAssetId> {
     fn render(&mut self, renderer: &mut Renderer<A>);
 }
 
-pub struct AppContext<A: AppAssetId> { core: CoreAudio, close_requested: bool, phantom: PhantomData<A> }
+pub struct AppContext<A: AppAssetId> { pub audio: Audio<A>, close_requested: bool }
 
 impl<A: AppAssetId> AppContext<A> {
     pub(crate) fn new(audio: CoreAudio) -> AppContext<A> {
         AppContext {
-            core: audio,
+            audio: Audio { core: audio, phantom: PhantomData },
             close_requested: false,
-            phantom: PhantomData,
         }
     }
 
+    pub fn close(&mut self) { self.close_requested = true; }
+}
+
+/// Struct for audio playback.
+pub struct Audio<A: AppAssetId> { core: CoreAudio, phantom: PhantomData<A> }
+
+impl<A: AppAssetId> Audio<A> {
     /// Plays the given sound effect once.
     pub fn play_sound(&mut self, sound: A::Sound) { self.core.play_sound(sound.id_u16()); }
 
@@ -112,6 +118,4 @@ impl<A: AppAssetId> AppContext<A> {
 
     /// Stops the currently playing music, if any.
     pub fn stop_music(&mut self) { self.core.stop_music(); }
-
-    pub fn close(&mut self) { self.close_requested = true; }
 }
