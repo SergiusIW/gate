@@ -65,12 +65,7 @@ impl<A: AppAssetId> Renderer<A> {
         TiledRenderer { r: self, camera: (camera_x, camera_y) }
     }
 
-    /// Returns the app width, which is restricted by the app height and the aspect ratio range
-    /// specified in `AppInfo`.
-    pub fn app_width(&self) -> f64 { self.b.dims.app_dims.0 }
-
-    /// Returns the app height, which is a constant specified in `AppInfo`.
-    pub fn app_height(&self) -> f64 { self.b.dims.app_dims.1 }
+    pub fn app_dims(&self) -> (f64, f64) { self.b.dims.app_dims }
 
     pub(crate) fn flush(&mut self) {
         self.b.flush(&mut self.c);

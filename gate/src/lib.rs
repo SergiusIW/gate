@@ -93,15 +93,18 @@ pub trait App<A: AppAssetId> {
     fn render(&mut self, renderer: &mut Renderer<A>);
 }
 
-pub struct AppContext<A: AppAssetId> { pub audio: Audio<A>, close_requested: bool }
+pub struct AppContext<A: AppAssetId> { pub audio: Audio<A>, dims: (f64, f64), close_requested: bool }
 
 impl<A: AppAssetId> AppContext<A> {
-    pub(crate) fn new(audio: CoreAudio) -> AppContext<A> {
+    pub(crate) fn new(audio: CoreAudio, dims: (f64, f64)) -> AppContext<A> {
         AppContext {
             audio: Audio { core: audio, phantom: PhantomData },
+            dims,
             close_requested: false,
         }
     }
+
+    pub fn dims(&self) -> (f64, f64) { self.dims }
 
     pub fn close(&mut self) { self.close_requested = true; }
 }

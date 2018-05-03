@@ -74,7 +74,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 
     gl_error_check();
 
-    let mut ctx = AppContext::new(CoreAudio::new(AS::Sound::count()));
+    let mut ctx = AppContext::new(CoreAudio::new(AS::Sound::count()), renderer.app_dims());
 
     if info.print_gl_info { print_gl_info(); }
 
@@ -91,6 +91,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
         let screen_dims = sdl_renderer.window().unwrap().size();
         if screen_dims.0 >= MIN_WINDOW_SIZE && screen_dims.1 >= MIN_WINDOW_SIZE {
             renderer.set_screen_dims(screen_dims);
+            ctx.dims = renderer.app_dims();
             app.render(&mut renderer);
             renderer.flush();
         }
