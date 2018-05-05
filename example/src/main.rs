@@ -42,6 +42,13 @@ fn disc_pos(pillar_index: usize, height_index: usize) -> (f64, f64) {
     (-27. + pillar_index as f64 * 27., 2.5 + height_index as f64 * 5.)
 }
 
+fn pillar_for_cursor(cursor: (f64, f64)) -> Option<usize> {
+    (0..3).find(|&idx| {
+        let cursor_x = cursor.0 + 13.5 - (13.5 * idx as f64);
+        cursor_x > -6. && cursor_x < 6. && cursor.1 > -5.5 && cursor.1 < 9.
+    })
+}
+
 struct TowerGame { pillars: Vec<Vec<u8>>, held: Option<HeldDisc> }
 
 impl App<AssetId> for TowerGame {
@@ -61,6 +68,7 @@ impl App<AssetId> for TowerGame {
                 KeyCode::Num1 => Some(0),
                 KeyCode::Num2 => Some(1),
                 KeyCode::Num3 => Some(2),
+                KeyCode::MouseLeft => pillar_for_cursor(ctx.cursor()),
                 _ => None,
             };
             if let Some(index) = index {
