@@ -55,7 +55,7 @@ impl CoreAudio {
 trait TraitAppRunner {
     fn init(&mut self);
     fn resize(&mut self, dims: (u32, u32));
-    fn update_and_draw(&mut self, time_sec: f64);
+    fn update_and_draw(&mut self, time_sec: f64, cursor_x: i32, cursor_y: i32);
     fn input(&mut self, event: KeyEvent, key: KeyCode);
     fn music_count(&self) -> u16;
     fn sound_count(&self) -> u16;
@@ -86,6 +86,7 @@ struct AppRunner<AS: AppAssetId, AP: App<AS>> {
     app: AP,
     info: AppInfo,
     renderer: Option<Renderer<AS>>,
+    ctx: AppContext<AS>,
     last_time_sec: Option<f64>,
     held_keys: HashSet<KeyCode>,
 }
@@ -111,35 +112,35 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         let core_renderer = CoreRenderer::new(&render_buffer);
         self.renderer = Some(Renderer::<AS>::new(render_buffer, core_renderer));
 
-        let mut ctx = AppContext::new(CoreAudio { }, self.renderer.as_ref().unwrap().app_dims());
-        self.app.start(&mut ctx);
+        self.ctx.dims = self.renderer.as_ref().unwrap().app_dims();
+        self.app.start(&mut self.ctx);
     }
 
     fn resize(&mut self, dims: (u32, u32)) {
         self.renderer.as_mut().unwrap().set_screen_dims(dims);
+        self.ctx.dims = self.renderer.as_ref().unwrap().app_dims();
     }
 
-    fn update_and_draw(&mut self, time_sec: f64) {
-        let mut ctx = AppContext::new(CoreAudio { }, self.renderer.as_ref().unwrap().app_dims());
+    fn update_and_draw(&mut self, time_sec: f64, cursor_x: i32, cursor_y: i32) {
+        self.ctx.cursor = self.renderer.as_ref().unwrap().to_app_pos(cursor_x, cursor_y);
         let elapsed = self.last_time_sec.map(|x| time_sec - x).unwrap_or(0.0).max(0.0).min(0.1);
         if elapsed > 0.0 {
-            self.app.advance(elapsed, &mut ctx);
+            self.app.advance(elapsed, &mut self.ctx);
         }
         self.last_time_sec = Some(time_sec);
 
-        self.app.render(self.renderer.as_mut().unwrap());
+        self.app.render(self.renderer.as_mut().unwrap(), &self.ctx);
         self.renderer.as_mut().unwrap().flush();
     }
 
     fn input(&mut self, event: KeyEvent, key: KeyCode) {
-        let mut ctx = AppContext::new(CoreAudio { }, self.renderer.as_ref().unwrap().app_dims());
         let success = if event == KeyEvent::Pressed {
             self.held_keys.insert(key)
         } else {
             self.held_keys.remove(&key)
         };
         if success {
-            self.app.input(event, key, &mut ctx);
+            self.app.input(event, key, &mut self.ctx);
         }
     }
 
@@ -151,6 +152,7 @@ pub fn run<AS: 'static + AppAssetId, AP: 'static + App<AS>>(info: AppInfo, app: 
     mark_app_created_flag();
     *APP_RUNNER.r.borrow_mut() = Some(Box::new(AppRunner {
         app, info,
+        ctx: AppContext::new(CoreAudio { }, (0., 0.)),
         renderer: None,
         last_time_sec: None,
         held_keys: HashSet::new(),

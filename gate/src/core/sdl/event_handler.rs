@@ -18,10 +18,10 @@ use sdl2::EventPump;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode as SdlKeyCode;
 
-use ::App;
-use ::AppContext;
-use ::asset_id::AppAssetId;
-use ::input::{KeyEvent, KeyCode};
+use ::{App, AppContext};
+use asset_id::AppAssetId;
+use input::{KeyEvent, KeyCode};
+use renderer::Renderer;
 
 pub struct EventHandler {
     pump: EventPump,
@@ -33,7 +33,8 @@ impl EventHandler {
         EventHandler { pump, held_keys: HashSet::new() }
     }
 
-    pub fn process_events<AS: AppAssetId, AP: App<AS>>(&mut self, app: &mut AP, ctx: &mut AppContext<AS>) {
+    pub fn process_events<AS: AppAssetId, AP: App<AS>>(&mut self, app: &mut AP, ctx: &mut AppContext<AS>,
+                                                       renderer: &Renderer<AS>) {
         for event in self.pump.poll_iter() {
             match event {
                 Event::Quit { .. } => ctx.close(),
@@ -51,6 +52,7 @@ impl EventHandler {
                         }
                     }
                 },
+                Event::MouseMotion { x, y, .. } => ctx.cursor = renderer.to_app_pos(x, y),
                 _ => {},
             }
             if ctx.close_requested { break; }

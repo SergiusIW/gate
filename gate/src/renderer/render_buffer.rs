@@ -32,13 +32,13 @@ impl Mode {
 }
 
 pub(super) struct RenderDims {
-    pub(super) min_aspect_ratio: f64,
-    pub(super) max_aspect_ratio: f64,
-    pub(super) app_dims: (f64, f64),
-    pub(super) full_screen_dims: (u32, u32),
-    pub(super) tiled_fbo_dims: (u32, u32),
-    pub(super) used_screen_dims: (u32, u32),
-    pub(super) app_pixel_scalar: f64,
+    pub min_aspect_ratio: f64,
+    pub max_aspect_ratio: f64,
+    pub app_dims: (f64, f64),
+    pub full_screen_dims: (u32, u32),
+    pub tiled_fbo_dims: (u32, u32),
+    pub used_screen_dims: (u32, u32),
+    pub app_pixel_scalar: f64,
 }
 
 impl RenderDims {
@@ -68,8 +68,15 @@ impl RenderDims {
         }
     }
 
-    pub(super) fn set_full_screen_dims(&mut self, screen_dims: (u32, u32)) {
+    pub fn set_full_screen_dims(&mut self, screen_dims: (u32, u32)) {
         *self = RenderDims::new(self.min_aspect_ratio, self.max_aspect_ratio, self.app_dims.1, screen_dims);
+    }
+
+    pub fn to_app_pos(&self, raw_x: i32, raw_y: i32) -> (f64, f64) {
+        let x = (raw_x as f64 - 0.5 * self.full_screen_dims.0 as f64) / self.app_pixel_scalar;
+        let y = -(raw_y as f64 - 0.5 * self.full_screen_dims.1 as f64) / self.app_pixel_scalar;
+        let (half_width, half_height) = (self.app_dims.0 * 0.5, self.app_dims.1 * 0.5);
+        (x.max(-half_width).min(half_width), y.max(-half_height).min(half_height))
     }
 }
 

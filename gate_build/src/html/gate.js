@@ -53,6 +53,8 @@ gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 var vbo = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
 
+var cursorPos = { x: 0, y: 0 };
+
 var Module = {};
 Module.loadingAudioCount = 0;
 
@@ -409,12 +411,13 @@ function tryStart2 () {
     requestAnimationFrame(updateAndDraw);
     document.addEventListener('keydown', e => handleKeyEvent(e.key, true));
     document.addEventListener('keyup', e => handleKeyEvent(e.key, false));
+    document.addEventListener('mousemove', e => handleMouseMotionEvent(e));
   }
 }
 
 function updateAndDraw(now) {
   resizeCanvas();
-  Module.gateWasmUpdateAndDraw(now);
+  Module.gateWasmUpdateAndDraw(now, cursorPos.x, cursorPos.y);
   requestAnimationFrame(updateAndDraw);
 }
 
@@ -423,6 +426,11 @@ function handleKeyEvent(codeStr, down) {
   if (code != undefined) {
     Module.gateWasmKeyEvent(code, down);
   }
+}
+
+function handleMouseMotionEvent(evt) {
+  cursorPos.x = evt.clientX;
+  cursorPos.y = evt.clientY;
 }
 
 function resizeCanvas() {

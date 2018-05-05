@@ -86,7 +86,7 @@ impl App<AssetId> for TowerGame {
         }
     }
 
-    fn render(&mut self, renderer: &mut Renderer<AssetId>) {
+    fn render(&mut self, renderer: &mut Renderer<AssetId>, _ctx: &AppContext<AssetId>) {
         let (app_width, app_height) = renderer.app_dims();
         { // drawing tiles
             let mut renderer = renderer.tiled_mode(0.5 * app_width, 0.5 * app_height);

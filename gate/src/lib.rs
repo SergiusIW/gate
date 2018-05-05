@@ -90,19 +90,27 @@ pub trait App<A: AppAssetId> {
     fn input(&mut self, event: KeyEvent, key: KeyCode, ctx: &mut AppContext<A>);
 
     /// Render the app in its current state.
-    fn render(&mut self, renderer: &mut Renderer<A>);
+    fn render(&mut self, renderer: &mut Renderer<A>, ctx: &AppContext<A>);
 }
 
-pub struct AppContext<A: AppAssetId> { pub audio: Audio<A>, dims: (f64, f64), close_requested: bool }
+pub struct AppContext<A: AppAssetId> {
+    pub audio: Audio<A>,
+    dims: (f64, f64),
+    cursor: (f64, f64),
+    close_requested: bool,
+}
 
 impl<A: AppAssetId> AppContext<A> {
     pub(crate) fn new(audio: CoreAudio, dims: (f64, f64)) -> AppContext<A> {
         AppContext {
             audio: Audio { core: audio, phantom: PhantomData },
             dims,
+            cursor: (0., 0.),
             close_requested: false,
         }
     }
+
+    pub fn cursor(&self) -> (f64, f64) { self.cursor }
 
     pub fn dims(&self) -> (f64, f64) { self.dims }
 

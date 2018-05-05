@@ -92,7 +92,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
         if screen_dims.0 >= MIN_WINDOW_SIZE && screen_dims.1 >= MIN_WINDOW_SIZE {
             renderer.set_screen_dims(screen_dims);
             ctx.dims = renderer.app_dims();
-            app.render(&mut renderer);
+            app.render(&mut renderer, &ctx);
             renderer.flush();
         }
         sdl_renderer.present();
@@ -100,7 +100,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 
         let elapsed = clock.step();
 
-        event_handler.process_events(&mut app, &mut ctx);
+        event_handler.process_events(&mut app, &mut ctx, &renderer);
         if ctx.close_requested { break; }
         app.advance(elapsed, &mut ctx);
         if ctx.close_requested { break; }

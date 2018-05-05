@@ -32,8 +32,8 @@ pub unsafe extern "C" fn gateWasmOnResize(w: c_int, h: c_int) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn gateWasmUpdateAndDraw(time_millis: f64) {
-    app_runner_borrow_mut().update_and_draw(time_millis / 1000.0);
+pub unsafe extern "C" fn gateWasmUpdateAndDraw(time_millis: f64, cursor_x: c_int, cursor_y: c_int) {
+    app_runner_borrow_mut().update_and_draw(time_millis / 1000.0, cursor_x as i32, cursor_y as i32);
 }
 
 #[no_mangle]
