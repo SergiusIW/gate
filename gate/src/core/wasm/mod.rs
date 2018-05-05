@@ -55,7 +55,8 @@ impl CoreAudio {
 trait TraitAppRunner {
     fn init(&mut self);
     fn resize(&mut self, dims: (u32, u32));
-    fn update_and_draw(&mut self, time_sec: f64, cursor_x: i32, cursor_y: i32);
+    fn update_and_draw(&mut self, time_sec: f64);
+    fn update_cursor(&mut self, cursor_x: i32, cursor_y: i32);
     fn input(&mut self, event: KeyEvent, key: KeyCode);
     fn music_count(&self) -> u16;
     fn sound_count(&self) -> u16;
@@ -121,8 +122,7 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         self.ctx.dims = self.renderer.as_ref().unwrap().app_dims();
     }
 
-    fn update_and_draw(&mut self, time_sec: f64, cursor_x: i32, cursor_y: i32) {
-        self.ctx.cursor = self.renderer.as_ref().unwrap().to_app_pos(cursor_x, cursor_y);
+    fn update_and_draw(&mut self, time_sec: f64) {
         let elapsed = self.last_time_sec.map(|x| time_sec - x).unwrap_or(0.0).max(0.0).min(0.1);
         if elapsed > 0.0 {
             self.app.advance(elapsed, &mut self.ctx);
@@ -131,6 +131,10 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
 
         self.app.render(self.renderer.as_mut().unwrap(), &self.ctx);
         self.renderer.as_mut().unwrap().flush();
+    }
+
+    fn update_cursor(&mut self, cursor_x: i32, cursor_y: i32) {
+        self.ctx.cursor = self.renderer.as_ref().unwrap().to_app_pos(cursor_x, cursor_y);
     }
 
     fn input(&mut self, event: KeyEvent, key: KeyCode) {

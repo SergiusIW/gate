@@ -256,6 +256,7 @@ fetch("gate_app.wasm").then(response =>
   Module.gateWasmOnResize = mod.exports.gateWasmOnResize;
   Module.gateWasmUpdateAndDraw = mod.exports.gateWasmUpdateAndDraw;
   Module.gateWasmKeyEvent = mod.exports.gateWasmKeyEvent;
+  Module.gateWasmMouseEvent = mod.exports.gateWasmMouseEvent;
   Module.gateWasmMusicCount = mod.exports.gateWasmMusicCount;
   Module.gateWasmSoundCount = mod.exports.gateWasmSoundCount;
   Module.gateWasmSpriteVertSrc = mod.exports.gateWasmSpriteVertSrc;
@@ -411,7 +412,9 @@ function tryStart2 () {
     requestAnimationFrame(updateAndDraw);
     document.addEventListener('keydown', e => handleKeyEvent(e.key, true));
     document.addEventListener('keyup', e => handleKeyEvent(e.key, false));
-    document.addEventListener('mousemove', e => handleMouseMotionEvent(e));
+    document.addEventListener('mousemove', e => handleMouseMotion(e));
+    document.addEventListener('mousedown', e => handleMouseEvent(e, true));
+    document.addEventListener('mouseup', e => handleMouseEvent(e, false));
   }
 }
 
@@ -428,9 +431,15 @@ function handleKeyEvent(codeStr, down) {
   }
 }
 
-function handleMouseMotionEvent(evt) {
+function handleMouseMotion(evt) {
   cursorPos.x = evt.clientX;
   cursorPos.y = evt.clientY;
+}
+
+function handleMouseEvent(evt, down) {
+  cursorPos.x = evt.clientX;
+  cursorPos.y = evt.clientY;
+  Module.gateWasmMouseEvent(cursorPos.x, cursorPos.y, evt.button, down)
 }
 
 function resizeCanvas() {

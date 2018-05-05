@@ -33,7 +33,8 @@ pub unsafe extern "C" fn gateWasmOnResize(w: c_int, h: c_int) {
 
 #[no_mangle]
 pub unsafe extern "C" fn gateWasmUpdateAndDraw(time_millis: f64, cursor_x: c_int, cursor_y: c_int) {
-    app_runner_borrow_mut().update_and_draw(time_millis / 1000.0, cursor_x as i32, cursor_y as i32);
+    app_runner_borrow_mut().update_cursor(cursor_x as i32, cursor_y as i32);
+    app_runner_borrow_mut().update_and_draw(time_millis / 1000.0);
 }
 
 #[no_mangle]
@@ -42,6 +43,21 @@ pub unsafe extern "C" fn gateWasmKeyEvent(code: c_int, down: bool) {
     let code = KeyCode::from_u8(code as u8).unwrap();
     let event = if down { KeyEvent::Pressed } else { KeyEvent::Released };
     app_runner_borrow_mut().input(event, code);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn gateWasmMouseEvent(cursor_x: c_int, cursor_y: c_int, button: c_int, down: bool) {
+    app_runner_borrow_mut().update_cursor(cursor_x as i32, cursor_y as i32);
+    let code = match button {
+        0 => Some(KeyCode::MouseLeft),
+        1 => Some(KeyCode::MouseMiddle),
+        2 => Some(KeyCode::MouseRight),
+        _ => None,
+    };
+    if let Some(code) = code {
+        let event = if down { KeyEvent::Pressed } else { KeyEvent::Released };
+        app_runner_borrow_mut().input(event, code);
+    }
 }
 
 #[no_mangle]

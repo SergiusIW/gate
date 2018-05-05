@@ -14,9 +14,12 @@
 
 use std::collections::HashSet;
 
-use sdl2::EventPump;
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode as SdlKeyCode;
+use sdl2::{
+    EventPump,
+    event::Event,
+    keyboard::Keycode as SdlKeyCode,
+    mouse::MouseButton,
+};
 
 use ::{App, AppContext};
 use asset_id::AppAssetId;
@@ -53,6 +56,22 @@ impl EventHandler {
                     }
                 },
                 Event::MouseMotion { x, y, .. } => ctx.cursor = renderer.to_app_pos(x, y),
+                Event::MouseButtonDown { x, y, mouse_btn, .. } => {
+                    ctx.cursor = renderer.to_app_pos(x, y);
+                    if let Some(keycode) = mouse_button_to_gate_key(mouse_btn) {
+                        if self.held_keys.insert(keycode) {
+                            app.input(KeyEvent::Pressed, keycode, ctx);
+                        }
+                    }
+                },
+                Event::MouseButtonUp { x, y, mouse_btn, .. } => {
+                    ctx.cursor = renderer.to_app_pos(x, y);
+                    if let Some(keycode) = mouse_button_to_gate_key(mouse_btn) {
+                        if self.held_keys.remove(&keycode) {
+                            app.input(KeyEvent::Released, keycode, ctx);
+                        }
+                    }
+                },
                 _ => {},
             }
             if ctx.close_requested { break; }
@@ -104,6 +123,15 @@ fn sdl_to_gate_key(sdl: SdlKeyCode) -> Option<KeyCode> {
         SdlKeyCode::Up => Some(KeyCode::Up),
         SdlKeyCode::Return => Some(KeyCode::Return),
         SdlKeyCode::Space => Some(KeyCode::Space),
+        _ => None,
+    }
+}
+
+fn mouse_button_to_gate_key(button: MouseButton) -> Option<KeyCode> {
+    match button {
+        MouseButton::Left => Some(KeyCode::MouseLeft),
+        MouseButton::Right => Some(KeyCode::MouseRight),
+        MouseButton::Middle => Some(KeyCode::MouseMiddle),
         _ => None,
     }
 }
