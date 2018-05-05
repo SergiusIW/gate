@@ -22,13 +22,13 @@ use std::io::Cursor;
 use std::os::raw::c_int;
 
 use ::{App, AppContext};
-use ::asset_id::{AppAssetId, IdU16};
-use ::renderer::Renderer;
-use ::app_info::AppInfo;
-use ::input::{KeyEvent, KeyCode};
-use ::renderer::atlas::Atlas;
-use ::renderer::render_buffer::RenderBuffer;
-use ::renderer::core_renderer::CoreRenderer;
+use asset_id::{AppAssetId, IdU16};
+use renderer::Renderer;
+use app_info::AppInfo;
+use input::KeyCode;
+use renderer::atlas::Atlas;
+use renderer::render_buffer::RenderBuffer;
+use renderer::core_renderer::CoreRenderer;
 use self::wasm_imports::*;
 use super::mark_app_created_flag;
 
@@ -57,7 +57,7 @@ trait TraitAppRunner {
     fn resize(&mut self, dims: (u32, u32));
     fn update_and_draw(&mut self, time_sec: f64);
     fn update_cursor(&mut self, cursor_x: i32, cursor_y: i32);
-    fn input(&mut self, event: KeyEvent, key: KeyCode);
+    fn input(&mut self, key: KeyCode, down: bool);
     fn music_count(&self) -> u16;
     fn sound_count(&self) -> u16;
 }
@@ -137,14 +137,15 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         self.ctx.cursor = self.renderer.as_ref().unwrap().to_app_pos(cursor_x, cursor_y);
     }
 
-    fn input(&mut self, event: KeyEvent, key: KeyCode) {
-        let success = if event == KeyEvent::Pressed {
-            self.held_keys.insert(key)
+    fn input(&mut self, key: KeyCode, down: bool) {
+        if down {
+            if self.held_keys.insert(key) {
+                self.app.key_down(key, &mut self.ctx);
+            }
         } else {
-            self.held_keys.remove(&key)
-        };
-        if success {
-            self.app.input(event, key, &mut self.ctx);
+            if self.held_keys.remove(&key) {
+                self.app.key_up(key, &mut self.ctx);
+            }
         }
     }
 

@@ -16,15 +16,6 @@
 
 #[cfg(target_arch = "wasm32")] use std::mem;
 
-/// Events related to a keyboard key or similar button.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub enum KeyEvent {
-    /// Key is pressed down.
-    Pressed,
-    /// A pressed down key is released.
-    Released,
-}
-
 /// Enum for keyboard keys and mouse buttons.
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]

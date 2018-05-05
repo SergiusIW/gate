@@ -17,7 +17,7 @@
 
 use std::os::raw::{c_int, c_char};
 
-use ::input::{KeyEvent, KeyCode};
+use ::input::KeyCode;
 use ::renderer::shaders;
 use super::{app_runner_is_defined, app_runner_borrow, app_runner_borrow_mut};
 
@@ -41,8 +41,7 @@ pub unsafe extern "C" fn gateWasmUpdateAndDraw(time_millis: f64, cursor_x: c_int
 pub unsafe extern "C" fn gateWasmKeyEvent(code: c_int, down: bool) {
     assert!(code >= 0 && code <= 255);
     let code = KeyCode::from_u8(code as u8).unwrap();
-    let event = if down { KeyEvent::Pressed } else { KeyEvent::Released };
-    app_runner_borrow_mut().input(event, code);
+    app_runner_borrow_mut().input(code, down);
 }
 
 #[no_mangle]
@@ -55,8 +54,7 @@ pub unsafe extern "C" fn gateWasmMouseEvent(cursor_x: c_int, cursor_y: c_int, bu
         _ => None,
     };
     if let Some(code) = code {
-        let event = if down { KeyEvent::Pressed } else { KeyEvent::Released };
-        app_runner_borrow_mut().input(event, code);
+        app_runner_borrow_mut().input(code, down);
     }
 }
 

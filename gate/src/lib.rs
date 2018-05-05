@@ -68,7 +68,7 @@ use std::marker::PhantomData;
 
 use core::CoreAudio;
 use ::asset_id::{AppAssetId, IdU16};
-use ::input::{KeyEvent, KeyCode};
+use ::input::KeyCode;
 use ::renderer::Renderer;
 use ::app_info::AppInfo;
 
@@ -86,8 +86,9 @@ pub trait App<A: AppAssetId> {
     /// Advances the app state by a given amount of `seconds` (usually a fraction of a second).
     fn advance(&mut self, seconds: f64, ctx: &mut AppContext<A>);
 
-    /// Invoked when user input is received (currently only keyboard presses/releases).
-    fn input(&mut self, event: KeyEvent, key: KeyCode, ctx: &mut AppContext<A>);
+    fn key_down(&mut self, key: KeyCode, ctx: &mut AppContext<A>);
+
+    fn key_up(&mut self, _key: KeyCode, _ctx: &mut AppContext<A>) {}
 
     /// Render the app in its current state.
     fn render(&mut self, renderer: &mut Renderer<A>, ctx: &AppContext<A>);

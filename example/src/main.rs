@@ -16,7 +16,7 @@ extern crate gate;
 
 use gate::{App, AppContext};
 use gate::app_info::AppInfo;
-use gate::input::{KeyEvent, KeyCode};
+use gate::input::KeyCode;
 use gate::renderer::{Renderer, Affine};
 
 mod asset_id { include!(concat!(env!("OUT_DIR"), "/asset_id.rs")); }
@@ -62,33 +62,31 @@ impl App<AssetId> for TowerGame {
         }
     }
 
-    fn input(&mut self, evt: KeyEvent, key: KeyCode, ctx: &mut AppContext<AssetId>) {
-        if evt == KeyEvent::Pressed {
-            let index = match key {
-                KeyCode::Num1 => Some(0),
-                KeyCode::Num2 => Some(1),
-                KeyCode::Num3 => Some(2),
-                KeyCode::MouseLeft => pillar_for_cursor(ctx.cursor()),
-                _ => None,
-            };
-            if let Some(index) = index {
-                let pillar = &mut self.pillars[index];
-                if let Some(held) = self.held.take() {
-                    if pillar.last().map_or(true, |&v| v > held.value) {
-                        pillar.push(held.value);
-                        ctx.audio.play_sound(SoundId::Shuffle);
-                    } else {
-                        self.held = Some(held);
-                        ctx.audio.play_sound(SoundId::Error);
-                    }
+    fn key_down(&mut self, key: KeyCode, ctx: &mut AppContext<AssetId>) {
+        let index = match key {
+            KeyCode::Num1 => Some(0),
+            KeyCode::Num2 => Some(1),
+            KeyCode::Num3 => Some(2),
+            KeyCode::MouseLeft => pillar_for_cursor(ctx.cursor()),
+            _ => None,
+        };
+        if let Some(index) = index {
+            let pillar = &mut self.pillars[index];
+            if let Some(held) = self.held.take() {
+                if pillar.last().map_or(true, |&v| v > held.value) {
+                    pillar.push(held.value);
+                    ctx.audio.play_sound(SoundId::Shuffle);
                 } else {
-                    if let Some(value) = pillar.pop() {
-                        let pos = disc_pos(index, pillar.len());
-                        self.held = Some(HeldDisc { value, pos });
-                        ctx.audio.play_sound(SoundId::Shuffle);
-                    } else {
-                        ctx.audio.play_sound(SoundId::Error);
-                    }
+                    self.held = Some(held);
+                    ctx.audio.play_sound(SoundId::Error);
+                }
+            } else {
+                if let Some(value) = pillar.pop() {
+                    let pos = disc_pos(index, pillar.len());
+                    self.held = Some(HeldDisc { value, pos });
+                    ctx.audio.play_sound(SoundId::Shuffle);
+                } else {
+                    ctx.audio.play_sound(SoundId::Error);
                 }
             }
         }

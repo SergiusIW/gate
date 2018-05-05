@@ -23,7 +23,7 @@ use sdl2::{
 
 use ::{App, AppContext};
 use asset_id::AppAssetId;
-use input::{KeyEvent, KeyCode};
+use input::KeyCode;
 use renderer::Renderer;
 
 pub struct EventHandler {
@@ -44,14 +44,14 @@ impl EventHandler {
                 Event::KeyDown { keycode: Some(keycode), .. } => {
                     if let Some(keycode) = sdl_to_gate_key(keycode) {
                         if self.held_keys.insert(keycode) {
-                            app.input(KeyEvent::Pressed, keycode, ctx);
+                            app.key_down(keycode, ctx);
                         }
                     }
                 },
                 Event::KeyUp { keycode: Some(keycode), .. } => {
                     if let Some(keycode) = sdl_to_gate_key(keycode) {
                         if self.held_keys.remove(&keycode) {
-                            app.input(KeyEvent::Released, keycode, ctx);
+                            app.key_up(keycode, ctx);
                         }
                     }
                 },
@@ -60,7 +60,7 @@ impl EventHandler {
                     ctx.cursor = renderer.to_app_pos(x, y);
                     if let Some(keycode) = mouse_button_to_gate_key(mouse_btn) {
                         if self.held_keys.insert(keycode) {
-                            app.input(KeyEvent::Pressed, keycode, ctx);
+                            app.key_down(keycode, ctx);
                         }
                     }
                 },
@@ -68,7 +68,7 @@ impl EventHandler {
                     ctx.cursor = renderer.to_app_pos(x, y);
                     if let Some(keycode) = mouse_button_to_gate_key(mouse_btn) {
                         if self.held_keys.remove(&keycode) {
-                            app.input(KeyEvent::Released, keycode, ctx);
+                            app.key_up(keycode, ctx);
                         }
                     }
                 },
