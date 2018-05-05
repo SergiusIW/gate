@@ -65,7 +65,7 @@ impl<A: AppAssetId> Renderer<A> {
         TiledRenderer { r: self, camera: (camera_x, camera_y) }
     }
 
-    pub fn app_dims(&self) -> (f64, f64) { self.b.dims.app_dims }
+    pub(crate) fn app_dims(&self) -> (f64, f64) { self.b.dims.app_dims }
 
     pub(crate) fn to_app_pos(&self, raw_x: i32, raw_y: i32) -> (f64, f64) {
         self.b.dims.to_app_pos(raw_x, raw_y)
