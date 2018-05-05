@@ -59,18 +59,19 @@ extern crate byteorder;
 pub mod asset_id;
 pub mod renderer;
 pub mod app_info;
-pub mod input;
+mod input;
 mod core;
 
 pub use core::*;
 
+pub use input::KeyCode;
+pub use app_info::AppInfo;
+
 use std::marker::PhantomData;
 
 use core::CoreAudio;
-use ::asset_id::{AppAssetId, IdU16};
-use ::input::KeyCode;
-use ::renderer::Renderer;
-use ::app_info::AppInfo;
+use asset_id::{AppAssetId, IdU16};
+use renderer::Renderer;
 
 /// Invoke this in a `main` method to run the `App`.
 ///
@@ -86,15 +87,19 @@ pub trait App<A: AppAssetId> {
     /// Advances the app state by a given amount of `seconds` (usually a fraction of a second).
     fn advance(&mut self, seconds: f64, ctx: &mut AppContext<A>);
 
+    /// Invoked when a key or mouse button is pressed down.
     fn key_down(&mut self, key: KeyCode, ctx: &mut AppContext<A>);
 
+    /// Invoked when a key or mouse button is released, default behavior is a no-op.
     fn key_up(&mut self, _key: KeyCode, _ctx: &mut AppContext<A>) {}
 
     /// Render the app in its current state.
     fn render(&mut self, renderer: &mut Renderer<A>, ctx: &AppContext<A>);
 }
 
+/// Context passed to methods in `App`.
 pub struct AppContext<A: AppAssetId> {
+    /// Audio playback.
     pub audio: Audio<A>,
     dims: (f64, f64),
     cursor: (f64, f64),
@@ -111,10 +116,17 @@ impl<A: AppAssetId> AppContext<A> {
         }
     }
 
-    pub fn cursor(&self) -> (f64, f64) { self.cursor }
-
+    /// Returns the app (width, height), which are restricted by the app height and the
+    /// aspect ratio range specified in `AppInfo`.
     pub fn dims(&self) -> (f64, f64) { self.dims }
 
+    /// Returns the mouse cursor (x, y) position in app coordinates.
+    ///
+    /// The x coordinate lies in the range `-0.5 * self.dims().0` to `0.5 * self.dims().0`.
+    /// The y coordinate lies in the range `-0.5 * self.dims().1` to `0.5 * self.dims().1`.
+    pub fn cursor(&self) -> (f64, f64) { self.cursor }
+
+    /// Closes the app entirely.
     pub fn close(&mut self) { self.close_requested = true; }
 }
 

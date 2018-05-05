@@ -14,9 +14,7 @@
 
 extern crate gate;
 
-use gate::{App, AppContext};
-use gate::app_info::AppInfo;
-use gate::input::KeyCode;
+use gate::{App, AppContext, AppInfo, KeyCode};
 use gate::renderer::{Renderer, Affine};
 
 mod asset_id { include!(concat!(env!("OUT_DIR"), "/asset_id.rs")); }

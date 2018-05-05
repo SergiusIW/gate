@@ -14,21 +14,21 @@
 
 //! Contains `AppInfo` (and related structs), a struct for specifying intialization
 //! information for running an `App`.
-//!
-//! # Example
-//!
-//! ```rust
-//! use gate::app_info::AppInfo;
-//!
-//! let info = AppInfo::with_app_height(100.)
-//!                    .title("My Game")
-//!                    .target_fps(30.)
-//!                    .print_workload_info()
-//!                    .print_gl_info()
-//!                    .build();
-//! ```
 
 /// A struct for specifying initialization information for running an `App`.
+///
+/// # Example
+///
+/// ```rust
+/// use gate::app_info::AppInfo;
+///
+/// let info = AppInfo::with_app_height(100.)
+///                    .title("My Game")
+///                    .target_fps(30.)
+///                    .print_workload_info()
+///                    .print_gl_info()
+///                    .build();
+/// ```
 #[derive(Clone)]
 pub struct AppInfo {
     pub(crate) app_height: f64,
@@ -49,10 +49,10 @@ impl AppInfo {
     /// Even if the window is resized and the aspect ratio changed,
     /// the app height will always remain the same.
     /// The choice of this is important for the `TiledRenderer` in particular.
-    pub fn with_app_height(app_height: f64) -> AppInfoBuilder {
+    pub fn with_app_height(app_height: f64) -> Builder {
         assert!(app_height >= 1e-30 && app_height <= 3000., "unrealistic app height {}", app_height);
 
-        AppInfoBuilder {
+        Builder {
             info: AppInfo {
                 app_height,
                 window_pixels: (800, 600),
@@ -68,11 +68,11 @@ impl AppInfo {
 }
 
 /// Builder for `AppInfo`, created by `AppInfo::builder()`.
-pub struct AppInfoBuilder {
+pub struct Builder {
     info: AppInfo
 }
 
-impl AppInfoBuilder {
+impl Builder {
     /// Specifies the minimum and maximum aspect ratio for the game, enforced by
     /// letterboxing/pillarboxing if necessary (default is `4/3` to `16/9`).
     pub fn aspect_ratio_range(&mut self, min_ratio: f64, max_ratio: f64) -> &mut Self {
