@@ -63,7 +63,8 @@ mod app_context;
 mod input;
 mod core;
 
-pub use core::*; // exports WASM FFI function
+#[cfg(target_arch = "wasm32")]
+pub use core::{wasm_imports, wasm_exports};
 
 pub use app_context::{AppContext, Audio};
 pub use input::KeyCode;
