@@ -58,7 +58,7 @@ extern crate byteorder;
 
 pub mod asset_id;
 pub mod renderer;
-pub mod app_info;
+mod app_info;
 mod app_context;
 mod input;
 mod core;
@@ -77,7 +77,9 @@ use renderer::Renderer;
 ///
 /// Will panic if this method is called more than once.
 /// The `AppInfo` is used to specify intiailization parameters for the application.
-pub fn run<AS: 'static + AppAssetId, AP: 'static + App<AS>>(info: AppInfo, app: AP) { core::run(info, app); }
+pub fn run<AS: 'static + AppAssetId, AP: 'static + App<AS>>(info: AppInfo, app: AP) {
+    core::run(info, app);
+}
 
 /// Trait that a user can implement to specify application behavior, passed into `gate::run(...)`.
 pub trait App<A: AppAssetId> {

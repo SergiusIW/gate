@@ -121,6 +121,6 @@ impl App<AssetId> for TowerGame {
 }
 
 fn main() {
-    let info = AppInfo::with_app_height(48.).title("Tower").build();
+    let info = AppInfo::with_app_height(48.).title("Tower");
     gate::run(info, TowerGame { pillars: vec![vec![4, 3, 2, 1, 0], vec![], vec![]], held: None });
 }
