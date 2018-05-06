@@ -113,13 +113,13 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         let core_renderer = CoreRenderer::new(&render_buffer);
         self.renderer = Some(Renderer::<AS>::new(render_buffer, core_renderer));
 
-        self.ctx.dims = self.renderer.as_ref().unwrap().app_dims();
+        self.ctx.set_dims(self.renderer.as_ref().unwrap().app_dims());
         self.app.start(&mut self.ctx);
     }
 
     fn resize(&mut self, dims: (u32, u32)) {
         self.renderer.as_mut().unwrap().set_screen_dims(dims);
-        self.ctx.dims = self.renderer.as_ref().unwrap().app_dims();
+        self.ctx.set_dims(self.renderer.as_ref().unwrap().app_dims());
     }
 
     fn update_and_draw(&mut self, time_sec: f64) {
@@ -134,7 +134,7 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
     }
 
     fn update_cursor(&mut self, cursor_x: i32, cursor_y: i32) {
-        self.ctx.cursor = self.renderer.as_ref().unwrap().to_app_pos(cursor_x, cursor_y);
+        self.ctx.set_cursor(self.renderer.as_ref().unwrap().to_app_pos(cursor_x, cursor_y));
     }
 
     fn input(&mut self, key: KeyCode, down: bool) {

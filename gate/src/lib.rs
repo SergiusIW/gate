@@ -107,13 +107,31 @@ pub struct AppContext<A: AppAssetId> {
 }
 
 impl<A: AppAssetId> AppContext<A> {
-    pub(crate) fn new(audio: CoreAudio, dims: (f64, f64)) -> AppContext<A> {
+    fn new(audio: CoreAudio, dims: (f64, f64)) -> AppContext<A> {
         AppContext {
             audio: Audio { core: audio, phantom: PhantomData },
             dims,
             cursor: (0., 0.),
             close_requested: false,
         }
+    }
+
+    fn set_cursor(&mut self, cursor: (f64, f64)) {
+        self.cursor = cursor;
+        self.bound_cursor();
+    }
+
+    fn set_dims(&mut self, dims: (f64, f64)) {
+        self.dims = dims;
+        self.bound_cursor();
+    }
+
+    fn bound_cursor(&mut self) {
+        let (half_width, half_height) = (self.dims.0 * 0.5, self.dims.1 * 0.5);
+        self.cursor = (
+            self.cursor.0.max(-half_width).min(half_width),
+            self.cursor.1.max(-half_height).min(half_height),
+        );
     }
 
     /// Returns the app (width, height), which are restricted by the app height and the

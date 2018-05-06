@@ -55,9 +55,9 @@ impl EventHandler {
                         }
                     }
                 },
-                Event::MouseMotion { x, y, .. } => ctx.cursor = renderer.to_app_pos(x, y),
+                Event::MouseMotion { x, y, .. } => ctx.set_cursor(renderer.to_app_pos(x, y)),
                 Event::MouseButtonDown { x, y, mouse_btn, .. } => {
-                    ctx.cursor = renderer.to_app_pos(x, y);
+                    ctx.set_cursor(renderer.to_app_pos(x, y));
                     if let Some(keycode) = mouse_button_to_gate_key(mouse_btn) {
                         if self.held_keys.insert(keycode) {
                             app.key_down(keycode, ctx);
@@ -65,7 +65,7 @@ impl EventHandler {
                     }
                 },
                 Event::MouseButtonUp { x, y, mouse_btn, .. } => {
-                    ctx.cursor = renderer.to_app_pos(x, y);
+                    ctx.set_cursor(renderer.to_app_pos(x, y));
                     if let Some(keycode) = mouse_button_to_gate_key(mouse_btn) {
                         if self.held_keys.remove(&keycode) {
                             app.key_up(keycode, ctx);

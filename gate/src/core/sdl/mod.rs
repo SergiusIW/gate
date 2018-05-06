@@ -91,7 +91,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
         let screen_dims = sdl_renderer.window().unwrap().size();
         if screen_dims.0 >= MIN_WINDOW_SIZE && screen_dims.1 >= MIN_WINDOW_SIZE {
             renderer.set_screen_dims(screen_dims);
-            ctx.dims = renderer.app_dims();
+            ctx.set_dims(renderer.app_dims());
             app.render(&mut renderer, &ctx);
             renderer.flush();
         }

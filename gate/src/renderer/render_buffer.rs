@@ -73,10 +73,10 @@ impl RenderDims {
     }
 
     pub fn to_app_pos(&self, raw_x: i32, raw_y: i32) -> (f64, f64) {
-        let x = (raw_x as f64 - 0.5 * self.full_screen_dims.0 as f64) / self.app_pixel_scalar;
-        let y = -(raw_y as f64 - 0.5 * self.full_screen_dims.1 as f64) / self.app_pixel_scalar;
-        let (half_width, half_height) = (self.app_dims.0 * 0.5, self.app_dims.1 * 0.5);
-        (x.max(-half_width).min(half_width), y.max(-half_height).min(half_height))
+        (
+            (raw_x as f64 - 0.5 * self.full_screen_dims.0 as f64) / self.app_pixel_scalar,
+            -(raw_y as f64 - 0.5 * self.full_screen_dims.1 as f64) / self.app_pixel_scalar,
+        )
     }
 }
 
