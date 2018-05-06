@@ -74,7 +74,7 @@ impl EventHandler {
                 },
                 _ => {},
             }
-            if ctx.close_requested { break; }
+            if ctx.close_requested() { break; }
         }
     }
 }
