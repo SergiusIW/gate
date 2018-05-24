@@ -119,6 +119,7 @@ impl App<AssetId> for TowerGame {
 fn main() {
     let info = AppInfo::with_max_dims(86., 48.)
                        .min_dims(64., 44.)
+                       .tile_width(16)
                        .title("Tower");
     gate::run(info, TowerGame { pillars: vec![vec![4, 3, 2, 1, 0], vec![], vec![]], held: None });
 }

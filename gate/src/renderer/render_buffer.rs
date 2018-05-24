@@ -25,6 +25,7 @@ pub(super) enum Mode { Sprite }
 pub(super) struct RenderDims {
     pub min_dims: (f64, f64),
     pub max_dims: (f64, f64),
+    pub tile_width: Option<u32>,
     pub native_dims: (u32, u32),
     pub pixel_scalar: f64,
     pub native_pre_pad: (u32, u32),
@@ -33,9 +34,14 @@ pub(super) struct RenderDims {
 }
 
 impl RenderDims {
-    fn new(min_dims: (f64, f64), max_dims: (f64, f64), native_dims: (u32, u32)) -> RenderDims {
-        let scalar_from_min = (native_dims.0 as f64 / min_dims.0).min(native_dims.1 as f64 / min_dims.1);
-        let scalar_from_max = (native_dims.0 as f64 / max_dims.0).max(native_dims.1 as f64 / max_dims.1);
+    fn new(min_dims: (f64, f64), max_dims: (f64, f64), tile_width: Option<u32>, native_dims: (u32, u32)) -> RenderDims {
+        let mut scalar_from_min = (native_dims.0 as f64 / min_dims.0).min(native_dims.1 as f64 / min_dims.1);
+        let mut scalar_from_max = (native_dims.0 as f64 / max_dims.0).max(native_dims.1 as f64 / max_dims.1);
+        if let Some(tile_width) = tile_width {
+            let tile_width = tile_width as f64;
+            scalar_from_min = (scalar_from_min * tile_width).floor() / tile_width;
+            scalar_from_max = (scalar_from_max * tile_width).ceil() / tile_width;
+        }
         let pixel_scalar = scalar_from_min.min(scalar_from_max).max(1.0);
         let used_native_dims = (
             native_dims.0.min((max_dims.0 * pixel_scalar).floor() as u32),
@@ -44,11 +50,11 @@ impl RenderDims {
         let native_pad = (native_dims.0 - used_native_dims.0, native_dims.1 - used_native_dims.1);
         let native_pre_pad = (native_pad.0 / 2, native_pad.1 / 2);
         let dims = (used_native_dims.0 as f64 / pixel_scalar, used_native_dims.1 as f64 / pixel_scalar);
-        RenderDims { min_dims, max_dims, native_dims, pixel_scalar, native_pre_pad, used_native_dims, dims }
+        RenderDims { min_dims, max_dims, tile_width, native_dims, pixel_scalar, native_pre_pad, used_native_dims, dims }
     }
 
     pub fn set_native_dims(&mut self, native_dims: (u32, u32)) {
-        *self = RenderDims::new(self.min_dims, self.max_dims, native_dims);
+        *self = RenderDims::new(self.min_dims, self.max_dims, self.tile_width, native_dims);
     }
 
     pub fn to_app_pos(&self, raw_x: i32, raw_y: i32) -> (f64, f64) {
@@ -73,7 +79,7 @@ impl RenderBuffer {
             sprite_atlas,
             mode: Mode::Sprite,
             vbo_data: Vec::new(),
-            dims: RenderDims::new(info.min_dims, info.max_dims, native_dims),
+            dims: RenderDims::new(info.min_dims, info.max_dims, info.tile_width, native_dims),
         }
     }
 

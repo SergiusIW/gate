@@ -27,6 +27,7 @@
 ///
 /// let info = AppInfo::with_max_dims(160., 90.)
 ///                    .min_dims(120., 86.)
+///                    .tile_width(16)
 ///                    .title("My Game")
 ///                    .target_fps(30.)
 ///                    .print_workload_info()
@@ -36,6 +37,7 @@ pub struct AppInfo {
     pub(crate) window_pixels: (u32, u32),
     pub(crate) min_dims: (f64, f64),
     pub(crate) max_dims: (f64, f64),
+    pub(crate) tile_width: Option<u32>,
     pub(crate) title: &'static str,
     pub(crate) target_fps: f64,
     pub(crate) print_workload_info: bool,
@@ -52,6 +54,7 @@ impl AppInfo {
             window_pixels: (800, 600),
             min_dims: (0., 0.),
             max_dims: (max_width, max_height),
+            tile_width: None,
             title: "untitled app",
             target_fps: 60.,
             print_workload_info: false,
@@ -62,6 +65,12 @@ impl AppInfo {
     pub fn min_dims(mut self, min_width: f64, min_height: f64) -> Self {
         assert!(self.min_dims.0 <= self.max_dims.0 && self.min_dims.1 <= self.max_dims.1);
         self.min_dims = (min_width, min_height);
+        self
+    }
+
+    pub fn tile_width(mut self, tile_width: u32) -> Self {
+        assert!(tile_width > 0 && tile_width <= 10000, "unrealistic tile_width {}", tile_width);
+        self.tile_width = Some(tile_width);
         self
     }
 
