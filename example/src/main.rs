@@ -18,7 +18,7 @@ use gate::{App, AppContext, AppInfo, KeyCode};
 use gate::renderer::{Renderer, Affine};
 
 mod asset_id { include!(concat!(env!("OUT_DIR"), "/asset_id.rs")); }
-use asset_id::{AssetId, SpriteId, TileId, MusicId, SoundId};
+use asset_id::{AssetId, SpriteId, MusicId, SoundId};
 
 // Note: the assets that we placed in the src_assets directory can be referenced using the
 //       SpriteId, TileId, MusicId, and SoundId enums
@@ -92,7 +92,18 @@ impl App<AssetId> for TowerGame {
 
     fn render(&mut self, renderer: &mut Renderer<AssetId>, ctx: &AppContext<AssetId>) {
         let (app_width, app_height) = ctx.dims();
-        { // drawing tiles
+        let mut renderer = renderer.sprite_mode();
+        for x in 0..((app_width / 16.).ceil() as usize) {
+            for y in 0..((app_height / 16.).ceil() as usize) {
+                let affine = Affine::translate(
+                    8. + x as f64 * 16. - 0.5 * app_width,
+                    8. + y as f64 * 16. - 0.5 * app_height,
+                );
+                let tile = if (x + y) % 2 == 0 { SpriteId::BgTileR0C0 } else { SpriteId::BgTileR0C1 };
+                renderer.draw(&affine, tile);
+            }
+        }
+        /*{ // drawing tiles
             let mut renderer = renderer.tiled_mode(0.5 * app_width, 0.5 * app_height);
             for x in 0..((app_width / 16.).ceil() as usize) {
                 for y in 0..((app_height / 16.).ceil() as usize) {
@@ -101,21 +112,18 @@ impl App<AssetId> for TowerGame {
                     renderer.draw(&affine, tile);
                 }
             }
+        }*/
+        let base = Affine::scale(0.5).pre_translate(0., -10.);
+        renderer.draw(&base, SpriteId::Pillars);
+        for pillar_index in 0..self.pillars.len() {
+            let pillar = &self.pillars[pillar_index];
+            for height_index in 0..pillar.len() {
+                let pos = disc_pos(pillar_index, height_index);
+                renderer.draw(&base.pre_translate(pos.0, pos.1), disc_sprite(pillar[height_index]));
+            }
         }
-        { // drawing sprites
-            let mut renderer = renderer.sprite_mode();
-            let base = Affine::scale(0.5).pre_translate(0., -10.);
-            renderer.draw(&base, SpriteId::Pillars);
-            for pillar_index in 0..self.pillars.len() {
-                let pillar = &self.pillars[pillar_index];
-                for height_index in 0..pillar.len() {
-                    let pos = disc_pos(pillar_index, height_index);
-                    renderer.draw(&base.pre_translate(pos.0, pos.1), disc_sprite(pillar[height_index]));
-                }
-            }
-            if let Some(held) = self.held.as_ref() {
-                renderer.draw(&base.pre_translate(held.pos.0, held.pos.1), disc_sprite(held.value));
-            }
+        if let Some(held) = self.held.as_ref() {
+            renderer.draw(&base.pre_translate(held.pos.0, held.pos.1), disc_sprite(held.value));
         }
     }
 }

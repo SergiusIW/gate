@@ -16,9 +16,3 @@ use std::os::raw::c_char;
 
 pub const VS_SPRITE_SRC: *const c_char = include_c_str!("sprite.vert");
 pub const FS_SPRITE_SRC: *const c_char = include_c_str!("sprite.frag");
-
-pub const VS_TILED_SRC: *const c_char = include_c_str!("tiled.vert");
-pub const FS_TILED_SRC: *const c_char = include_c_str!("tiled.frag");
-
-pub const VS_FROM_TILED_SRC: *const c_char = include_c_str!("from_tiled.vert");
-pub const FS_FROM_TILED_SRC: *const c_char = include_c_str!("from_tiled.frag");

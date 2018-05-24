@@ -27,7 +27,6 @@ fn main() {
     let mut packer = AssetPacker::new(Path::new(assets_dir));
     packer.cargo_rerun_if_changed();
     packer.sprites(Path::new("src_assets/sprites"));
-    packer.tiles(Path::new("src_assets/tiles"));
     packer.music(Path::new("src_assets/music"));
     packer.sounds(Path::new("src_assets/sounds"));
     if is_wasm { packer.gen_javascript_and_html(); }

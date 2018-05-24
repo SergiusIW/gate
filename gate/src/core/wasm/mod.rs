@@ -101,16 +101,10 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
             atlas_buf = vec![0; gateWasmSpriteAtlasBinSize()];
             gateWasmSpriteAtlasBinFill(mem::transmute(&mut atlas_buf[0]));
         }
-        let sprite_atlas = Atlas::new_sprite(Cursor::new(atlas_buf));
+        let sprite_atlas = Atlas::new(Cursor::new(atlas_buf)).unwrap();
 
-        unsafe {
-            atlas_buf = vec![0; gateWasmTiledAtlasBinSize()];
-            gateWasmTiledAtlasBinFill(mem::transmute(&mut atlas_buf[0]));
-        }
-        let tiled_atlas = Atlas::new_tiled(Cursor::new(atlas_buf));
-
-        let render_buffer = RenderBuffer::new(&self.info, self.info.window_pixels, sprite_atlas, tiled_atlas);
-        let core_renderer = CoreRenderer::new(&render_buffer);
+        let render_buffer = RenderBuffer::new(&self.info, self.info.window_pixels, sprite_atlas);
+        let core_renderer = CoreRenderer::new();
         self.renderer = Some(Renderer::<AS>::new(render_buffer, core_renderer));
 
         self.ctx.set_dims(self.renderer.as_ref().unwrap().app_dims());

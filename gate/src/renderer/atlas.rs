@@ -17,16 +17,16 @@ use std::collections::HashMap;
 
 use byteorder::BigEndian;
 
+const PAD: u16 = 1;
+
 pub struct Atlas {
+    #[allow(dead_code)] // dims might not used when targeting wasm
     pub(super) dims: (f32, f32),
     pub(super) images: HashMap<u16, ImageCoords>,
 }
 
 impl Atlas {
-    pub fn new_sprite<R: Read>(input: R) -> Atlas { Atlas::new(input, 1).unwrap() }
-    pub fn new_tiled<R: Read>(input: R) -> Atlas { Atlas::new(input, 0).unwrap() }
-
-    fn new<R: Read>(mut input: R, pad: u16) -> io::Result<Atlas> {
+    pub fn new<R: Read>(mut input: R) -> io::Result<Atlas> {
         use byteorder::ReadBytesExt;
 
         let dims = (input.read_u16::<BigEndian>()? as f32, input.read_u16::<BigEndian>()? as f32);
@@ -35,8 +35,8 @@ impl Atlas {
         let mut images = HashMap::with_capacity(handle_count as usize);
         for id in 0..handle_count {
             let image = ImageCoords {
-                lt: ((input.read_u16::<BigEndian>()? - pad) as f32, (input.read_u16::<BigEndian>()? - pad) as f32),
-                rb: ((input.read_u16::<BigEndian>()? + pad) as f32, (input.read_u16::<BigEndian>()? + pad) as f32),
+                lt: ((input.read_u16::<BigEndian>()? - PAD) as f32, (input.read_u16::<BigEndian>()? - PAD) as f32),
+                rb: ((input.read_u16::<BigEndian>()? + PAD) as f32, (input.read_u16::<BigEndian>()? + PAD) as f32),
                 anchor: (0.5 * input.read_i16::<BigEndian>()? as f32, 0.5 * input.read_i16::<BigEndian>()? as f32),
             };
             images.insert(id, image);

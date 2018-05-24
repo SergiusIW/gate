@@ -38,8 +38,6 @@ pub trait IdU16: Sized {
 pub trait AppAssetId {
     /// Sprite asset enum
     type Sprite: IdU16;
-    /// Tile asset enum
-    type Tile: IdU16;
     /// Music asset enum
     type Music: IdU16;
     /// Sound asset enum

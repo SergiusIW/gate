@@ -19,13 +19,10 @@ pub struct AssetId;
 
 impl AppAssetId for AssetId {{
     type Sprite = SpriteId;
-    type Tile = TileId;
     type Music = MusicId;
     type Sound = SoundId;
 }}
 
-
-{}
 
 {}
 

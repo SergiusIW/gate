@@ -55,16 +55,6 @@ impl<A: AppAssetId> Renderer<A> {
         SpriteRenderer { r: self }
     }
 
-    /// Enters "tiled mode", for rendering tiles that must line up without any seams.
-    ///
-    /// `camera_x` and `camera_y` specify the location of the center of the screen
-    /// relative to the `TiledRenderer` coordinate system origin.
-    /// This may be important to specify if a fractional offset is needed,
-    /// because an `Affine` used in `TiledRenderer` must have integer offsets.
-    pub fn tiled_mode(&mut self, camera_x: f64, camera_y: f64) -> TiledRenderer<A> {
-        TiledRenderer { r: self, camera: (camera_x, camera_y) }
-    }
-
     pub(crate) fn app_dims(&self) -> (f64, f64) { self.b.dims.app_dims }
 
     pub(crate) fn to_app_pos(&self, raw_x: i32, raw_y: i32) -> (f64, f64) {
@@ -109,25 +99,5 @@ impl<'a, A: AppAssetId + 'a> SpriteRenderer<'a, A> {
     /// color white (`0.0` means use the image unaltered, `1.0` means use white completely).
     pub fn draw_flash(&mut self, affine: &Affine, sprite: A::Sprite, flash_ratio: f64) {
         self.r.b.append_sprite(&mut self.r.c, affine, sprite.id_u16(), flash_ratio);
-    }
-}
-
-/// A rendering mode for tiles that must line up without any seams.
-pub struct TiledRenderer<'a, A: AppAssetId + 'a> {
-    camera: (f64, f64),
-    r: &'a mut Renderer<A>,
-}
-
-impl<'a, A: AppAssetId + 'a> TiledRenderer<'a, A> {
-    /// Draws the given `tile` using the given `affine` transformation from the origin.
-    ///
-    /// The `affine` transformation must be such that the pixels of the `tile` line up with
-    /// the "app pixels" of the `TiledRenderer` exactly.
-    /// For example, if the `tile` has an anchor on the intersection of pixel boundaries,
-    /// then the `affine` should only use integer translation and scaling (not fractional),
-    /// and should only use rotations that are multiples of 90 degrees.
-    /// Will panic if this is not the case.
-    pub fn draw(&mut self, affine: &Affine, tile: A::Tile) {
-        self.r.b.append_tile(&mut self.r.c, self.camera, affine, tile.id_u16());
     }
 }

@@ -33,7 +33,6 @@ pub struct AssetPacker {
     assets_dir: PathBuf,
     check_rerun: bool,
     sprites: Option<Vec<String>>,
-    tiles: Option<Vec<String>>,
     music: Option<Vec<String>>,
     sounds: Option<Vec<String>>,
     js: bool,
@@ -51,7 +50,6 @@ impl AssetPacker {
         AssetPacker {
             assets_dir: assets_dir.to_path_buf(),
             sprites: None,
-            tiles: None,
             check_rerun: false,
             music: None,
             sounds: None,
@@ -67,7 +65,7 @@ impl AssetPacker {
     ///
     /// Panics if called after calling methods to pack assets.
     pub fn cargo_rerun_if_changed(&mut self) {
-        assert!(self.sprites.is_none() && self.tiles.is_none(), "cannot add rerun checks after asset packing has already started");
+        assert!(self.sprites.is_none(), "cannot add rerun checks after asset packing has already started");
         self.check_rerun = true;
     }
 
@@ -98,21 +96,6 @@ impl AssetPacker {
         let output = &self.assets_dir.join("sprites");
         self.sprites = Some(form_atlas(in_dir, output, 1, self.check_rerun));
         self.sprites.as_ref().unwrap()
-    }
-
-    /// Packs tile images into an atlas, to be rendered by Gate renderer in "tiled" mode.
-    ///
-    /// Follows the same packing conventions as `self.sprites(in_dir)`.
-    /// See that method for more details.
-    ///
-    /// Note: in the current implementation of `gate` there is only one atlas for tiles,
-    /// but in the future there are plans to allow for larger games that may need
-    /// multiple atlases loaded at different times.
-    pub fn tiles(&mut self, in_dir: &Path) -> &[String] {
-        assert!(self.tiles.is_none(), "self.tiles(...) was already invoked");
-        let output = &self.assets_dir.join("tiles");
-        self.tiles = Some(form_atlas(in_dir, output, 0, self.check_rerun));
-        self.tiles.as_ref().unwrap()
     }
 
     /// Creates handles for and moves music files from `in_dir` to the assets directory.
@@ -187,12 +170,10 @@ impl AssetPacker {
 
     fn gen_asset_id_code_checked(self, out: &Path) -> io::Result<()> {
         let sprites_enum = gen_asset_enum("SpriteId", &self.sprites.expect("self.sprites(...) was not invoked"));
-        let tiles_enum = gen_asset_enum("TileId", &self.tiles.expect("self.tiles(...) was not invoked"));
         let music_enum = gen_asset_enum("MusicId", &self.music.unwrap_or(vec![]));
         let sounds_enum = gen_asset_enum("SoundId", &self.sounds.unwrap_or(vec![]));
 
-        let code = format!(include_str!("asset_id.template.rs"),
-                           sprites_enum, tiles_enum, music_enum, sounds_enum);
+        let code = format!(include_str!("asset_id.template.rs"), sprites_enum, music_enum, sounds_enum);
         if let Some(out_dir) = out.parent() {
             fs::create_dir_all(out_dir)?;
         }

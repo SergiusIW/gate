@@ -82,23 +82,3 @@ pub unsafe extern "C" fn gateWasmSpriteVertSrc() -> *const c_char {
 pub unsafe extern "C" fn gateWasmSpriteFragSrc() -> *const c_char {
     shaders::FS_SPRITE_SRC
 }
-
-#[no_mangle]
-pub unsafe extern "C" fn gateWasmTiledVertSrc() -> *const c_char {
-    shaders::VS_TILED_SRC
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn gateWasmTiledFragSrc() -> *const c_char {
-    shaders::FS_TILED_SRC
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn gateWasmFromTiledVertSrc() -> *const c_char {
-    shaders::VS_FROM_TILED_SRC
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn gateWasmFromTiledFragSrc() -> *const c_char {
-    shaders::FS_FROM_TILED_SRC
-}

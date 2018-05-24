@@ -108,9 +108,8 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 }
 
 fn build_renderer<AS: AppAssetId>(info: &AppInfo, sdl_renderer: &SdlRenderer) -> Renderer<AS> {
-    let sprites_atlas = Atlas::new_sprite(BufReader::new(File::open("assets/sprites.atlas").unwrap()));
-    let tiles_atlas = Atlas::new_tiled(BufReader::new(File::open("assets/tiles.atlas").unwrap()));
-    let render_buffer = RenderBuffer::new(&info, info.window_pixels, sprites_atlas, tiles_atlas);
+    let sprites_atlas = Atlas::new(BufReader::new(File::open("assets/sprites.atlas").unwrap())).unwrap();
+    let render_buffer = RenderBuffer::new(&info, info.window_pixels, sprites_atlas);
 
     let mut sprites_tex = sdl_renderer.load_texture(Path::new("assets/sprites.png")).unwrap();
     unsafe {
@@ -119,9 +118,8 @@ fn build_renderer<AS: AppAssetId>(info: &AppInfo, sdl_renderer: &SdlRenderer) ->
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as GLint);
         sprites_tex.gl_unbind_texture();
     }
-    let tiles_tex = sdl_renderer.load_texture(Path::new("assets/tiles.png")).unwrap();
     // TODO need to ensure Nearest-neighbor sampling is used?
-    let core_renderer = CoreRenderer::new(&render_buffer, sprites_tex, tiles_tex);
+    let core_renderer = CoreRenderer::new(sprites_tex);
 
     Renderer::<AS>::new(render_buffer, core_renderer)
 }

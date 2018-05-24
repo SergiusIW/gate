@@ -20,16 +20,7 @@ use super::atlas::Atlas;
 use super::geom::Affine;
 
 #[derive(PartialEq, Copy, Clone)]
-pub(super) enum Mode { Sprite, Tiled((f64, f64)) }
-
-impl Mode {
-    pub fn tiled_camera(self) -> (f64, f64) {
-        match self {
-            Mode::Tiled(camera) => camera,
-            _ => panic!("not in tiled mode"),
-        }
-    }
-}
+pub(super) enum Mode { Sprite }
 
 pub(super) struct RenderDims {
     pub min_aspect_ratio: f64,
@@ -86,17 +77,15 @@ fn to_fbo_dim(app_dim: f64) -> u32 {
 
 pub struct RenderBuffer {
     pub(super) sprite_atlas: Atlas,
-    pub(super) tiled_atlas: Atlas,
     pub(super) mode: Mode,
     pub(super) vbo_data: Vec<f32>,
     pub(super) dims: RenderDims,
 }
 
 impl RenderBuffer {
-    pub fn new(info: &AppInfo, screen_dims: (u32, u32), sprite_atlas: Atlas, tiled_atlas: Atlas) -> RenderBuffer {
+    pub fn new(info: &AppInfo, screen_dims: (u32, u32), sprite_atlas: Atlas) -> RenderBuffer {
         RenderBuffer {
             sprite_atlas,
-            tiled_atlas,
             mode: Mode::Sprite,
             vbo_data: Vec::new(),
             dims: RenderDims::new(info.min_aspect_ratio, info.max_aspect_ratio, info.app_height, screen_dims),
@@ -114,12 +103,6 @@ impl RenderBuffer {
         if !self.vbo_data.is_empty() {
             match self.mode {
                 Mode::Sprite => r.draw_sprites(self),
-                Mode::Tiled(_) => {
-                    r.draw_tiles_to_fbo(self);
-                    self.vbo_data.clear();
-                    vbo_packer::append_tile_fbo(self);
-                    r.draw_tiles_from_fbo(self);
-                },
             }
             self.vbo_data.clear();
         }
@@ -128,10 +111,5 @@ impl RenderBuffer {
     pub(super) fn append_sprite(&mut self, r: &mut CoreRenderer, affine: &Affine, sprite_id: u16, flash_ratio: f64) {
         self.change_mode(r, Mode::Sprite);
         vbo_packer::append_sprite(self, affine, sprite_id, flash_ratio);
-    }
-
-    pub(super) fn append_tile(&mut self, r: &mut CoreRenderer, camera: (f64, f64), affine: &Affine, tile_id: u16) {
-        self.change_mode(r, Mode::Tiled(camera));
-        vbo_packer::append_tile(self, affine, tile_id);
     }
 }

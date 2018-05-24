@@ -21,10 +21,7 @@ use ::wasm_imports::*;
 pub struct CoreRenderer { }
 
 impl CoreRenderer {
-    pub fn new(r: &RenderBuffer) -> CoreRenderer {
-        unsafe {
-            gateWasmSetTiledFboDims(r.dims.tiled_fbo_dims.0 as c_int, r.dims.tiled_fbo_dims.1 as c_int);
-        }
+    pub fn new() -> CoreRenderer {
         CoreRenderer { }
     }
 }
@@ -45,18 +42,6 @@ impl CoreRenderer {
     pub(in renderer) fn draw_sprites(&mut self, r: &mut RenderBuffer) {
         unsafe {
             gateWasmDrawSprites(mem::size_of::<f32>() * r.vbo_data.len(), mem::transmute(&r.vbo_data[0]));
-        }
-    }
-
-    pub(in renderer) fn draw_tiles_to_fbo(&mut self, r: &mut RenderBuffer) {
-        unsafe {
-            gateWasmDrawTilesToFbo(mem::size_of::<f32>() * r.vbo_data.len(), mem::transmute(&r.vbo_data[0]));
-        }
-    }
-
-    pub(in renderer) fn draw_tiles_from_fbo(&mut self, r: &mut RenderBuffer) {
-        unsafe {
-            gateWasmDrawTilesFromFbo(mem::size_of::<f32>() * r.vbo_data.len(), mem::transmute(&r.vbo_data[0]), r.dims.app_pixel_scalar as f32);
         }
     }
 }

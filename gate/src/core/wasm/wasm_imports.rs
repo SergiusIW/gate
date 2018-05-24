@@ -18,13 +18,10 @@
 use std::os::raw::{c_void, c_int};
 
 extern {
-    pub fn gateWasmSetTiledFboDims(w: c_int, h: c_int);
     pub fn gateWasmSetScissor(x: c_int, y: c_int, w: c_int, h: c_int);
 
     pub fn gateWasmClear(r: f32, g: f32, b: f32);
     pub fn gateWasmDrawSprites(size: usize, data: *const c_void);
-    pub fn gateWasmDrawTilesToFbo(size: usize, data: *const c_void);
-    pub fn gateWasmDrawTilesFromFbo(size: usize, data: *const c_void, app_pixel_scalar: f32);
 
     pub fn gateWasmPlaySound(id: c_int);
     pub fn gateWasmLoopMusic(id: c_int);

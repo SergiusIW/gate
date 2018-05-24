@@ -22,7 +22,6 @@ impl Vec2 {
     pub fn new(x: f64, y: f64) -> Vec2 { Vec2 { x, y } }
     pub fn zero() -> Vec2 { Vec2::new(0.0, 0.0) }
     pub fn len(&self) -> f64 { (self.x * self.x + self.y * self.y).sqrt() }
-    pub fn is_int_aligned(&self) -> bool { self.x.fract() == 0.0 && self.y.fract() == 0.0 }
 }
 
 impl Add<Vec2> for Vec2 {
@@ -67,11 +66,6 @@ impl Mat2 {
 
     pub fn col_0(&self) -> Vec2 { Vec2::new(self.a, self.c) }
     pub fn col_1(&self) -> Vec2 { Vec2::new(self.b, self.d) }
-
-    fn is_int_aligned(&self) -> bool {
-        (self.a == 0.0 && self.d == 0.0 && self.b.fract() == 0.0 && self.c.fract() == 0.0) ||
-            (self.b == 0.0 && self.c == 0.0 && self.a.fract() == 0.0 && self.d.fract() == 0.0)
-    }
 }
 
 impl Mul<Vec2> for Mat2 {
@@ -230,8 +224,4 @@ impl Affine {
     }
 
     pub(crate) fn mat(&self) -> &Mat2 { &self.mat }
-
-    pub(crate) fn is_int_aligned(&self) -> bool {
-        self.offset.is_int_aligned() && self.mat.is_int_aligned()
-    }
 }
