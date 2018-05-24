@@ -44,8 +44,6 @@ use self::app_clock::AppClock;
 use self::event_handler::EventHandler;
 use super::mark_app_created_flag;
 
-const MIN_WINDOW_SIZE: u32 = 100;
-
 pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
     mark_app_created_flag();
 
@@ -89,7 +87,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
         }
 
         let screen_dims = sdl_renderer.window().unwrap().size();
-        if screen_dims.0 >= MIN_WINDOW_SIZE && screen_dims.1 >= MIN_WINDOW_SIZE {
+        if screen_dims.0 > 0 && screen_dims.1 > 0 {
             renderer.set_screen_dims(screen_dims);
             ctx.set_dims(renderer.app_dims());
             app.render(&mut renderer, &ctx);
