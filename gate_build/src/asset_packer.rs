@@ -65,7 +65,8 @@ impl AssetPacker {
     ///
     /// Panics if called after calling methods to pack assets.
     pub fn cargo_rerun_if_changed(&mut self) {
-        assert!(self.sprites.is_none(), "cannot add rerun checks after asset packing has already started");
+        assert!(self.sprites.is_none() && self.music.is_none() && self.sounds.is_none(),
+                "cannot add rerun checks after asset packing has already started");
         self.check_rerun = true;
     }
 
