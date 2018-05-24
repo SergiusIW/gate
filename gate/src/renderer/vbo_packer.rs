@@ -37,7 +37,8 @@ pub fn append_sprite(r: &mut RenderBuffer, affine: &Affine, sprite_id: u16, flas
     let dst_lb = (dst_lt.0, dst_rb.1);
     let dst_rt = (dst_rb.0, dst_lt.1);
 
-    let affine = affine.post_translate(-0.5 * r.dims.used_native_dims.0 as f64, -0.5 * r.dims.used_native_dims.1 as f64)
+    let affine = affine.post_translate(r.dims.native_pre_pad.0 as f64 - 0.5 * r.dims.native_dims.0 as f64,
+                                       r.dims.native_pre_pad.1 as f64 - 0.5 * r.dims.native_dims.1 as f64)
                        .post_scale_axes(2.0 / r.dims.native_dims.0 as f64, 2.0 / r.dims.native_dims.1 as f64);
     let aff_lt = affine.apply_f32(dst_lt);
     let aff_rb = affine.apply_f32(dst_rb);
