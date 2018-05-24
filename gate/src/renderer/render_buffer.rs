@@ -23,56 +23,41 @@ use super::geom::Affine;
 pub(super) enum Mode { Sprite }
 
 pub(super) struct RenderDims {
-    pub min_aspect_ratio: f64,
-    pub max_aspect_ratio: f64,
-    pub app_dims: (f64, f64),
-    pub full_screen_dims: (u32, u32),
-    pub tiled_fbo_dims: (u32, u32),
-    pub used_screen_dims: (u32, u32),
-    pub app_pixel_scalar: f64,
+    pub min_dims: (f64, f64),
+    pub max_dims: (f64, f64),
+    pub native_dims: (u32, u32),
+    pub pixel_scalar: f64,
+    pub native_pre_pad: (u32, u32),
+    pub used_native_dims: (u32, u32),
+    pub dims: (f64, f64),
 }
 
 impl RenderDims {
-    fn new(min_aspect_ratio: f64, max_aspect_ratio: f64, app_height: f64, full_screen_dims: (u32, u32)) -> RenderDims {
-        let ratio = full_screen_dims.0 as f64 / full_screen_dims.1 as f64;
-        let used_screen_dims = if ratio < min_aspect_ratio {
-            let mut h = (full_screen_dims.0 as f64 / min_aspect_ratio).floor() as u32;
-            if (full_screen_dims.1 - h) % 2 != 0 { h -= 1; }
-            (full_screen_dims.0, h)
-        } else if ratio > max_aspect_ratio {
-            let mut w = (full_screen_dims.1 as f64 * max_aspect_ratio).floor() as u32;
-            if (full_screen_dims.0 - w) % 2 != 0 { w -= 1; }
-            (w, full_screen_dims.1)
-        } else {
-            full_screen_dims
-        };
-        let ratio = used_screen_dims.0 as f64 / used_screen_dims.1 as f64;
-        let app_dims = (app_height * ratio, app_height);
-        let app_pixel_scalar = if used_screen_dims.1 == full_screen_dims.1 {
-            full_screen_dims.1 as f64 / app_dims.1
-        } else {
-            full_screen_dims.0 as f64 / app_dims.0
-        };
-        RenderDims {
-            min_aspect_ratio, max_aspect_ratio, app_dims, full_screen_dims, used_screen_dims, app_pixel_scalar,
-            tiled_fbo_dims: (to_fbo_dim(app_height * max_aspect_ratio), to_fbo_dim(app_height)),
-        }
+    fn new(min_dims: (f64, f64), max_dims: (f64, f64), native_dims: (u32, u32)) -> RenderDims {
+        let scalar_from_min = (native_dims.0 as f64 / min_dims.0).min(native_dims.1 as f64 / min_dims.1);
+        let scalar_from_max = (native_dims.0 as f64 / max_dims.0).max(native_dims.1 as f64 / max_dims.1);
+        let pixel_scalar = scalar_from_min.min(scalar_from_max).max(1.0);
+        let used_native_dims = (
+            native_dims.0.min((max_dims.0 * pixel_scalar).floor() as u32),
+            native_dims.1.min((max_dims.1 * pixel_scalar).floor() as u32),
+        );
+        let native_pad = (native_dims.0 - used_native_dims.0, native_dims.1 - used_native_dims.1);
+        let native_pre_pad = (native_pad.0 / 2, native_pad.1 / 2);
+        let dims = (used_native_dims.0 as f64 / pixel_scalar, used_native_dims.1 as f64 / pixel_scalar);
+        RenderDims { min_dims, max_dims, native_dims, pixel_scalar, native_pre_pad, used_native_dims, dims }
     }
 
-    pub fn set_full_screen_dims(&mut self, screen_dims: (u32, u32)) {
-        *self = RenderDims::new(self.min_aspect_ratio, self.max_aspect_ratio, self.app_dims.1, screen_dims);
+    pub fn set_native_dims(&mut self, native_dims: (u32, u32)) {
+        *self = RenderDims::new(self.min_dims, self.max_dims, native_dims);
     }
 
     pub fn to_app_pos(&self, raw_x: i32, raw_y: i32) -> (f64, f64) {
+        let raw_y = self.native_dims.1 as i32 - raw_y;
         (
-            (raw_x as f64 - 0.5 * self.full_screen_dims.0 as f64) / self.app_pixel_scalar,
-            -(raw_y as f64 - 0.5 * self.full_screen_dims.1 as f64) / self.app_pixel_scalar,
+            (raw_x - self.native_pre_pad.0 as i32) as f64 / self.pixel_scalar,
+            (raw_y - self.native_pre_pad.1 as i32) as f64 / self.pixel_scalar,
         )
     }
-}
-
-fn to_fbo_dim(app_dim: f64) -> u32 {
-    (app_dim - 1e-7).ceil() as u32 + 1
 }
 
 pub struct RenderBuffer {
@@ -83,12 +68,12 @@ pub struct RenderBuffer {
 }
 
 impl RenderBuffer {
-    pub fn new(info: &AppInfo, screen_dims: (u32, u32), sprite_atlas: Atlas) -> RenderBuffer {
+    pub fn new(info: &AppInfo, native_dims: (u32, u32), sprite_atlas: Atlas) -> RenderBuffer {
         RenderBuffer {
             sprite_atlas,
             mode: Mode::Sprite,
             vbo_data: Vec::new(),
-            dims: RenderDims::new(info.min_aspect_ratio, info.max_aspect_ratio, info.app_height, screen_dims),
+            dims: RenderDims::new(info.min_dims, info.max_dims, native_dims),
         }
     }
 

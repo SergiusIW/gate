@@ -55,7 +55,7 @@ impl<A: AppAssetId> Renderer<A> {
         SpriteRenderer { r: self }
     }
 
-    pub(crate) fn app_dims(&self) -> (f64, f64) { self.b.dims.app_dims }
+    pub(crate) fn app_dims(&self) -> (f64, f64) { self.b.dims.dims }
 
     pub(crate) fn to_app_pos(&self, raw_x: i32, raw_y: i32) -> (f64, f64) {
         self.b.dims.to_app_pos(raw_x, raw_y)
@@ -66,18 +66,19 @@ impl<A: AppAssetId> Renderer<A> {
     }
 
     pub(crate) fn set_screen_dims(&mut self, dims: (u32, u32)) {
-        if dims != self.b.dims.full_screen_dims {
-            self.b.dims.set_full_screen_dims(dims);
+        if dims != self.b.dims.native_dims {
+            self.b.dims.set_native_dims(dims);
             self.set_scissor();
         }
     }
 
     fn set_scissor(&mut self) {
+        let dims = &self.b.dims;
         self.c.set_scissor(
-            (self.b.dims.full_screen_dims.0 - self.b.dims.used_screen_dims.0) / 2,
-            (self.b.dims.full_screen_dims.1 - self.b.dims.used_screen_dims.1) / 2,
-            self.b.dims.used_screen_dims.0,
-            self.b.dims.used_screen_dims.1,
+            dims.native_pre_pad.0,
+            dims.native_pre_pad.1,
+            dims.used_native_dims.0,
+            dims.used_native_dims.1,
         );
     }
 }

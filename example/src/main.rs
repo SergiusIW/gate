@@ -21,7 +21,7 @@ mod asset_id { include!(concat!(env!("OUT_DIR"), "/asset_id.rs")); }
 use asset_id::{AssetId, SpriteId, MusicId, SoundId};
 
 // Note: the assets that we placed in the src_assets directory can be referenced using the
-//       SpriteId, TileId, MusicId, and SoundId enums
+//       SpriteId, MusicId, and SoundId enums
 
 struct HeldDisc { value: u8, pos: (f64, f64) }
 
@@ -40,7 +40,8 @@ fn disc_pos(pillar_index: usize, height_index: usize) -> (f64, f64) {
     (-27. + pillar_index as f64 * 27., 2.5 + height_index as f64 * 5.)
 }
 
-fn pillar_for_cursor(cursor: (f64, f64)) -> Option<usize> {
+fn pillar_for_cursor(cursor: (f64, f64), dims: (f64, f64)) -> Option<usize> {
+    let cursor = (cursor.0 - 0.5 * dims.0, cursor.1 - 0.5 * dims.1);
     (0..3).find(|&idx| {
         let cursor_x = cursor.0 + 13.5 - (13.5 * idx as f64);
         cursor_x > -6. && cursor_x < 6. && cursor.1 > -5.5 && cursor.1 < 9.
@@ -65,7 +66,7 @@ impl App<AssetId> for TowerGame {
             KeyCode::Num1 => Some(0),
             KeyCode::Num2 => Some(1),
             KeyCode::Num3 => Some(2),
-            KeyCode::MouseLeft => pillar_for_cursor(ctx.cursor()),
+            KeyCode::MouseLeft => pillar_for_cursor(ctx.cursor(), ctx.dims()),
             _ => None,
         };
         if let Some(index) = index {
@@ -95,25 +96,12 @@ impl App<AssetId> for TowerGame {
         let mut renderer = renderer.sprite_mode();
         for x in 0..((app_width / 16.).ceil() as usize) {
             for y in 0..((app_height / 16.).ceil() as usize) {
-                let affine = Affine::translate(
-                    8. + x as f64 * 16. - 0.5 * app_width,
-                    8. + y as f64 * 16. - 0.5 * app_height,
-                );
+                let affine = Affine::translate(8. + x as f64 * 16., 8. + y as f64 * 16.);
                 let tile = if (x + y) % 2 == 0 { SpriteId::BgTileR0C0 } else { SpriteId::BgTileR0C1 };
                 renderer.draw(&affine, tile);
             }
         }
-        /*{ // drawing tiles
-            let mut renderer = renderer.tiled_mode(0.5 * app_width, 0.5 * app_height);
-            for x in 0..((app_width / 16.).ceil() as usize) {
-                for y in 0..((app_height / 16.).ceil() as usize) {
-                    let affine = Affine::translate(8. + x as f64 * 16., 8. + y as f64 * 16.);
-                    let tile = if (x + y) % 2 == 0 { TileId::BgTileR0C0 } else { TileId::BgTileR0C1 };
-                    renderer.draw(&affine, tile);
-                }
-            }
-        }*/
-        let base = Affine::scale(0.5).pre_translate(0., -10.);
+        let base = Affine::translate(0.5 * app_width, 0.5 * app_height - 5.).pre_scale(0.5);
         renderer.draw(&base, SpriteId::Pillars);
         for pillar_index in 0..self.pillars.len() {
             let pillar = &self.pillars[pillar_index];
@@ -129,6 +117,8 @@ impl App<AssetId> for TowerGame {
 }
 
 fn main() {
-    let info = AppInfo::with_app_height(48.).title("Tower");
+    let info = AppInfo::with_max_dims(86., 48.)
+                       .min_dims(64., 44.)
+                       .title("Tower");
     gate::run(info, TowerGame { pillars: vec![vec![4, 3, 2, 1, 0], vec![], vec![]], held: None });
 }

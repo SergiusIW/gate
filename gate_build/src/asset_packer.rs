@@ -152,14 +152,14 @@ impl AssetPacker {
     /// Generates Rust enums to use as handles for all of the packed assets.
     ///
     /// The generated code will consist of four enums:
-    /// `SpriteId`, `TileId`, `MusicId`, and `SoundId`.
+    /// `SpriteId`, `MusicId`, and `SoundId`.
     /// These types are collected together in the type `AssetId`,
     /// which implements `gate::asset_id::AppAssetId`.
     /// Constructing a `gate::App` instance with this as the Asset ID type
     /// will allow you to use the generated handles to refer to assets.
     ///
     /// This method should be called after packing all of the assets.
-    /// The `sprites` and `tiles` methods must be called before this,
+    /// The `sprites` method must be called before this,
     /// but `music` and `sounds` may be omitted if there is no audio.
     ///
     /// The generated Rust code is written to `out`.

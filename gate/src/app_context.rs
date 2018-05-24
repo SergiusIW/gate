@@ -47,10 +47,9 @@ impl<A: AppAssetId> AppContext<A> {
     }
 
     fn bound_cursor(&mut self) {
-        let (half_width, half_height) = (self.dims.0 * 0.5, self.dims.1 * 0.5);
         self.cursor = (
-            self.cursor.0.max(-half_width).min(half_width),
-            self.cursor.1.max(-half_height).min(half_height),
+            self.cursor.0.max(0.).min(self.dims.0),
+            self.cursor.1.max(0.).min(self.dims.1),
         );
     }
 

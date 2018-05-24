@@ -38,7 +38,6 @@
 //!     let mut packer = AssetPacker::new(Path::new("assets"));
 //!     packer.cargo_rerun_if_changed();
 //!     packer.sprites(Path::new("sprites"));
-//!     packer.tiles(Path::new("tiles"));
 //!     packer.music(Path::new("music"));
 //!     packer.sounds(Path::new("sounds"));
 //!     packer.gen_asset_id_code(&gen_code_path);

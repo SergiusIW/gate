@@ -19,7 +19,7 @@ pub fn append_sprite(r: &mut RenderBuffer, affine: &Affine, sprite_id: u16, flas
     assert!(r.mode == Mode::Sprite);
 
     let img_coords = r.sprite_atlas.images[&sprite_id];
-    let affine = affine.post_scale(r.dims.app_pixel_scalar);
+    let affine = affine.post_scale(r.dims.pixel_scalar);
     let flash_ratio = (flash_ratio as f32).max(0.0).min(1.0);
 
     let pad = (
@@ -37,7 +37,8 @@ pub fn append_sprite(r: &mut RenderBuffer, affine: &Affine, sprite_id: u16, flas
     let dst_lb = (dst_lt.0, dst_rb.1);
     let dst_rt = (dst_rb.0, dst_lt.1);
 
-    let affine = affine.post_scale_axes(2.0 / r.dims.full_screen_dims.0 as f64, 2.0 / r.dims.full_screen_dims.1 as f64);
+    let affine = affine.post_translate(-0.5 * r.dims.used_native_dims.0 as f64, -0.5 * r.dims.used_native_dims.1 as f64)
+                       .post_scale_axes(2.0 / r.dims.native_dims.0 as f64, 2.0 / r.dims.native_dims.1 as f64);
     let aff_lt = affine.apply_f32(dst_lt);
     let aff_rb = affine.apply_f32(dst_rb);
     let aff_lb = affine.apply_f32(dst_lb);

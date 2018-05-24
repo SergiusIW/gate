@@ -25,39 +25,33 @@
 /// ```rust
 /// use gate::AppInfo;
 ///
-/// let info = AppInfo::with_app_height(100.)
+/// let info = AppInfo::with_max_dims(160., 90.)
+///                    .min_dims(120., 86.)
 ///                    .title("My Game")
 ///                    .target_fps(30.)
 ///                    .print_workload_info()
 ///                    .print_gl_info();
 /// ```
 pub struct AppInfo {
-    pub(crate) app_height: f64,
     pub(crate) window_pixels: (u32, u32),
-    pub(crate) min_aspect_ratio: f64,
-    pub(crate) max_aspect_ratio: f64,
+    pub(crate) min_dims: (f64, f64),
+    pub(crate) max_dims: (f64, f64),
     pub(crate) title: &'static str,
     pub(crate) target_fps: f64,
     pub(crate) print_workload_info: bool,
     pub(crate) print_gl_info: bool,
 }
 
-impl AppInfo {
-    /// Returns a new AppInfo, initialized with the required value `app_height`.
-    ///
-    /// The `app_height` is the height of the screen in conceptual "app pixels",
-    /// which defines the units used by the renderers.
-    /// Even if the window is resized and the aspect ratio changed,
-    /// the app height will always remain the same.
-    /// The choice of this is important for the `TiledRenderer` in particular.
-    pub fn with_app_height(app_height: f64) -> AppInfo {
-        assert!(app_height >= 1e-30 && app_height <= 3000., "unrealistic app height {}", app_height);
+// FIXME update rustdoc comments relating to app dims...
 
+impl AppInfo {
+    pub fn with_max_dims(max_width: f64, max_height: f64) -> AppInfo {
+        assert!(max_width >= 1e-30 && max_width <= 3000., "unrealistic max_width: {}", max_width);
+        assert!(max_height >= 1e-30 && max_height <= 3000., "unrealistic max_height: {}", max_height);
         AppInfo {
-            app_height,
             window_pixels: (800, 600),
-            min_aspect_ratio: 4. / 3.,
-            max_aspect_ratio: 16. / 9.,
+            min_dims: (0., 0.),
+            max_dims: (max_width, max_height),
             title: "untitled app",
             target_fps: 60.,
             print_workload_info: false,
@@ -65,13 +59,9 @@ impl AppInfo {
         }
     }
 
-    /// Specifies the minimum and maximum aspect ratio for the game, enforced by
-    /// letterboxing/pillarboxing if necessary (default is `4/3` to `16/9`).
-    pub fn aspect_ratio_range(mut self, min_ratio: f64, max_ratio: f64) -> Self {
-        assert!(0.2 < min_ratio && min_ratio < max_ratio && max_ratio < 5.0, "invalid aspect ratios");
-        // TODO ensure there is a large enough gap between min_ratio and max_ratio, so that pixel rounding isn't an issue
-        self.min_aspect_ratio = min_ratio;
-        self.max_aspect_ratio = max_ratio;
+    pub fn min_dims(mut self, min_width: f64, min_height: f64) -> Self {
+        assert!(self.min_dims.0 <= self.max_dims.0 && self.min_dims.1 <= self.max_dims.1);
+        self.min_dims = (min_width, min_height);
         self
     }
 
