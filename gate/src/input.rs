@@ -25,12 +25,13 @@ pub enum KeyCode {
     Right, Left, Down, Up,
     Return,
     Space,
+    Backspace, Delete,
     MouseLeft, MouseRight, MouseMiddle,
 }
 
 #[cfg(target_arch = "wasm32")]
 impl KeyCode {
-    fn count() -> u8 { KeyCode::Space as u8 + 1 }
+    fn count() -> u8 { KeyCode::MouseMiddle as u8 + 1 }
     pub(crate) fn from_u8(id: u8) -> Option<KeyCode> {
         if id < Self::count() { Some(unsafe { mem::transmute(id) }) } else { None }
     }

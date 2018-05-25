@@ -123,6 +123,8 @@ fn sdl_to_gate_key(sdl: SdlKeyCode) -> Option<KeyCode> {
         SdlKeyCode::Up => Some(KeyCode::Up),
         SdlKeyCode::Return => Some(KeyCode::Return),
         SdlKeyCode::Space => Some(KeyCode::Space),
+        SdlKeyCode::Backspace => Some(KeyCode::Backspace),
+        SdlKeyCode::Delete => Some(KeyCode::Delete),
         _ => None,
     }
 }
