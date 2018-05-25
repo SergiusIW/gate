@@ -44,12 +44,17 @@ pub struct AppInfo {
     pub(crate) print_gl_info: bool,
 }
 
-// FIXME update rustdoc comments relating to app dims...
-
 impl AppInfo {
+    /// Returns a new `AppInfo`, initialized with the maximum app dimensions.
+    ///
+    /// These dimensions are specified in conceptual "app pixels",
+    /// which defines the units used by the renderers.
+    /// Even if a window is resized, this conecptual `max_width` and `max_height`
+    /// will never be exceeded.
+    /// Max width/height must be at least 1.
     pub fn with_max_dims(max_width: f64, max_height: f64) -> AppInfo {
-        assert!(max_width >= 1e-30 && max_width <= 3000., "unrealistic max_width: {}", max_width);
-        assert!(max_height >= 1e-30 && max_height <= 3000., "unrealistic max_height: {}", max_height);
+        assert!(max_width >= 1. && max_width <= 3000., "unrealistic max_width: {}", max_width);
+        assert!(max_height >= 1. && max_height <= 3000., "unrealistic max_height: {}", max_height);
         AppInfo {
             window_pixels: (800, 600),
             min_dims: (0., 0.),
@@ -62,12 +67,23 @@ impl AppInfo {
         }
     }
 
+    /// Specifies the minimum dimensions in "app pixels" (default is 0).
+    ///
+    /// Even if you want height to be fixed, it is good practice to design the app so that
+    /// min_height is slightly less than max_height.
+    /// Under normal circumstances, the app dimensions will not fall below these minimum
+    /// dimensions, but there are some extreme cases in which it could.
+    /// App dimensions will never fall below 1.
     pub fn min_dims(mut self, min_width: f64, min_height: f64) -> Self {
         assert!(self.min_dims.0 <= self.max_dims.0 && self.min_dims.1 <= self.max_dims.1);
         self.min_dims = (min_width, min_height);
         self
     }
 
+    /// Specifies the tile width for meshing tiles.
+    ///
+    /// If this value is set, the app dimensions are chosen carefully to ensure that
+    /// the width of a tile is aligned to native pixels.
     pub fn tile_width(mut self, tile_width: u32) -> Self {
         assert!(tile_width > 0 && tile_width <= 10000, "unrealistic tile_width {}", tile_width);
         self.tile_width = Some(tile_width);
@@ -77,8 +93,8 @@ impl AppInfo {
     /// Specifies a window title (default is "untitled app").
     pub fn title(mut self, title: &'static str) -> Self { self.title = title; self }
 
-    /// Specifies the intial width and height of the window (default is width `800` height `600`).
-    pub fn window_pixels(mut self, width: u32, height: u32) -> Self {
+    /// Specifies the intial native width and height of the window (default is `800` by `600`).
+    pub fn native_dims(mut self, width: u32, height: u32) -> Self {
         assert!(width >= 10 && width <= 3000, "unrealistic window width {}", width);
         assert!(height >= 10 && height <= 3000, "unrealistic window height {}", height);
         self.window_pixels = (width, height);

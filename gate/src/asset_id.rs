@@ -16,7 +16,7 @@
 //!
 //! The user is not expected to implement these traits themselves directly.
 //! Rather, the generated code from "gate_build" will implement these traits.
-//! Gate build will generate four enums: `SpriteId`, `TileId`, `MusicId`, and `SoundId`,
+//! Gate build will generate four enums: `SpriteId`, `MusicId`, and `SoundId`,
 //! that implement `IdU16`.
 //! It will also generate a collection type `AssetId` that implements `AppAssetId`.
 

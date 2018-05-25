@@ -56,18 +56,25 @@ impl<A: AppAssetId> AppContext<A> {
         );
     }
 
-    /// Returns the app (width, height), which are restricted by the app height and the
-    /// aspect ratio range specified in `AppInfo`.
+    /// Returns the app (width, height), which are restricted by the min/max dimensions
+    /// specified in `AppInfo`.
     pub fn dims(&self) -> (f64, f64) { self.dims }
 
     /// Returns the mouse cursor (x, y) position in app coordinates.
     ///
-    /// The x coordinate lies in the range `-0.5 * self.dims().0` to `0.5 * self.dims().0`.
-    /// The y coordinate lies in the range `-0.5 * self.dims().1` to `0.5 * self.dims().1`.
+    /// The x coordinate lies in the range `0` to `self.dims().0`.
+    /// The y coordinate lies in the range `0` to `self.dims().1`.
     pub fn cursor(&self) -> (f64, f64) { self.cursor }
 
+    /// Returns the width of a native pixel, measured in "app pixels".
+    ///
+    /// This value will always be at most 1.
     pub fn native_px(&self) -> f64 { self.native_px }
 
+    /// Convenience method for aligning an `(x, y)` position to native pixels.
+    ///
+    /// This is typically used to align a camera position.
+    /// See also `self.native_px()`.
     pub fn native_px_align(&self, x: f64, y: f64) -> (f64, f64) {
         (
             (x / self.native_px).round() * self.native_px,

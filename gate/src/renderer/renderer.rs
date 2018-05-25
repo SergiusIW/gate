@@ -27,7 +27,7 @@ use super::core_renderer::CoreRenderer;
 
 /// Contains methods for rendering visuals to screen.
 ///
-/// The renderer origin is the center of the screen, with +X meaning "right" and +Y meaning "up".
+/// The renderer origin is the bottom-left of the screen, with +X meaning "right" and +Y meaning "up".
 /// The dimensions of the screen in renderer units ("app pixels") are `AppContext.dims()`.
 /// The default scaling of each image is such that one source image pixel equals one "app pixel".
 ///

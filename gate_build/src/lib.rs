@@ -21,8 +21,7 @@
 //! # Example build script
 //!
 //! In the below example, the user should place sprite png files in the "sprites" directory,
-//! tile png files in the "tiles" directory, music ogg files in the "music" directory,
-//! and sound ogg files in the "sounds" directory.
+//! music ogg files in the "music" directory, and sound ogg files in the "sounds" directory.
 //!
 //! ```rust,no_run
 //! extern crate gate_build;
