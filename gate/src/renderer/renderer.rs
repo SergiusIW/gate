@@ -57,6 +57,8 @@ impl<A: AppAssetId> Renderer<A> {
 
     pub(crate) fn app_dims(&self) -> (f64, f64) { self.b.dims.dims }
 
+    pub(crate) fn native_px(&self) -> f64 { 1. / self.b.dims.pixel_scalar }
+
     pub(crate) fn to_app_pos(&self, raw_x: i32, raw_y: i32) -> (f64, f64) {
         self.b.dims.to_app_pos(raw_x, raw_y)
     }

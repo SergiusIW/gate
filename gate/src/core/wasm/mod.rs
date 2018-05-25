@@ -107,13 +107,15 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         let core_renderer = CoreRenderer::new();
         self.renderer = Some(Renderer::<AS>::new(render_buffer, core_renderer));
 
-        self.ctx.set_dims(self.renderer.as_ref().unwrap().app_dims());
+        let renderer = self.renderer.as_ref().unwrap();
+        self.ctx.set_dims(renderer.app_dims(), renderer.native_px());
         self.app.start(&mut self.ctx);
     }
 
     fn resize(&mut self, dims: (u32, u32)) {
-        self.renderer.as_mut().unwrap().set_screen_dims(dims);
-        self.ctx.set_dims(self.renderer.as_ref().unwrap().app_dims());
+        let renderer = self.renderer.as_mut().unwrap();
+        renderer.set_screen_dims(dims);
+        self.ctx.set_dims(renderer.app_dims(), renderer.native_px());
     }
 
     fn update_and_draw(&mut self, time_sec: f64) {
@@ -151,7 +153,7 @@ pub fn run<AS: 'static + AppAssetId, AP: 'static + App<AS>>(info: AppInfo, app: 
     mark_app_created_flag();
     *APP_RUNNER.r.borrow_mut() = Some(Box::new(AppRunner {
         app, info,
-        ctx: AppContext::new(CoreAudio { }, (0., 0.)),
+        ctx: AppContext::new(CoreAudio { }, (0., 0.), 1.),
         renderer: None,
         last_time_sec: None,
         held_keys: HashSet::new(),

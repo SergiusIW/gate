@@ -24,15 +24,17 @@ pub struct AppContext<A: AppAssetId> {
     dims: (f64, f64),
     cursor: (f64, f64),
     close_requested: bool,
+    native_px: f64,
 }
 
 impl<A: AppAssetId> AppContext<A> {
-    pub(crate) fn new(audio: CoreAudio, dims: (f64, f64)) -> AppContext<A> {
+    pub(crate) fn new(audio: CoreAudio, dims: (f64, f64), native_px: f64) -> AppContext<A> {
         AppContext {
             audio: Audio { core: audio, phantom: PhantomData },
             dims,
             cursor: (0., 0.),
             close_requested: false,
+            native_px,
         }
     }
 
@@ -41,8 +43,9 @@ impl<A: AppAssetId> AppContext<A> {
         self.bound_cursor();
     }
 
-    pub(crate) fn set_dims(&mut self, dims: (f64, f64)) {
+    pub(crate) fn set_dims(&mut self, dims: (f64, f64), native_px: f64) {
         self.dims = dims;
+        self.native_px = native_px;
         self.bound_cursor();
     }
 
@@ -62,6 +65,15 @@ impl<A: AppAssetId> AppContext<A> {
     /// The x coordinate lies in the range `-0.5 * self.dims().0` to `0.5 * self.dims().0`.
     /// The y coordinate lies in the range `-0.5 * self.dims().1` to `0.5 * self.dims().1`.
     pub fn cursor(&self) -> (f64, f64) { self.cursor }
+
+    pub fn native_px(&self) -> f64 { self.native_px }
+
+    pub fn native_px_align(&self, x: f64, y: f64) -> (f64, f64) {
+        (
+            (x / self.native_px).round() * self.native_px,
+            (y / self.native_px).round() * self.native_px,
+        )
+    }
 
     /// Closes the app entirely.
     pub fn close(&mut self) { self.close_requested = true; }
