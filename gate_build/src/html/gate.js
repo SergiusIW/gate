@@ -57,6 +57,7 @@ var cursorPos = { x: 0, y: 0 };
 
 var Module = {};
 Module.loadingAudioCount = 0;
+Module.currentlyRunning = false;
 
 function setSpriteAttribPointers () {
   gl.vertexAttribPointer(Module.spriteProg.attribs.vert, 2, gl.FLOAT, false, 7 * floatSize, 0);
@@ -251,6 +252,7 @@ function tryStart () {
 
 function tryStart2 () {
   if (Module.loadingAudioCount == 0) {
+    Module.currentlyRunning = true;
     Module.currentMusic = null;
     Module.gateWasmInit();
     Module.gateWasmOnResize(canvas.width, canvas.height);
@@ -265,35 +267,43 @@ function tryStart2 () {
 }
 
 function updateAndDraw(now) {
-  resizeCanvas();
-  const continuing = Module.gateWasmUpdateAndDraw(now, cursorPos.x, cursorPos.y);
-  if (!continuing) {
-    quitApp();
+  if (Module.currentlyRunning) {
+    resizeCanvas();
+    const continuing = Module.gateWasmUpdateAndDraw(now, cursorPos.x, cursorPos.y);
+    if (!continuing) {
+      quitApp();
+    }
   }
   requestAnimationFrame(updateAndDraw);
 }
 
 function handleKeyEvent(codeStr, down) {
-  const code = keycodes[codeStr];
-  if (code != undefined) {
-    const continuing = Module.gateWasmKeyEvent(code, down);
-    if (!continuing) {
-      quitApp();
+  if (Module.currentlyRunning) {
+    const code = keycodes[codeStr];
+    if (code != undefined) {
+      const continuing = Module.gateWasmKeyEvent(code, down);
+      if (!continuing) {
+        quitApp();
+      }
     }
   }
 }
 
 function handleMouseMotion(evt) {
-  cursorPos.x = evt.clientX;
-  cursorPos.y = evt.clientY;
+  if (Module.currentlyRunning) {
+    cursorPos.x = evt.clientX;
+    cursorPos.y = evt.clientY;
+  }
 }
 
 function handleMouseEvent(evt, down) {
-  cursorPos.x = evt.clientX;
-  cursorPos.y = evt.clientY;
-  const continuing = Module.gateWasmMouseEvent(cursorPos.x, cursorPos.y, evt.button, down)
-  if (!continuing) {
-    quitApp();
+  if (Module.currentlyRunning) {
+    cursorPos.x = evt.clientX;
+    cursorPos.y = evt.clientY;
+    const continuing = Module.gateWasmMouseEvent(cursorPos.x, cursorPos.y, evt.button, down)
+    if (!continuing) {
+      quitApp();
+    }
   }
 }
 
@@ -316,5 +326,5 @@ function readCStr(ptr) {
 }
 
 function quitApp() {
-  alert("FIXME implement quitting App");
+  Module.currentlyRunning = false;
 }
