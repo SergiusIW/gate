@@ -121,7 +121,7 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
     fn update_and_draw(&mut self, time_sec: f64) {
         let elapsed = self.last_time_sec.map(|x| time_sec - x).unwrap_or(0.0).max(0.0).min(0.1);
         if elapsed > 0.0 {
-            self.app.advance(elapsed, &mut self.ctx);
+            self.app.advance(elapsed.min(::MAX_TIMESTEP), &mut self.ctx);
         }
         self.last_time_sec = Some(time_sec);
 

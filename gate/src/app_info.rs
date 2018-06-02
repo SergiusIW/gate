@@ -103,7 +103,7 @@ impl AppInfo {
 
     /// Specifies the target frames-per-second (default is `60.`).
     pub fn target_fps(mut self, target_fps: f64) -> Self {
-        assert!(target_fps > 10. && target_fps < 200., "unrealistic target_fps: {}", target_fps);
+        assert!(target_fps >= 20. && target_fps < 200., "unrealistic target_fps: {}", target_fps);
         self.target_fps = target_fps;
         self
     }

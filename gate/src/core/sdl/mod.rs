@@ -100,7 +100,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 
         event_handler.process_events(&mut app, &mut ctx, &renderer);
         if ctx.close_requested() { break; }
-        app.advance(elapsed, &mut ctx);
+        app.advance(elapsed.min(::MAX_TIMESTEP), &mut ctx);
         if ctx.close_requested() { break; }
     }
 }

@@ -73,6 +73,8 @@ pub use app_info::AppInfo;
 use asset_id::AppAssetId;
 use renderer::Renderer;
 
+const MAX_TIMESTEP: f64 = 1. / 15.;
+
 /// Invoke this in a `main` method to run the `App`.
 ///
 /// Will panic if this method is called more than once.
