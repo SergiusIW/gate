@@ -266,14 +266,20 @@ function tryStart2 () {
 
 function updateAndDraw(now) {
   resizeCanvas();
-  Module.gateWasmUpdateAndDraw(now, cursorPos.x, cursorPos.y);
+  const continuing = Module.gateWasmUpdateAndDraw(now, cursorPos.x, cursorPos.y);
+  if (!continuing) {
+    quitApp();
+  }
   requestAnimationFrame(updateAndDraw);
 }
 
 function handleKeyEvent(codeStr, down) {
   const code = keycodes[codeStr];
   if (code != undefined) {
-    Module.gateWasmKeyEvent(code, down);
+    const continuing = Module.gateWasmKeyEvent(code, down);
+    if (!continuing) {
+      quitApp();
+    }
   }
 }
 
@@ -285,7 +291,10 @@ function handleMouseMotion(evt) {
 function handleMouseEvent(evt, down) {
   cursorPos.x = evt.clientX;
   cursorPos.y = evt.clientY;
-  Module.gateWasmMouseEvent(cursorPos.x, cursorPos.y, evt.button, down)
+  const continuing = Module.gateWasmMouseEvent(cursorPos.x, cursorPos.y, evt.button, down)
+  if (!continuing) {
+    quitApp();
+  }
 }
 
 function resizeCanvas() {
@@ -304,4 +313,8 @@ function readCStr(ptr) {
   var endPtr = ptr;
   for (endPtr = ptr; memory[endPtr] !== 0; endPtr++);
   return new TextDecoder("UTF-8").decode(memory.subarray(ptr, endPtr));
+}
+
+function quitApp() {
+  alert("FIXME implement quitting App");
 }

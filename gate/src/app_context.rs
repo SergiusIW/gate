@@ -85,7 +85,6 @@ impl<A: AppAssetId> AppContext<A> {
     /// Closes the app entirely.
     pub fn close(&mut self) { self.close_requested = true; }
 
-    #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn close_requested(&self) -> bool { self.close_requested }
 }
 

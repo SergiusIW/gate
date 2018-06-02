@@ -19,7 +19,7 @@ use std::os::raw::{c_int, c_char};
 
 use ::input::KeyCode;
 use ::renderer::shaders;
-use super::{app_runner_is_defined, app_runner_borrow, app_runner_borrow_mut};
+use super::{app_runner_is_defined, app_runner_borrow, app_runner_borrow_mut, delete_app };
 
 #[no_mangle]
 pub unsafe extern "C" fn gateWasmInit() {
@@ -32,20 +32,28 @@ pub unsafe extern "C" fn gateWasmOnResize(w: c_int, h: c_int) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn gateWasmUpdateAndDraw(time_millis: f64, cursor_x: c_int, cursor_y: c_int) {
+pub unsafe extern "C" fn gateWasmUpdateAndDraw(time_millis: f64, cursor_x: c_int, cursor_y: c_int) -> c_int {
     app_runner_borrow_mut().update_cursor(cursor_x as i32, cursor_y as i32);
-    app_runner_borrow_mut().update_and_draw(time_millis / 1000.0);
+    let continuing = app_runner_borrow_mut().update_and_draw(time_millis / 1000.0);
+    if !continuing {
+        delete_app();
+    }
+    if continuing { 1 } else { 0 }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn gateWasmKeyEvent(code: c_int, down: bool) {
+pub unsafe extern "C" fn gateWasmKeyEvent(code: c_int, down: bool) -> c_int {
     assert!(code >= 0 && code <= 255);
     let code = KeyCode::from_u8(code as u8).unwrap();
-    app_runner_borrow_mut().input(code, down);
+    let continuing = app_runner_borrow_mut().input(code, down);
+    if !continuing {
+        delete_app();
+    }
+    if continuing { 1 } else { 0 }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn gateWasmMouseEvent(cursor_x: c_int, cursor_y: c_int, button: c_int, down: bool) {
+pub unsafe extern "C" fn gateWasmMouseEvent(cursor_x: c_int, cursor_y: c_int, button: c_int, down: bool) -> c_int {
     app_runner_borrow_mut().update_cursor(cursor_x as i32, cursor_y as i32);
     let code = match button {
         0 => Some(KeyCode::MouseLeft),
@@ -53,9 +61,15 @@ pub unsafe extern "C" fn gateWasmMouseEvent(cursor_x: c_int, cursor_y: c_int, bu
         2 => Some(KeyCode::MouseRight),
         _ => None,
     };
-    if let Some(code) = code {
-        app_runner_borrow_mut().input(code, down);
+    let continuing = if let Some(code) = code {
+        app_runner_borrow_mut().input(code, down)
+    } else {
+        false
+    };
+    if !continuing {
+        delete_app();
     }
+    if continuing { 1 } else { 0 }
 }
 
 #[no_mangle]
