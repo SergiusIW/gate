@@ -80,7 +80,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 
     let mut clock = AppClock::new(timer, &info);
 
-    'main: loop {
+    loop {
         unsafe {
             gl::ClearColor(0., 0., 0., 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
@@ -98,10 +98,10 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 
         let elapsed = clock.step();
 
-        event_handler.process_events(&mut app, &mut ctx, &renderer);
-        if ctx.close_requested() { break; }
+        let continuing = event_handler.process_events(&mut app, &mut ctx, &renderer);
+        if !continuing { break; }
         app.advance(elapsed.min(::MAX_TIMESTEP), &mut ctx);
-        if ctx.close_requested() { break; }
+        if ctx.take_close_request() { break; }
     }
 }
 

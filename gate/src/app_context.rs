@@ -85,7 +85,11 @@ impl<A: AppAssetId> AppContext<A> {
     /// Closes the app entirely.
     pub fn close(&mut self) { self.close_requested = true; }
 
-    pub(crate) fn close_requested(&self) -> bool { self.close_requested }
+    pub(crate) fn take_close_request(&mut self) -> bool {
+        let result = self.close_requested;
+        self.close_requested = false;
+        result
+    }
 }
 
 /// Struct for audio playback.

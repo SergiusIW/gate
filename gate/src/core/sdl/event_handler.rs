@@ -37,7 +37,7 @@ impl EventHandler {
     }
 
     pub fn process_events<AS: AppAssetId, AP: App<AS>>(&mut self, app: &mut AP, ctx: &mut AppContext<AS>,
-                                                       renderer: &Renderer<AS>) {
+                                                       renderer: &Renderer<AS>) -> bool {
         for event in self.pump.poll_iter() {
             match event {
                 Event::Quit { .. } => ctx.close(),
@@ -74,8 +74,9 @@ impl EventHandler {
                 },
                 _ => {},
             }
-            if ctx.close_requested() { break; }
+            if ctx.take_close_request() { return false; }
         }
+        true
     }
 }
 

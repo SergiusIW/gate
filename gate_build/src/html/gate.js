@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function gate(canvas, wasmFilePath) {
+function gate(canvas, wasmFilePath, onQuit) {
 
   const floatSize = 4;
 
@@ -56,6 +56,7 @@ function gate(canvas, wasmFilePath) {
   var Module = {};
   Module.loadingAudioCount = 0;
   Module.currentlyRunning = false;
+  Module.appQuit = false;
 
   function setSpriteAttribPointers () {
     gl.vertexAttribPointer(Module.spriteProg.attribs.vert, 2, gl.FLOAT, false, 7 * floatSize, 0);
@@ -272,7 +273,7 @@ function gate(canvas, wasmFilePath) {
         quitApp();
       }
     }
-    requestAnimationFrame(updateAndDraw);
+    requestAnimationFrame(updateAndDraw); // TODO don't request animation frames after app has stopped?
   }
 
   function handleKeyEvent(codeStr, down) {
@@ -325,6 +326,25 @@ function gate(canvas, wasmFilePath) {
 
   function quitApp() {
     Module.currentlyRunning = false;
+    Module.appQuit = true;
+    if (Module.currentMusic != null) {
+      Module.currentMusic.pause();
+    }
+    if (onQuit) {
+      onQuit();
+    }
   }
 
+  return {
+    restart: function() {
+      if (!Module.currentlyRunning && Module.appQuit) {
+        Module.currentlyRunning = true;
+        Module.appQuit = false;
+        if (Module.currentMusic != null) {
+          Module.currentMusic.play();
+        }
+        // TODO notify app of all keys that were released after the app was quit...
+      }
+    }
+  };
 }

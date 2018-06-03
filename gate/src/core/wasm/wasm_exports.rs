@@ -19,7 +19,7 @@ use std::os::raw::{c_int, c_char};
 
 use ::input::KeyCode;
 use ::renderer::shaders;
-use super::{app_runner_is_defined, app_runner_borrow, app_runner_borrow_mut, delete_app };
+use super::{app_runner_is_defined, app_runner_borrow, app_runner_borrow_mut };
 
 #[no_mangle]
 pub unsafe extern "C" fn gateWasmInit() {
@@ -35,9 +35,6 @@ pub unsafe extern "C" fn gateWasmOnResize(w: c_int, h: c_int) {
 pub unsafe extern "C" fn gateWasmUpdateAndDraw(time_millis: f64, cursor_x: c_int, cursor_y: c_int) -> c_int {
     app_runner_borrow_mut().update_cursor(cursor_x as i32, cursor_y as i32);
     let continuing = app_runner_borrow_mut().update_and_draw(time_millis / 1000.0);
-    if !continuing {
-        delete_app();
-    }
     if continuing { 1 } else { 0 }
 }
 
@@ -46,9 +43,6 @@ pub unsafe extern "C" fn gateWasmKeyEvent(code: c_int, down: bool) -> c_int {
     assert!(code >= 0 && code <= 255);
     let code = KeyCode::from_u8(code as u8).unwrap();
     let continuing = app_runner_borrow_mut().input(code, down);
-    if !continuing {
-        delete_app();
-    }
     if continuing { 1 } else { 0 }
 }
 
@@ -64,11 +58,8 @@ pub unsafe extern "C" fn gateWasmMouseEvent(cursor_x: c_int, cursor_y: c_int, bu
     let continuing = if let Some(code) = code {
         app_runner_borrow_mut().input(code, down)
     } else {
-        false
+        true
     };
-    if !continuing {
-        delete_app();
-    }
     if continuing { 1 } else { 0 }
 }
 

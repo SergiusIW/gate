@@ -20,7 +20,6 @@ use std::cell::{self, RefCell};
 use std::mem;
 use std::io::Cursor;
 use std::os::raw::c_int;
-use std::sync::atomic::Ordering;
 
 use ::{App, AppContext};
 use asset_id::{AppAssetId, IdU16};
@@ -31,7 +30,7 @@ use renderer::atlas::Atlas;
 use renderer::render_buffer::RenderBuffer;
 use renderer::core_renderer::CoreRenderer;
 use self::wasm_imports::*;
-use super::{mark_app_created_flag, APP_CREATED};
+use super::mark_app_created_flag;
 
 pub struct CoreAudio;
 
@@ -126,11 +125,12 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         }
         self.last_time_sec = Some(time_sec);
 
-        if !self.ctx.close_requested() {
+        let close_requested = self.ctx.take_close_request();
+        if !close_requested {
             self.app.render(self.renderer.as_mut().unwrap(), &self.ctx);
             self.renderer.as_mut().unwrap().flush();
         }
-        !self.ctx.close_requested()
+        !close_requested
     }
 
     fn update_cursor(&mut self, cursor_x: i32, cursor_y: i32) {
@@ -147,7 +147,7 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
                 self.app.key_up(key, &mut self.ctx);
             }
         }
-        !self.ctx.close_requested()
+        !self.ctx.take_close_request()
     }
 
     fn music_count(&self) -> u16 { AS::Music::count() }
@@ -163,14 +163,4 @@ pub fn run<AS: 'static + AppAssetId, AP: 'static + App<AS>>(info: AppInfo, app: 
         last_time_sec: None,
         held_keys: HashSet::new(),
     }));
-}
-
-fn delete_app() {
-    *APP_RUNNER.r.borrow_mut() = None;
-    unmark_app_created_flag();
-}
-
-fn unmark_app_created_flag() {
-    let previously_created = APP_CREATED.swap(false, Ordering::Relaxed);
-    assert!(previously_created);
 }
