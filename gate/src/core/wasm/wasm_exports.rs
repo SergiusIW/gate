@@ -87,3 +87,8 @@ pub unsafe extern "C" fn gateWasmSpriteVertSrc() -> *const c_char {
 pub unsafe extern "C" fn gateWasmSpriteFragSrc() -> *const c_char {
     shaders::FS_SPRITE_SRC
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn gateWasmOnRestart() {
+    app_runner_borrow_mut().on_restart();
+}

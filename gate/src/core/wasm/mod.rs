@@ -60,6 +60,7 @@ trait TraitAppRunner {
     fn input(&mut self, key: KeyCode, down: bool) -> bool;
     fn music_count(&self) -> u16;
     fn sound_count(&self) -> u16;
+    fn on_restart(&mut self);
 }
 
 struct StaticAppRunner { r: RefCell<Option<Box<TraitAppRunner>>> }
@@ -110,6 +111,7 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         let renderer = self.renderer.as_ref().unwrap();
         self.ctx.set_dims(renderer.app_dims(), renderer.native_px());
         self.app.start(&mut self.ctx);
+        assert!(!self.ctx.take_close_request(), "unexpected close immediately upon start");
     }
 
     fn resize(&mut self, dims: (u32, u32)) {
@@ -152,6 +154,13 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
 
     fn music_count(&self) -> u16 { AS::Music::count() }
     fn sound_count(&self) -> u16 { AS::Sound::count() }
+
+    fn on_restart(&mut self) {
+        for key in self.held_keys.drain() {
+            self.app.key_up(key, &mut self.ctx);
+        }
+        assert!(!self.ctx.take_close_request(), "unexpected close immediately upon restart");
+    }
 }
 
 pub fn run<AS: 'static + AppAssetId, AP: 'static + App<AS>>(info: AppInfo, app: AP) {

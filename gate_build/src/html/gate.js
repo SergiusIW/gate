@@ -161,6 +161,7 @@ function gate(canvas, wasmFilePath, onQuit) {
     Module.gateWasmSoundCount = mod.exports.gateWasmSoundCount;
     Module.gateWasmSpriteVertSrc = mod.exports.gateWasmSpriteVertSrc;
     Module.gateWasmSpriteFragSrc = mod.exports.gateWasmSpriteFragSrc;
+    Module.gateWasmOnRestart = mod.exports.gateWasmOnRestart;
     tryStart();
   });
 
@@ -343,7 +344,7 @@ function gate(canvas, wasmFilePath, onQuit) {
         if (Module.currentMusic != null) {
           Module.currentMusic.play();
         }
-        // TODO notify app of all keys that were released after the app was quit...
+        Module.gateWasmOnRestart();
       }
     }
   };
