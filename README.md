@@ -1,6 +1,14 @@
 # Gate
 Gate is a game development library tailored to 2D pixel-art games, written in Rust.
 
+### Games
+
+I've made a couple of games using Gate, which are playable through a web-browser
+thanks to Gate's WebAssembly support.
+
+* [Project Ice Puzzle](http://www.matthewmichelotti.com/games/project_ice_puzzle/)
+* [Gate Demo](http://www.matthewmichelotti.com/games/gate_demo/play/) ([source](https://github.com/SergiusIW/gate_demo))
+
 ### Crate
 
 The Rust crate for Gate can be found [here](https://crates.io/crates/gate),
