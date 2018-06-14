@@ -44,6 +44,11 @@ use self::app_clock::AppClock;
 use self::event_handler::EventHandler;
 use super::mark_app_created_flag;
 
+#[macro_export]
+macro_rules! gate_header {
+    () => {};
+}
+
 pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
     mark_app_created_flag();
 

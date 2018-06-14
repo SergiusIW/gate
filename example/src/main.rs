@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#[macro_use]
 extern crate gate;
 
 use gate::{App, AppContext, AppInfo, KeyCode};
@@ -19,6 +20,8 @@ use gate::renderer::{Renderer, Affine};
 
 mod asset_id { include!(concat!(env!("OUT_DIR"), "/asset_id.rs")); }
 use asset_id::{AssetId, SpriteId, MusicId, SoundId};
+
+gate_header!();
 
 // Note: the assets that we placed in the src_assets directory can be referenced using the
 //       SpriteId, MusicId, and SoundId enums
