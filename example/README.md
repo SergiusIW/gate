@@ -53,8 +53,3 @@ opening the `html/index.html` file in a web browser.
 The web browser must have WebAssembly and WebGl support.
 Depending on the browser, it may not fetch the files correctly
 unless you spin up a local web server.
-
-Although the `wasm32-unknown-unknown` target is now part of the stable release
-channel, the target itself is not considered stable. This example is working for
-Stable Rust version 1.25.0. It may break in the future, requiring additional
-changes to the Gate library.
