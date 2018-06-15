@@ -71,7 +71,7 @@ impl<A: AppAssetId> AppContext<A> {
     /// This value will always be at most 1.
     pub fn native_px(&self) -> f64 { self.native_px }
 
-    /// Convenience method for aligning an `(x, y)` position to native pixels.
+    /// Convenience method for aligning an `(x, y)` position to the nearest native pixel boundaries.
     ///
     /// This is typically used to align a camera position.
     /// See also `self.native_px()`.
@@ -83,6 +83,9 @@ impl<A: AppAssetId> AppContext<A> {
     }
 
     /// Closes the app entirely.
+    ///
+    /// When compiling to `wasm32-unknown-unknown`, the app may be resumed after it is closed
+    /// via invoking a JavaScript method.
     pub fn close(&mut self) { self.close_requested = true; }
 
     pub(crate) fn take_close_request(&mut self) -> bool {

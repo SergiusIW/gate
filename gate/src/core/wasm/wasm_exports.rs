@@ -84,6 +84,10 @@ pub fn gateWasmOnRestart() {
     app_runner_borrow_mut().on_restart();
 }
 
+/// Macro to be placed in the `main.rs` file for a Gate app.
+///
+/// Currently, the only use this macro has is to export WASM functions for the app
+/// when compiling to the `wasm32-unknown-unknown` target.
 #[macro_export]
 macro_rules! gate_header {
     () => {

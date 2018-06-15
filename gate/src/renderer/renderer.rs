@@ -35,6 +35,9 @@ use super::core_renderer::CoreRenderer;
 /// Switching between different modes (or the same mode with different parameters)
 /// can be expensive, since it involves flushing graphics data and switching shaders,
 /// so try to minimize these switches.
+///
+/// Note: due to recent refactorings, there is currently only one render mode, the "sprite mode".
+/// This will likely change in the near future.
 pub struct Renderer<A: AppAssetId> { b: RenderBuffer, c: CoreRenderer, phantom: PhantomData<A> }
 
 impl<A: AppAssetId> Renderer<A> {
