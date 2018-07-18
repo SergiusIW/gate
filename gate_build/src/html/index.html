@@ -5,18 +5,30 @@
     <style>
     * { margin:0; padding:0; }
     html, body { width:100%; height:100%; background-color: black; }
-    canvas { display:block; background-color: black; }
+    canvas { display: block; background-color: black; }
     video { display: none; }
+    #gate-wrapper-div { display: block; width: 100%; height: 100%; background-color: black; overflow: hidden }
+    h1 { font-family:Arial,Helvetica,sans-serif;font-size:50px;color:white;text-align:center;padding-top:25px; }
     </style>
   </head>
 
   <body>
-    <canvas id="gate-canvas"></canvas>
+    <div id="gate-wrapper-div">
+      <h1 id="loading-notice" style="display:block">Loading…</h1>
+      <canvas id="gate-canvas" style="display:none"></canvas>
+    </div>
   </body>
 
   <script src="howler.js"></script>
   <script src="gate.js"></script>
   <script>
-    gate(document.getElementById("gate-canvas"), "gate_app.wasm")
+    var gateDiv = document.getElementById("gate-wrapper-div");
+    var gateCanvas = document.getElementById("gate-canvas");
+    var loadingNotice = document.getElementById("loading-notice");
+    function onload() {
+      loadingNotice.style.display = "none";
+      gateCanvas.style.display = "block";
+    }
+    gate({ wrapperDiv: gateDiv, canvas: gateCanvas, wasmFilePath: "gate_app.wasm", onload: onload });
   </script>
 </html>

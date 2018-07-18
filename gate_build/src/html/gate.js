@@ -12,7 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function gate(canvas, wasmFilePath, onQuit) {
+// Initializes a Gate app. Resources are expected to be in the current directory.
+// Arguments:
+//   wrapperDiv: div surrounding the gate canvas, user controls the size
+//   canvas: canvas that will fill up the wrapperDiv to display the app
+//   wasmFilePath: path to the WebAssembly file for the app
+//   onload: invoked when the app has finished loading
+//   onquit: invoked when a quit event is signalled from the app
+// Returns a handle with the following:
+//   restart: function (with no arguments) that can be called to resume an app
+//            that was suspended via a quit signal
+function gate(args) {
+  wrapperDiv = args.wrapperDiv;
+  canvas = args.canvas;
+  wasmFilePath = args.wasmFilePath;
+  onload = args.onload;
+  onquit = args.onQuit;
 
   const floatSize = 4;
 
@@ -254,15 +269,18 @@ function gate(canvas, wasmFilePath, onQuit) {
     if (Module.loadingAudioCount == 0) {
       Module.currentlyRunning = true;
       Module.currentMusic = null;
+      if (onload) {
+        onload();
+      }
       Module.gateWasmInit();
       Module.gateWasmOnResize(canvas.width, canvas.height);
       setSpriteAttribPointers();
       requestAnimationFrame(updateAndDraw);
       document.addEventListener('keydown', e => handleKeyEvent(e.key, true));
       document.addEventListener('keyup', e => handleKeyEvent(e.key, false));
-      document.addEventListener('mousemove', e => handleMouseMotion(e));
-      document.addEventListener('mousedown', e => handleMouseEvent(e, true));
-      document.addEventListener('mouseup', e => handleMouseEvent(e, false));
+      canvas.addEventListener('mousemove', e => handleMouseMotion(e));
+      canvas.addEventListener('mousedown', e => handleMouseEvent(e, true));
+      canvas.addEventListener('mouseup', e => handleMouseEvent(e, false));
     }
   }
 
@@ -308,8 +326,8 @@ function gate(canvas, wasmFilePath, onQuit) {
   }
 
   function resizeCanvas() {
-    const newWidth = Math.max(window.innerWidth, 100);
-    const newHeight = Math.max(window.innerHeight, 100);
+    const newWidth = Math.max(wrapperDiv.clientWidth, 100);
+    const newHeight = Math.max(wrapperDiv.clientHeight, 100);
     if (canvas.width != newWidth || canvas.height != newHeight) {
       canvas.width = newWidth;
       canvas.height = newHeight;
