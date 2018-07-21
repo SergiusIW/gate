@@ -27,7 +27,7 @@ function gate(args) {
   canvas = args.canvas;
   wasmFilePath = args.wasmFilePath;
   onload = args.onload;
-  onquit = args.onQuit;
+  onquit = args.onquit;
 
   const floatSize = 4;
 
@@ -128,6 +128,41 @@ function gate(args) {
       },
       gateWasmSpriteAtlasBinFill: function(bufferPtr) {
         new Uint8Array(Module.memory.buffer).set(Module.spriteAtlas, bufferPtr);
+      },
+      gateWasmRequestFullscreen: function () {
+        if (wrapperDiv.requestFullscreen) {
+          wrapperDiv.requestFullscreen();
+        } else if (wrapperDiv.mozRequestFullScreen) {
+          wrapperDiv.mozRequestFullScreen();
+        } else if (wrapperDiv.webkitRequestFullScreen) {
+          wrapperDiv.webkitRequestFullScreen();
+        } else if (wrapperDiv.msRequestFullscreen) {
+          wrapperDiv.msRequestFullscreen();
+        }
+      },
+      gateWasmCancelFullscreen: function () {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+          document.mozCancelFullScreen();
+        } else if (document.webkitCancelFullScreen) {
+          document.webkitCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+      },
+      gateWasmIsFullscreen: function () {
+        if (document.fullscreen !== undefined) {
+          return document.fullscreen;
+        } else if (document.mozFullScreen !== undefined) {
+          return document.mozFullScreen;
+        } else if (document.webkitIsFullScreen !== undefined) {
+          return document.webkitIsFullScreen;
+        } else if (document.msFullscreenElement !== undefined) {
+          return document.msFullscreenElement;
+        } else {
+          return false;
+        }
       },
       Math_atan2: Math.atan2,
       cos: Math.cos,
@@ -359,8 +394,8 @@ function gate(args) {
     if (Module.currentMusic != null) {
       Module.currentMusic.pause();
     }
-    if (onQuit) {
-      onQuit();
+    if (onquit) {
+      onquit();
     }
   }
 

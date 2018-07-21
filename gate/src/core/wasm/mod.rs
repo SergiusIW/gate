@@ -93,6 +93,20 @@ struct AppRunner<AS: AppAssetId, AP: App<AS>> {
     held_keys: HashSet<KeyCode>,
 }
 
+impl<AS: AppAssetId, AP: App<AS>> AppRunner<AS, AP> {
+    fn update_is_fullscreen(&mut self) {
+        self.ctx.set_is_fullscreen(unsafe { gateWasmIsFullscreen() != 0 });
+    }
+
+    fn resolve_fullscreen_requests(&self) {
+        match (self.ctx.is_fullscreen(), self.ctx.desires_fullscreen()) {
+            (false, true) => unsafe { gateWasmRequestFullscreen() },
+            (true, false) => unsafe { gateWasmCancelFullscreen() },
+            (false, false) | (true, true) => {},
+        }
+    }
+}
+
 impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
     fn init(&mut self) {
         assert!(self.renderer.is_none());
@@ -121,6 +135,7 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
     }
 
     fn update_and_draw(&mut self, time_sec: f64) -> bool {
+        self.update_is_fullscreen();
         let elapsed = self.last_time_sec.map(|x| time_sec - x).unwrap_or(0.0).max(0.0).min(0.1);
         if elapsed > 0.0 {
             self.app.advance(elapsed.min(::MAX_TIMESTEP), &mut self.ctx);
@@ -140,6 +155,7 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
     }
 
     fn input(&mut self, key: KeyCode, down: bool) -> bool {
+        self.update_is_fullscreen();
         if down {
             if self.held_keys.insert(key) {
                 self.app.key_down(key, &mut self.ctx);
@@ -149,13 +165,19 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
                 self.app.key_up(key, &mut self.ctx);
             }
         }
-        !self.ctx.take_close_request()
+        if self.ctx.take_close_request() {
+            false
+        } else {
+            self.resolve_fullscreen_requests();
+            true
+        }
     }
 
     fn music_count(&self) -> u16 { AS::Music::count() }
     fn sound_count(&self) -> u16 { AS::Sound::count() }
 
     fn on_restart(&mut self) {
+        self.update_is_fullscreen();
         for key in self.held_keys.drain() {
             self.app.key_up(key, &mut self.ctx);
         }

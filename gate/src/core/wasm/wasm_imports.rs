@@ -31,4 +31,8 @@ extern {
     pub fn gateWasmSpriteAtlasBinFill(buffer: *mut c_void);
     pub fn gateWasmTiledAtlasBinSize() -> usize;
     pub fn gateWasmTiledAtlasBinFill(buffer: *mut c_void);
+
+    pub fn gateWasmRequestFullscreen();
+    pub fn gateWasmCancelFullscreen();
+    pub fn gateWasmIsFullscreen() -> c_int;
 }

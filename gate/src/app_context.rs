@@ -25,6 +25,8 @@ pub struct AppContext<A: AppAssetId> {
     cursor: (f64, f64),
     close_requested: bool,
     native_px: f64,
+    is_fullscreen: bool,
+    desires_fullscreen: bool,
 }
 
 impl<A: AppAssetId> AppContext<A> {
@@ -35,6 +37,8 @@ impl<A: AppAssetId> AppContext<A> {
             cursor: (0., 0.),
             close_requested: false,
             native_px,
+            is_fullscreen: false,
+            desires_fullscreen: false,
         }
     }
 
@@ -80,6 +84,31 @@ impl<A: AppAssetId> AppContext<A> {
             (x / self.native_px).round() * self.native_px,
             (y / self.native_px).round() * self.native_px,
         )
+    }
+
+    /// Requests the app to enter fullscreen mode.
+    ///
+    /// Depending on the target and how this method is invoked, the app may or may not
+    /// actually enter fullscreen mode. When compiling to `wasm32-unknown-unknown` and
+    /// running in a web browser, fullscreen requests can only be made successfully during
+    /// certain user input events, so invoking fullscreen during `App.start` or `App.advance`
+    /// will likely fail.
+    pub fn request_fullscreen(&mut self) { self.desires_fullscreen = true; }
+
+    /// Requests the app to cancel fullscreen mode.
+    pub fn cancel_fullscreen(&mut self) { self.desires_fullscreen = false; }
+
+    /// Checks whether or not the app is currently in fullscreen mode.
+    ///
+    /// This value will not change immediately after a call to `request_fullscreen` or
+    /// `cancel_fullscreen`.
+    pub fn is_fullscreen(&self) -> bool { self.is_fullscreen }
+
+    pub(crate) fn desires_fullscreen(&self) -> bool { self.desires_fullscreen }
+
+    pub(crate) fn set_is_fullscreen(&mut self, is_fullscreen: bool) {
+        self.is_fullscreen = is_fullscreen;
+        self.desires_fullscreen = is_fullscreen;
     }
 
     /// Closes the app entirely.
