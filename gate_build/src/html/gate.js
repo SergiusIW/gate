@@ -325,12 +325,22 @@ function gate(args) {
     }
   }
 
+  var lastWrapperDivWidth = -1;
+  var lastWrapperDivHeight = -1;
+  var lastDevicePixelRatio = -1;
+
   function resizeCanvas() {
-    const newWidth = Math.max(wrapperDiv.clientWidth, 100);
-    const newHeight = Math.max(wrapperDiv.clientHeight, 100);
-    if (canvas.width != newWidth || canvas.height != newHeight) {
-      canvas.width = newWidth;
-      canvas.height = newHeight;
+    const wrapperDivWidth = Math.max(wrapperDiv.clientWidth, 50);
+    const wrapperDivHeight = Math.max(wrapperDiv.clientHeight, 50);
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    if (wrapperDivWidth != lastWrapperDivWidth || wrapperDivHeight != lastWrapperDivHeight || devicePixelRatio != lastDevicePixelRatio) {
+      lastWrapperDivWidth = wrapperDivWidth;
+      lastWrapperDivHeight = wrapperDivHeight;
+      lastDevicePixelRatio = devicePixelRatio;
+      canvas.width = Math.floor((wrapperDivWidth - 1) * devicePixelRatio) + 1;
+      canvas.height = Math.floor((wrapperDivHeight - 1) * devicePixelRatio) + 1;
+      canvas.style.width = canvas.width / devicePixelRatio + "px";
+      canvas.style.height = canvas.height / devicePixelRatio + "px";
       gl.viewport(0, 0, canvas.width, canvas.height);
       Module.gateWasmOnResize(canvas.width, canvas.height);
     }
