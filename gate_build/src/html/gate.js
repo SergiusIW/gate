@@ -344,15 +344,15 @@ function gate(args) {
 
   function handleMouseMotion(evt) {
     if (Module.currentlyRunning) {
-      cursorPos.x = evt.clientX;
-      cursorPos.y = evt.clientY;
+      cursorPos.x = evt.clientX * (canvas.width / canvas.clientWidth);
+      cursorPos.y = evt.clientY * (canvas.height / canvas.clientHeight);
     }
   }
 
   function handleMouseEvent(evt, down) {
     if (Module.currentlyRunning) {
-      cursorPos.x = evt.clientX;
-      cursorPos.y = evt.clientY;
+      cursorPos.x = evt.clientX * (canvas.width / canvas.clientWidth);
+      cursorPos.y = evt.clientY * (canvas.height / canvas.clientHeight);
       const continuing = Module.gateWasmMouseEvent(cursorPos.x, cursorPos.y, evt.button, down)
       if (!continuing) {
         quitApp();
