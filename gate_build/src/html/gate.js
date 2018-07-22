@@ -390,6 +390,7 @@ function gate(args) {
 
   function quitApp() {
     Module.currentlyRunning = false;
+    imports.env.gateWasmCancelFullscreen();
     Module.appQuit = true;
     if (Module.currentMusic != null) {
       Module.currentMusic.pause();
