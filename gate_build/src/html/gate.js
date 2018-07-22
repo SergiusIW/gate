@@ -316,6 +316,10 @@ function gate(args) {
       canvas.addEventListener('mousemove', e => handleMouseMotion(e));
       canvas.addEventListener('mousedown', e => handleMouseEvent(e, true));
       canvas.addEventListener('mouseup', e => handleMouseEvent(e, false));
+      canvas.addEventListener("touchstart", handleTouchStart, false);
+      canvas.addEventListener("touchend", handleTouchEnd, false);
+      canvas.addEventListener("touchcancel", handleTouchEnd, false);
+      canvas.addEventListener("touchmove", handleTouchMove, false);
     }
   }
 
@@ -360,6 +364,50 @@ function gate(args) {
     }
   }
 
+  var currentTouchId = undefined;
+
+  function handleTouchStart(evt) {
+    if (Module.currentlyRunning) {
+      evt.preventDefault();
+      if (currentTouchId === undefined && evt.changedTouches.length > 0) {
+        var touch = evt.changedTouches[0];
+        currentTouchId = touch.identifier;
+        handleMouseEvent({ clientX: touch.clientX, clientY: touch.clientY, button: 0 }, true);
+      }
+    }
+  }
+
+  function handleTouchEnd(evt) {
+    if (Module.currentlyRunning) {
+      evt.preventDefault();
+      if (currentTouchId !== undefined) {
+        for (var i = 0; i < evt.changedTouches.length; i++) {
+          var touch = evt.changedTouches[i];
+          if (touch.identifier === currentTouchId) {
+            currentTouchId = undefined;
+            handleMouseEvent({ clientX: touch.clientX, clientY: touch.clientY, button: 0 }, false);
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  function handleTouchMove(evt) {
+    if (Module.currentlyRunning) {
+      evt.preventDefault();
+      if (currentTouchId !== undefined) {
+        for (var i = 0; i < evt.changedTouches.length; i++) {
+          var touch = evt.changedTouches[i];
+          if (touch.identifier === currentTouchId) {
+            handleMouseMotion(touch);
+            return;
+          }
+        }
+      }
+    }
+  }
+
   var lastWrapperDivWidth = -1;
   var lastWrapperDivHeight = -1;
   var lastDevicePixelRatio = -1;
@@ -390,6 +438,7 @@ function gate(args) {
 
   function quitApp() {
     Module.currentlyRunning = false;
+    currentTouchId = undefined;
     imports.env.gateWasmCancelFullscreen();
     Module.appQuit = true;
     if (Module.currentMusic != null) {
