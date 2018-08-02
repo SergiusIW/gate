@@ -27,7 +27,7 @@ use sdl2::{self, VideoSubsystem};
 use sdl2::video::GLProfile;
 use sdl2::video::gl_attr::GLAttr;
 use sdl2::image::LoadTexture;
-use sdl2::mixer::{INIT_OGG, DEFAULT_CHANNELS, AUDIO_S16LSB};
+use sdl2::mixer::{Sdl2MixerContext, INIT_OGG, DEFAULT_CHANNELS, AUDIO_S16LSB};
 use sdl2::render::{Renderer as SdlRenderer};
 
 use gl;
@@ -59,9 +59,9 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
     let sdl_context = sdl2::init().unwrap();
     let video = sdl_context.video().unwrap();
     let _sdl_audio = sdl_context.audio().unwrap();
-    let _mixer_context = sdl2::mixer::init(INIT_OGG).unwrap();
+    let _mixer_context = mixer_init();
 
-    init_mixer();
+    mixer_setup();
     gl_hints(video.gl_attr());
 
     let timer = sdl_context.timer().unwrap();
@@ -131,7 +131,11 @@ fn build_renderer<AS: AppAssetId>(info: &AppInfo, sdl_renderer: &SdlRenderer) ->
     Renderer::<AS>::new(render_buffer, core_renderer)
 }
 
-fn init_mixer() {
+fn mixer_init() -> Sdl2MixerContext {
+    sdl2::mixer::init(INIT_OGG).unwrap()
+}
+
+fn mixer_setup() {
     sdl2::mixer::open_audio(44100, AUDIO_S16LSB, DEFAULT_CHANNELS, 1024).unwrap();
     sdl2::mixer::allocate_channels(4);
 }
