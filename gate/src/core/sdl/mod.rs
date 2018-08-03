@@ -132,7 +132,13 @@ fn build_renderer<AS: AppAssetId>(info: &AppInfo, sdl_renderer: &SdlRenderer) ->
 }
 
 fn mixer_init() -> Sdl2MixerContext {
-    sdl2::mixer::init(INIT_OGG).unwrap()
+    match sdl2::mixer::init(INIT_OGG) {
+        Ok(ctx) => ctx,
+        // HACK TODO remove special handling once SDL2 mixer 2.0.3 is released
+        //           (see https://bugzilla.libsdl.org/show_bug.cgi?id=3929 for details)
+        Err(ref msg) if msg.as_str() == "OGG support not available" => Sdl2MixerContext,
+        Err(msg) => panic!("sdl2::mixer::init failed: {}", msg),
+    }
 }
 
 fn mixer_setup() {
