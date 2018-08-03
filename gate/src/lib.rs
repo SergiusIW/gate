@@ -42,7 +42,6 @@
 //! Some of these will involve breaking changes.
 //!
 //! * Loading assets on the fly
-//! * Entering fullscreen mode
 //! * Support for displaying text
 //! * Adding XBox controller input
 //! * Generating enums/handles for user-specific assets, and loading those assets
@@ -50,7 +49,7 @@
 //! * Playing looping music that has a one-time intro, without any hiccups in the music
 //!   (not sure how I'm going to do this, but it's important to me;
 //!   game libraries often seem to overlook this fundamental feature)
-//! * Probably some new renderer modes with new shaders
+//! * New renderer modes with new shaders
 
 #[cfg(not(target_arch = "wasm32"))] extern crate sdl2;
 #[cfg(not(target_arch = "wasm32"))] extern crate gl;
