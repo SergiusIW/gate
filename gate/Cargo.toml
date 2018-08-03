@@ -1,6 +1,6 @@
 [package]
 name = "gate"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["Matthew Michelotti <matthew@matthewmichelotti.com>"]
 description = "A specialized 2D game library"
 documentation = "https://docs.rs/gate/"
