@@ -109,7 +109,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 
         match (ctx.is_fullscreen(), ctx.desires_fullscreen()) {
             (false, true) => {
-                let success = sdl_renderer.window_mut().unwrap().set_fullscreen(FullscreenType::True).is_ok();
+                let success = sdl_renderer.window_mut().unwrap().set_fullscreen(FullscreenType::Desktop).is_ok();
                 ctx.set_is_fullscreen(success);
             },
             (true, false) => {
