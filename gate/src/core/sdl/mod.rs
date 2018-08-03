@@ -24,7 +24,7 @@ use std::fs::File;
 use std::io::BufReader;
 
 use sdl2::{self, VideoSubsystem};
-use sdl2::video::GLProfile;
+use sdl2::video::{FullscreenType, GLProfile};
 use sdl2::video::gl_attr::GLAttr;
 use sdl2::image::LoadTexture;
 use sdl2::mixer::{Sdl2MixerContext, INIT_OGG, DEFAULT_CHANNELS, AUDIO_S16LSB};
@@ -106,6 +106,18 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
         gl_error_check();
 
         let elapsed = clock.step();
+
+        match (ctx.is_fullscreen(), ctx.desires_fullscreen()) {
+            (false, true) => {
+                let success = sdl_renderer.window_mut().unwrap().set_fullscreen(FullscreenType::True).is_ok();
+                ctx.set_is_fullscreen(success);
+            },
+            (true, false) => {
+                let success = sdl_renderer.window_mut().unwrap().set_fullscreen(FullscreenType::Off).is_ok();
+                ctx.set_is_fullscreen(!success);
+            },
+            (false, false) | (true, true) => {},
+        }
 
         let continuing = event_handler.process_events(&mut app, &mut ctx, &renderer);
         if !continuing { break; }
