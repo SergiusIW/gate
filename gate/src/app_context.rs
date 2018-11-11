@@ -131,8 +131,11 @@ impl<A: AppAssetId> Audio<A> {
     /// Plays the given sound effect once.
     pub fn play_sound(&mut self, sound: A::Sound) { self.core.play_sound(sound.id_u16()); }
 
+    /// Plays the given music once, replacing the currently playing music, if any.
+    pub fn play_music(&mut self, music: A::Music) { self.core.play_music(music.id_u16(), false); }
+
     /// Continually loops the given music, replacing the currently playing music, if any.
-    pub fn loop_music(&mut self, music: A::Music) { self.core.loop_music(music.id_u16()); }
+    pub fn loop_music(&mut self, music: A::Music) { self.core.play_music(music.id_u16(), true); }
 
     /// Stops the currently playing music, if any.
     pub fn stop_music(&mut self) { self.core.stop_music(); }

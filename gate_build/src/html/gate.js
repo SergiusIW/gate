@@ -112,6 +112,15 @@ function gate(args) {
           Module.currentMusic.stop();
         }
         Module.currentMusic = Module.musics[id];
+        Module.currentMusic.loop(true);
+        Module.currentMusic.play();
+      },
+      gateWasmPlayMusic: function (id) {
+        if (Module.currentMusic != null) {
+          Module.currentMusic.stop();
+        }
+        Module.currentMusic = Module.musics[id];
+        Module.currentMusic.loop(false);
         Module.currentMusic.play();
       },
       gateWasmStopMusic: function () {

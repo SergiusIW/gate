@@ -24,6 +24,7 @@ extern {
     pub fn gateWasmDrawSprites(size: usize, data: *const c_void);
 
     pub fn gateWasmPlaySound(id: c_int);
+    pub fn gateWasmPlayMusic(id: c_int);
     pub fn gateWasmLoopMusic(id: c_int);
     pub fn gateWasmStopMusic();
 

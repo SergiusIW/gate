@@ -31,11 +31,11 @@ impl CoreAudio {
         mixer::Channel::all().play(&self.sounds[sound as usize], 0).unwrap();
     }
 
-    pub fn loop_music(&mut self, music: u16) {
+    pub fn play_music(&mut self, music: u16, loops: bool) {
         let music = &format!("assets/music{}.ogg", music);
         self.stop_music();
         let music = mixer::Music::from_file(music).unwrap();
-        music.play(1_000_000).unwrap();
+        music.play(if loops { 1_000_000 } else { 1 }).unwrap();
         self.music = Some(music);
     }
 

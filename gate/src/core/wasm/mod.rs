@@ -40,9 +40,13 @@ impl CoreAudio {
             gateWasmPlaySound(id as c_int);
         }
     }
-    pub fn loop_music(&mut self, id: u16) {
+    pub fn play_music(&mut self, id: u16, loops: bool) {
         unsafe {
-            gateWasmLoopMusic(id as c_int);
+            if loops {
+                gateWasmLoopMusic(id as c_int);
+            } else {
+                gateWasmPlayMusic(id as c_int);
+            }
         }
     }
     pub fn stop_music(&mut self) {
