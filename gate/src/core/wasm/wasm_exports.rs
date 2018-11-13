@@ -17,7 +17,7 @@
 
 #![allow(non_snake_case)]
 
-use std::os::raw::{c_int, c_char};
+use std::os::raw::{c_int, c_char, c_void};
 
 use ::input::KeyCode;
 use ::renderer::shaders;
@@ -84,6 +84,10 @@ pub fn gateWasmOnRestart() {
     app_runner_borrow_mut().on_restart();
 }
 
+pub fn gateWasmCookieDataPtr(size: usize) -> *mut c_void {
+    app_runner_borrow_mut().cookie_buffer(size).as_mut_ptr() as *mut c_void
+}
+
 /// Macro to be placed in the `main.rs` file for a Gate app.
 ///
 /// Currently, the only use this macro has is to export WASM functions for the app
@@ -92,7 +96,7 @@ pub fn gateWasmOnRestart() {
 macro_rules! gate_header {
     () => {
         pub mod gate_wasm_exports {
-            use std::os::raw::{c_int, c_char};
+            use std::os::raw::{c_int, c_char, c_void};
             #[no_mangle] pub unsafe extern "C" fn gateWasmInit() {
                 ::gate::wasm_exports::gateWasmInit()
             }
@@ -125,6 +129,9 @@ macro_rules! gate_header {
             }
             #[no_mangle] pub unsafe extern "C" fn gateWasmOnRestart() {
                 ::gate::wasm_exports::gateWasmOnRestart()
+            }
+            #[no_mangle] pub unsafe extern "C" fn gateWasmCookieDataPtr(size: usize) -> *mut c_void {
+                ::gate::wasm_exports::gateWasmCookieDataPtr(size)
             }
         }
     };

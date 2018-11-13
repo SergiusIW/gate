@@ -27,6 +27,8 @@ pub struct AppContext<A: AppAssetId> {
     native_px: f64,
     is_fullscreen: bool,
     desires_fullscreen: bool,
+    cookie: Vec<u8>,
+    cookie_updated: bool,
 }
 
 impl<A: AppAssetId> AppContext<A> {
@@ -39,6 +41,8 @@ impl<A: AppAssetId> AppContext<A> {
             native_px,
             is_fullscreen: false,
             desires_fullscreen: false,
+            cookie: Vec::new(),
+            cookie_updated: false,
         }
     }
 
@@ -121,6 +125,39 @@ impl<A: AppAssetId> AppContext<A> {
         let result = self.close_requested;
         self.close_requested = false;
         result
+    }
+
+    /// Gets current cookie data.
+    ///
+    /// NOTE: this API is likely to change change.
+    /// Returns an empty array if cookie is not set or if not running in WebAssembly mode.
+    pub fn cookie(&self) -> &[u8] {
+        &self.cookie
+    }
+
+    /// Writes cookie data.
+    ///
+    /// NOTE: this API is likely to change change.
+    /// Cookie can be used as lightweight save data when built in WebAssembly mode.
+    /// Only writes persistent cookie data if built in WebAssembly mode.
+    /// To use cookies, the readCookie and writeCookie functions must be passed into gate.js.
+    pub fn set_cookie(&mut self, cookie: Vec<u8>) {
+        if cookie != self.cookie {
+            self.cookie_updated = true;
+            self.cookie = cookie;
+        }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) fn take_cookie_updated_flag(&mut self) -> bool {
+        let was_updated = self.cookie_updated;
+        self.cookie_updated = false;
+        was_updated
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) fn cookie_buffer(&mut self) -> &mut Vec<u8> {
+        &mut self.cookie
     }
 }
 

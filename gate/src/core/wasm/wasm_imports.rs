@@ -36,4 +36,6 @@ extern {
     pub fn gateWasmRequestFullscreen();
     pub fn gateWasmCancelFullscreen();
     pub fn gateWasmIsFullscreen() -> c_int;
+
+    pub fn gateWasmWriteCookie(size: usize, data: *const c_void);
 }

@@ -19,6 +19,10 @@
 //   wasmFilePath: path to the WebAssembly file for the app
 //   onload: invoked when the app has finished loading
 //   onquit: invoked when a quit event is signalled from the app
+//   readCookie() -> str: if cookie save data is used, this is a function that reads
+//                        cookie save data as a string, or null
+//   writeCookie(str): if cookie save data is used, this is a function that writes
+//                     cookie save data as a string
 // Returns a handle with the following:
 //   restart: function (with no arguments) that can be called to resume an app
 //            that was suspended via a quit signal
@@ -28,6 +32,24 @@ function gate(args) {
   wasmFilePath = args.wasmFilePath;
   onload = args.onload;
   onquit = args.onquit;
+  readCookie = args.readCookie;
+  writeCookie = args.writeCookie;
+
+  function bytesToBase64(bytes) {
+    return btoa(String.fromCharCode.apply(null, bytes)).replace(/\=/g, '.');
+  }
+  function base64ToBytes(base64) {
+    return new Uint8Array(atob(base64.replace(/\./g, '=')).split("").map(function(c) { return c.charCodeAt(0); }));
+  }
+
+  function readCookieBytes() {
+    try {
+      let base64 = readCookie();
+      if (base64 === null || base64.length > 1000) { return null; }
+      return base64ToBytes(base64);
+    } catch(err) { }
+    return null;
+  }
 
   const floatSize = 4;
 
@@ -173,6 +195,9 @@ function gate(args) {
           return false;
         }
       },
+      gateWasmWriteCookie: function (size, dataPtr) {
+        writeCookie(bytesToBase64(new Uint8Array(Module.memory.buffer, dataPtr, size)));
+      },
       Math_atan2: Math.atan2,
       cos: Math.cos,
       sin: Math.sin,
@@ -221,6 +246,7 @@ function gate(args) {
     Module.gateWasmSpriteVertSrc = mod.exports.gateWasmSpriteVertSrc;
     Module.gateWasmSpriteFragSrc = mod.exports.gateWasmSpriteFragSrc;
     Module.gateWasmOnRestart = mod.exports.gateWasmOnRestart;
+    Module.gateWasmCookieDataPtr = mod.exports.gateWasmCookieDataPtr;
     tryStart();
   });
 
@@ -302,10 +328,19 @@ function gate(args) {
           throw "gate::run(...) was not invoked in main";
         }
       }
+      loadCookieIntoMemory();
       initSpriteProg();
       Module.musics = initAudioArray("music", Module.gateWasmMusicCount(), true);
       Module.sounds = initAudioArray("sound", Module.gateWasmSoundCount(), false);
       tryStart2();
+    }
+  }
+
+  function loadCookieIntoMemory () {
+    let cookie = readCookieBytes();
+    if (cookie !== null) {
+      let dataPtr = Module.gateWasmCookieDataPtr(cookie.length);
+      Module.memory.buffer.set(cookie, dataPtr);
     }
   }
 

@@ -19,7 +19,7 @@ use std::collections::HashSet;
 use std::cell::{self, RefCell};
 use std::mem;
 use std::io::Cursor;
-use std::os::raw::c_int;
+use std::os::raw::{c_int, c_void};
 
 use ::{App, AppContext};
 use asset_id::{AppAssetId, IdU16};
@@ -65,6 +65,7 @@ trait TraitAppRunner {
     fn music_count(&self) -> u16;
     fn sound_count(&self) -> u16;
     fn on_restart(&mut self);
+    fn cookie_buffer(&mut self, size: usize) -> &mut Vec<u8>;
 }
 
 struct StaticAppRunner { r: RefCell<Option<Box<TraitAppRunner>>> }
@@ -109,6 +110,13 @@ impl<AS: AppAssetId, AP: App<AS>> AppRunner<AS, AP> {
             (false, false) | (true, true) => {},
         }
     }
+
+    fn update_cookie(&mut self) {
+        if self.ctx.take_cookie_updated_flag() {
+            let cookie = self.ctx.cookie_buffer();
+            unsafe { gateWasmWriteCookie(cookie.len(), cookie.as_ptr() as *const c_void); }
+        }
+    }
 }
 
 impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
@@ -126,9 +134,12 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         let core_renderer = CoreRenderer::new();
         self.renderer = Some(Renderer::<AS>::new(render_buffer, core_renderer));
 
-        let renderer = self.renderer.as_ref().unwrap();
-        self.ctx.set_dims(renderer.app_dims(), renderer.native_px());
-        self.app.start(&mut self.ctx);
+        {
+            let renderer = self.renderer.as_ref().unwrap();
+            self.ctx.set_dims(renderer.app_dims(), renderer.native_px());
+            self.app.start(&mut self.ctx);
+        }
+        self.update_cookie();
         assert!(!self.ctx.take_close_request(), "unexpected close immediately upon start");
     }
 
@@ -146,6 +157,7 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         }
         self.last_time_sec = Some(time_sec);
 
+        self.update_cookie();
         let close_requested = self.ctx.take_close_request();
         if !close_requested {
             self.app.render(self.renderer.as_mut().unwrap(), &self.ctx);
@@ -169,6 +181,7 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
                 self.app.key_up(key, &mut self.ctx);
             }
         }
+        self.update_cookie();
         if self.ctx.take_close_request() {
             false
         } else {
@@ -185,7 +198,16 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         for key in self.held_keys.drain() {
             self.app.key_up(key, &mut self.ctx);
         }
+        self.update_cookie();
         assert!(!self.ctx.take_close_request(), "unexpected close immediately upon restart");
+    }
+
+    fn cookie_buffer(&mut self, size: usize) -> &mut Vec<u8> {
+        self.ctx.set_cookie(vec![0; size]);
+        self.ctx.take_cookie_updated_flag();
+        let buffer = self.ctx.cookie_buffer();
+        assert!(buffer.len() == size);
+        buffer
     }
 }
 
