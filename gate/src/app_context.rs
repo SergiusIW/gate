@@ -142,6 +142,7 @@ impl<A: AppAssetId> AppContext<A> {
     /// Only writes persistent cookie data if built in WebAssembly mode.
     /// To use cookies, the readCookie and writeCookie functions must be passed into gate.js.
     pub fn set_cookie(&mut self, cookie: Vec<u8>) {
+        assert!(cookie.len() < 700);
         if cookie != self.cookie {
             self.cookie_updated = true;
             self.cookie = cookie;

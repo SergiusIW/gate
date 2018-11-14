@@ -340,7 +340,7 @@ function gate(args) {
     let cookie = readCookieBytes();
     if (cookie !== null) {
       let dataPtr = Module.gateWasmCookieDataPtr(cookie.length);
-      Module.memory.buffer.set(cookie, dataPtr);
+      new Uint8Array(Module.memory.buffer).set(cookie, dataPtr);
     }
   }
 
