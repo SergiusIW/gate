@@ -10,12 +10,15 @@
     video { display: none; }
     #gate-wrapper-div { display: block; width: 100%; height: 100%; background-color: black; overflow: hidden }
     h1 { font-family:Arial,Helvetica,sans-serif;font-size:50px;color:white;text-align:center;padding-top:25px; }
+    p { font-family:Arial,Helvetica,sans-serif;font-size:16px;color:white;text-align:center;padding-top:25px; }
     </style>
   </head>
 
   <body>
     <div id="gate-wrapper-div">
-      <h1 id="loading-notice" style="display:block">Loading…</h1>
+      <h1 id="loading-notice" style="display:none">Loading…</h1>
+      <h1 id="error-notice" style="display:none">Error</h1>
+      <p id="error-text" style="display:none"></p>
       <canvas id="gate-canvas" style="display:none"></canvas>
     </div>
   </body>
@@ -26,10 +29,25 @@
     var gateDiv = document.getElementById("gate-wrapper-div");
     var gateCanvas = document.getElementById("gate-canvas");
     var loadingNotice = document.getElementById("loading-notice");
+    var errorNotice = document.getElementById("error-notice");
+    var errorText = document.getElementById("error-text");
+    loadingNotice.style.display = "block";
     function onload() {
       loadingNotice.style.display = "none";
       gateCanvas.style.display = "block";
     }
-    gate({ wrapperDiv: gateDiv, canvas: gateCanvas, wasmFilePath: "gate_app.wasm", onload: onload });
+    function onerror(err) {
+      gateCanvas.style.display = "none";
+      errorNotice.style.display = "block";
+      errorText.style.display = "block";
+      errorText.appendChild(document.createTextNode("An exception was thrown: " + err));
+    }
+    gate({
+      wrapperDiv: gateDiv,
+      canvas: gateCanvas,
+      wasmFilePath: "gate_app.wasm",
+      onload: onload,
+      onerror: onerror
+    });
   </script>
 </html>
