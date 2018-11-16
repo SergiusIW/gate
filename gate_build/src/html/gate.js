@@ -17,6 +17,7 @@
 //   wrapperDiv: div surrounding the gate canvas, user controls the size
 //   canvas: canvas that will fill up the wrapperDiv to display the app
 //   wasmFilePath: path to the WebAssembly file for the app
+//   onloadprogress(coreRatio, extraResourcesRatio): updates loading progress
 //   onload: invoked when the app has finished loading
 //   onquit: invoked when a quit event is signalled from the app
 //   onerror(err): invoked if an error is thrown at any point
@@ -31,6 +32,7 @@ function gate(args) {
   const wrapperDiv = args.wrapperDiv;
   const canvas = args.canvas;
   const wasmFilePath = args.wasmFilePath;
+  const onloadprogress = args.onloadprogress;
   const onload = args.onload;
   const onquit = args.onquit;
   const onerror = args.onerror;
@@ -344,7 +346,27 @@ function gate(args) {
       return result;
     }
 
+    function updateLoadProgress () {
+      if (!gateIsBroken && onloadprogress) {
+        var coreCount = 0;
+        if (Module.spriteAtlas) { coreCount += 1; }
+        if (Module.memory) { coreCount += 1; }
+        if (Module.spriteTex) { coreCount += 1; }
+        var audioRatio = 0.0;
+        if (Module.musics && Module.sounds) {
+          let totalAudioCount = Module.musics.length + Module.sounds.length;
+          if (totalAudioCount > 0) {
+            audioRatio = 1 - Module.loadingAudioCount / totalAudioCount;
+          } else {
+            audioRatio = 1;
+          }
+        }
+        onloadprogress(coreCount / 3, audioRatio);
+      }
+    }
+
     function tryStart () {
+      updateLoadProgress();
       if (!gateIsBroken && Module.spriteAtlas && Module.memory && Module.spriteTex) {
         if (!Module.gateWasmIsAppDefined()) {
           Module.main();
@@ -370,6 +392,7 @@ function gate(args) {
     }
 
     function tryStart2 () {
+      updateLoadProgress();
       if (!gateIsBroken && Module.loadingAudioCount == 0) {
         try {
           Module.currentlyRunning = true;

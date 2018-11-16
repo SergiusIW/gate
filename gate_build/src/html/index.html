@@ -17,6 +17,7 @@
   <body>
     <div id="gate-wrapper-div">
       <h1 id="loading-notice" style="display:none">Loading…</h1>
+      <h1 id="load-percent" style="display:none">0%</h1>
       <h1 id="error-notice" style="display:none">Error</h1>
       <p id="error-text" style="display:none"></p>
       <canvas id="gate-canvas" style="display:none"></canvas>
@@ -29,15 +30,23 @@
     var gateDiv = document.getElementById("gate-wrapper-div");
     var gateCanvas = document.getElementById("gate-canvas");
     var loadingNotice = document.getElementById("loading-notice");
+    var loadPercent = document.getElementById("load-percent");
     var errorNotice = document.getElementById("error-notice");
     var errorText = document.getElementById("error-text");
     loadingNotice.style.display = "block";
+    loadPercent.style.display = "block";
+    function onloadprogress(coreRatio, extraResourcesRatio) {
+      loadPercent.innerHTML = Math.round(50 * coreRatio + 50 * extraResourcesRatio) + "%";
+    }
     function onload() {
       loadingNotice.style.display = "none";
+      loadPercent.style.display = "none";
       gateCanvas.style.display = "block";
     }
     function onerror(err) {
       gateCanvas.style.display = "none";
+      loadingNotice.style.display = "none";
+      loadPercent.style.display = "none";
       errorNotice.style.display = "block";
       errorText.style.display = "block";
       errorText.appendChild(document.createTextNode("An exception was thrown: " + err));
@@ -46,6 +55,7 @@
       wrapperDiv: gateDiv,
       canvas: gateCanvas,
       wasmFilePath: "gate_app.wasm",
+      onloadprogress: onloadprogress,
       onload: onload,
       onerror: onerror
     });
