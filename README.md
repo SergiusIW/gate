@@ -6,7 +6,7 @@ Gate is a game development library tailored to 2D pixel-art games, written in Ru
 I've made a couple of games using Gate, which are playable through a web-browser
 thanks to Gate's WebAssembly support.
 
-* [Project Ice Puzzle](http://www.matthewmichelotti.com/games/project_ice_puzzle/)
+* [Project Ice Puzzle](http://www.luduminis.com/pascal/)
 * [Chirperjax](http://www.luduminis.com/chirperjax/) ([source](https://github.com/SergiusIW/chirperjax))
 
 ### Crate
