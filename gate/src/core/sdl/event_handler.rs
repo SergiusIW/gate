@@ -21,10 +21,10 @@ use sdl2::{
     mouse::MouseButton,
 };
 
-use ::{App, AppContext};
-use asset_id::AppAssetId;
-use input::KeyCode;
-use renderer::Renderer;
+use crate::{App, AppContext};
+use crate::asset_id::AppAssetId;
+use crate::input::KeyCode;
+use crate::renderer::Renderer;
 
 pub struct EventHandler {
     pump: EventPump,

@@ -14,7 +14,7 @@
 
 use sdl2::TimerSubsystem;
 
-use app_info::AppInfo;
+use crate::app_info::AppInfo;
 use std::u32;
 
 pub struct AppClock {

@@ -19,7 +19,7 @@ use gate::{App, AppContext, AppInfo, KeyCode};
 use gate::renderer::{Renderer, Affine};
 
 mod asset_id { include!(concat!(env!("OUT_DIR"), "/asset_id.rs")); }
-use asset_id::{AssetId, SpriteId, MusicId, SoundId};
+use crate::asset_id::{AssetId, SpriteId, MusicId, SoundId};
 
 gate_header!();
 

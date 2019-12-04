@@ -22,7 +22,7 @@ use sdl2::render::Texture;
 use gl::types::*;
 use gl;
 
-use ::renderer::render_buffer::RenderBuffer;
+use crate::renderer::render_buffer::RenderBuffer;
 use self::sprite_program::SpriteProgram;
 
 pub struct CoreRenderer {
@@ -43,13 +43,13 @@ impl CoreRenderer {
 }
 
 impl CoreRenderer {
-    pub(in renderer) fn set_scissor(&mut self, x: u32, y: u32, w: u32, h: u32) {
+    pub(in crate::renderer) fn set_scissor(&mut self, x: u32, y: u32, w: u32, h: u32) {
         unsafe {
             gl::Scissor(x as i32, y as i32, w as i32, h as i32);
         }
     }
 
-    pub(in renderer) fn clear(&mut self, color: (u8, u8, u8)) {
+    pub(in crate::renderer) fn clear(&mut self, color: (u8, u8, u8)) {
         unsafe {
             gl::Enable(gl::SCISSOR_TEST);
             gl::ClearColor(color.0 as f32 / 255., color.1 as f32 / 255., color.2 as f32 / 255., 1.0);
@@ -58,7 +58,7 @@ impl CoreRenderer {
         }
     }
 
-    pub(in renderer) fn draw_sprites(&mut self, r: &mut RenderBuffer) {
+    pub(in crate::renderer) fn draw_sprites(&mut self, r: &mut RenderBuffer) {
         unsafe {
             gl::Enable(gl::SCISSOR_TEST);
             gl::UseProgram(self.sprite_program.handle);

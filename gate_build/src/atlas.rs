@@ -22,8 +22,8 @@ use image::{self, RgbaImage, GenericImage};
 use byteorder::BigEndian;
 use regex::Regex;
 
-use rect_packer::{Rect, Pack};
-use ::rerun_print;
+use crate::rect_packer::{Rect, Pack};
+use crate::rerun_print;
 
 const MAX_DIM: u32 = 512;
 
@@ -174,7 +174,7 @@ fn render_sprite(atlas: &mut RgbaImage, sprite: &RgbaImage, dst_rect: Rect, src_
     assert!(dst_rect.dims == src_rect.dims);
     for row in 0..dst_rect.dims.0 {
         for col in 0..dst_rect.dims.1 {
-            let mut out_color = *sprite.get_pixel(src_rect.pos.1 + col, src_rect.pos.0 + row);
+            let out_color = *sprite.get_pixel(src_rect.pos.1 + col, src_rect.pos.0 + row);
             *atlas.get_pixel_mut(dst_rect.pos.1 + col, dst_rect.pos.0 + row) = out_color;
         }
     }

@@ -33,13 +33,13 @@ use sdl2::render::{Renderer as SdlRenderer};
 use gl;
 use gl::types::*;
 
-use ::{AppContext, App};
-use app_info::AppInfo;
-use renderer::Renderer;
-use renderer::core_renderer::CoreRenderer;
-use renderer::render_buffer::RenderBuffer;
-use renderer::atlas::Atlas;
-use ::asset_id::{AppAssetId, IdU16};
+use crate::{AppContext, App};
+use crate::app_info::AppInfo;
+use crate::renderer::Renderer;
+use crate::renderer::core_renderer::CoreRenderer;
+use crate::renderer::render_buffer::RenderBuffer;
+use crate::renderer::atlas::Atlas;
+use crate::asset_id::{AppAssetId, IdU16};
 use self::app_clock::AppClock;
 use self::event_handler::EventHandler;
 use super::mark_app_created_flag;
@@ -121,7 +121,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 
         let continuing = event_handler.process_events(&mut app, &mut ctx, &renderer);
         if !continuing { break; }
-        app.advance(elapsed.min(::MAX_TIMESTEP), &mut ctx);
+        app.advance(elapsed.min(crate::MAX_TIMESTEP), &mut ctx);
         if ctx.take_close_request() { break; }
     }
 }

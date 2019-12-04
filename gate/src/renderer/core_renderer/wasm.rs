@@ -15,8 +15,8 @@
 use std::mem;
 use std::os::raw::c_int;
 
-use renderer::render_buffer::RenderBuffer;
-use ::wasm_imports::*;
+use crate::renderer::render_buffer::RenderBuffer;
+use crate::wasm_imports::*;
 
 pub struct CoreRenderer { }
 
@@ -27,19 +27,19 @@ impl CoreRenderer {
 }
 
 impl CoreRenderer {
-    pub(in renderer) fn set_scissor(&mut self, x: u32, y: u32, w: u32, h: u32) {
+    pub(in crate::renderer) fn set_scissor(&mut self, x: u32, y: u32, w: u32, h: u32) {
         unsafe {
             gateWasmSetScissor(x as c_int, y as c_int, w as c_int, h as c_int);
         }
     }
 
-    pub(in renderer) fn clear(&mut self, color: (u8, u8, u8)) {
+    pub(in crate::renderer) fn clear(&mut self, color: (u8, u8, u8)) {
         unsafe {
             gateWasmClear(color.0 as f32 / 255., color.1 as f32 / 255., color.2 as f32 / 255.);
         }
     }
 
-    pub(in renderer) fn draw_sprites(&mut self, r: &mut RenderBuffer) {
+    pub(in crate::renderer) fn draw_sprites(&mut self, r: &mut RenderBuffer) {
         unsafe {
             gateWasmDrawSprites(mem::size_of::<f32>() * r.vbo_data.len(), mem::transmute(&r.vbo_data[0]));
         }

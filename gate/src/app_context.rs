@@ -14,8 +14,8 @@
 
 use std::marker::PhantomData;
 
-use asset_id::{AppAssetId, IdU16};
-use core::CoreAudio;
+use crate::asset_id::{AppAssetId, IdU16};
+use crate::core::CoreAudio;
 
 /// Context passed to methods in `App`.
 pub struct AppContext<A: AppAssetId> {

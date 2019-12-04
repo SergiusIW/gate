@@ -63,14 +63,14 @@ mod input;
 mod core;
 
 #[cfg(target_arch = "wasm32")]
-pub use core::{wasm_imports, wasm_exports};
+pub use crate::core::{wasm_imports, wasm_exports};
 
-pub use app_context::{AppContext, Audio};
-pub use input::KeyCode;
-pub use app_info::AppInfo;
+pub use crate::app_context::{AppContext, Audio};
+pub use crate::input::KeyCode;
+pub use crate::app_info::AppInfo;
 
-use asset_id::AppAssetId;
-use renderer::Renderer;
+use crate::asset_id::AppAssetId;
+use crate::renderer::Renderer;
 
 const MAX_TIMESTEP: f64 = 1. / 15.;
 

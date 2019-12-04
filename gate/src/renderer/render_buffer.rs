@@ -15,7 +15,7 @@
 use super::core_renderer::CoreRenderer;
 use super::vbo_packer;
 
-use ::app_info::AppInfo;
+use crate::app_info::AppInfo;
 use super::atlas::Atlas;
 use super::geom::Affine;
 

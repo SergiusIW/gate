@@ -19,7 +19,7 @@
 
 use std::marker::PhantomData;
 
-use ::asset_id::{AppAssetId, IdU16};
+use crate::asset_id::{AppAssetId, IdU16};
 
 use super::geom::Affine;
 use super::render_buffer::RenderBuffer;

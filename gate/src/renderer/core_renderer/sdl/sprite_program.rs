@@ -19,7 +19,7 @@ use gl::types::*;
 use gl;
 
 use super::shader_util;
-use renderer::shaders;
+use crate::renderer::shaders;
 
 pub struct SpriteProgram {
     pub handle: GLuint,

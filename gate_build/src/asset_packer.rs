@@ -17,9 +17,9 @@ use std::fs::{self, File};
 use std::io::{self, Write};
 use std::ffi::OsStr;
 
-use atlas::form_atlas;
-use html;
-use ::rerun_print;
+use crate::atlas::form_atlas;
+use crate::html;
+use crate::rerun_print;
 
 // TODO have more careful checks on input
 // TODO add unit test for rect_packer efficiency

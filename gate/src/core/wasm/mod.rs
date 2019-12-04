@@ -21,14 +21,14 @@ use std::mem;
 use std::io::Cursor;
 use std::os::raw::{c_int, c_void};
 
-use ::{App, AppContext};
-use asset_id::{AppAssetId, IdU16};
-use renderer::Renderer;
-use app_info::AppInfo;
-use input::KeyCode;
-use renderer::atlas::Atlas;
-use renderer::render_buffer::RenderBuffer;
-use renderer::core_renderer::CoreRenderer;
+use crate::{App, AppContext};
+use crate::asset_id::{AppAssetId, IdU16};
+use crate::renderer::Renderer;
+use crate::app_info::AppInfo;
+use crate::input::KeyCode;
+use crate::renderer::atlas::Atlas;
+use crate::renderer::render_buffer::RenderBuffer;
+use crate::renderer::core_renderer::CoreRenderer;
 use self::wasm_imports::*;
 use super::mark_app_created_flag;
 
@@ -68,7 +68,7 @@ trait TraitAppRunner {
     fn cookie_buffer(&mut self, size: usize) -> &mut Vec<u8>;
 }
 
-struct StaticAppRunner { r: RefCell<Option<Box<TraitAppRunner>>> }
+struct StaticAppRunner { r: RefCell<Option<Box<dyn TraitAppRunner>>> }
 
 // NOTE: StaticAppRunner is not really safe to access concurrently, this was just the easiest way
 //       I could find to make it a static variable without artifically requiring `App` to
@@ -81,11 +81,11 @@ fn app_runner_is_defined() -> bool {
     APP_RUNNER.r.borrow().is_some()
 }
 
-fn app_runner_borrow_mut() -> cell::RefMut<'static, TraitAppRunner> {
+fn app_runner_borrow_mut() -> cell::RefMut<'static, dyn TraitAppRunner> {
     cell::RefMut::map(APP_RUNNER.r.borrow_mut(), |x| &mut **x.as_mut().unwrap())
 }
 
-fn app_runner_borrow() -> cell::Ref<'static, TraitAppRunner> {
+fn app_runner_borrow() -> cell::Ref<'static, dyn TraitAppRunner> {
     cell::Ref::map(APP_RUNNER.r.borrow(), |x| &**x.as_ref().unwrap())
 }
 
@@ -153,7 +153,7 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         self.update_is_fullscreen();
         let elapsed = self.last_time_sec.map(|x| time_sec - x).unwrap_or(0.0).max(0.0).min(0.1);
         if elapsed > 0.0 {
-            self.app.advance(elapsed.min(::MAX_TIMESTEP), &mut self.ctx);
+            self.app.advance(elapsed.min(crate::MAX_TIMESTEP), &mut self.ctx);
         }
         self.last_time_sec = Some(time_sec);
 

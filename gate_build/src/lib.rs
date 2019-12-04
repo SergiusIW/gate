@@ -53,7 +53,7 @@ mod atlas;
 mod asset_packer;
 mod html;
 
-pub use asset_packer::AssetPacker;
+pub use crate::asset_packer::AssetPacker;
 
 use std::path::Path;
 

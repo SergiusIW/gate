@@ -19,8 +19,8 @@
 
 use std::os::raw::{c_int, c_char, c_void};
 
-use ::input::KeyCode;
-use ::renderer::shaders;
+use crate::input::KeyCode;
+use crate::renderer::shaders;
 use super::{app_runner_is_defined, app_runner_borrow, app_runner_borrow_mut };
 
 pub fn gateWasmInit() {
