@@ -11,7 +11,7 @@ keywords = ["2D", "game"]
 license = "Apache-2.0"
 
 [dependencies]
-byteorder = "1.1.0"
+byteorder = "1.3.2"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 gl = "0.6.1"
