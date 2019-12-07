@@ -32,6 +32,7 @@ use crate::rerun_print;
 pub struct AssetPacker {
     assets_dir: PathBuf,
     check_rerun: bool,
+    mp3_fallback: bool,
     sprites: Option<Vec<String>>,
     music: Option<Vec<String>>,
     sounds: Option<Vec<String>>,
@@ -51,6 +52,7 @@ impl AssetPacker {
             assets_dir: assets_dir.to_path_buf(),
             sprites: None,
             check_rerun: false,
+            mp3_fallback: false,
             music: None,
             sounds: None,
             js: false,
@@ -70,9 +72,22 @@ impl AssetPacker {
         self.check_rerun = true;
     }
 
+    /// Invoke this method to copy `.mp3` files along with `.ogg` files for audio.
+    ///
+    /// This is useful when compiling to the WASM target architecture.
+    /// The Safari browser does not support the `.ogg` file format,
+    /// so `.mp3` files can be used as a fallback option.
+    ///
+    /// Panics if called after calling methods to pack audio assets.
+    pub fn mp3_fallback(&mut self) {
+        assert!(self.music.is_none() && self.sounds.is_none(),
+                "cannot set mp3 fallback after audio asset packing has already started");
+        self.mp3_fallback = true;
+    }
+
     /// Packs sprite images into an atlas, to be rendered by Gate renderer in "sprite" mode.
     ///
-    /// Image ".png" files are read from `in_dir`,
+    /// Image `.png` files are read from `in_dir`,
     /// generating enum handles with the same names as the image files.
     /// Returns the list of these handles indexed by ID,
     /// in the same order that they appear in the generated enum code.
@@ -99,7 +114,7 @@ impl AssetPacker {
         self.sprites.as_ref().unwrap()
     }
 
-    /// Creates handles for and moves music files from `in_dir` to the assets directory.
+    /// Creates handles for and copies music files from `in_dir` to the assets directory.
     ///
     /// Music files are expected to be in `.ogg` format,
     /// generating enum handles with the same names as the audio files.
@@ -107,11 +122,11 @@ impl AssetPacker {
     /// in the same order that they appear in the generated enum code.
     pub fn music(&mut self, in_dir: &Path) -> &[String] {
         assert!(self.music.is_none(), "self.music(...) was already invoked");
-        self.music = Some(enumerate_files(in_dir, &self.assets_dir, "music", "ogg", self.check_rerun));
+        self.music = Some(enumerate_audio(in_dir, &self.assets_dir, "music", self.mp3_fallback, self.check_rerun));
         self.music.as_ref().unwrap()
     }
 
-    /// Creates handles for and moves sound files from `in_dir` to the assets directory.
+    /// Creates handles for and copies sound files from `in_dir` to the assets directory.
     ///
     /// Music files are expected to be in `.ogg` format,
     /// generating enum handles with the same names as the audio files.
@@ -119,7 +134,7 @@ impl AssetPacker {
     /// in the same order that they appear in the generated enum code.
     pub fn sounds(&mut self, in_dir: &Path) -> &[String] {
         assert!(self.sounds.is_none(), "self.sounds(...) was already invoked");
-        self.sounds = Some(enumerate_files(in_dir, &self.assets_dir, "sound", "ogg", self.check_rerun));
+        self.sounds = Some(enumerate_audio(in_dir, &self.assets_dir, "sound", self.mp3_fallback, self.check_rerun));
         self.sounds.as_ref().unwrap()
     }
 
@@ -190,20 +205,30 @@ fn create_file(out_dir: &Path, filename: &str, contents: &str, check_rerun: bool
     rerun_print(check_rerun, &out_path);
 }
 
-fn enumerate_files(in_dir: &Path, out_dir: &Path, prefix: &str, extension: &str, check_rerun: bool) -> Vec<String> {
+fn enumerate_audio(in_dir: &Path, out_dir: &Path, prefix: &str, mp3_fallback: bool, check_rerun: bool) -> Vec<String> {
     let mut paths: Vec<_> = in_dir.read_dir().unwrap()
                                   .filter_map(|p| p.ok())
                                   .map(|p| p.path())
-                                  .filter(|p| p.extension() == Some(OsStr::new(extension)))
+                                  .filter(|p| p.extension() == Some(OsStr::new("ogg")))
                                   .collect();
     paths.sort_unstable();
     for (id, path) in paths.iter().enumerate() {
-        rerun_print(check_rerun, &path);
-        let out_path = out_dir.join(format!("{}{}.{}", prefix, id, extension));
-        rerun_print(check_rerun, &out_path);
-        fs::copy(path, out_path).unwrap();
+        let out_path = out_dir.join(format!("{}{}.{}", prefix, id, "ogg"));
+        copy_file(path, &out_path, check_rerun);
+        if mp3_fallback {
+            copy_file(&path.with_extension("mp3"), &out_path.with_extension("mp3"), check_rerun);
+        }
     }
     paths.iter().map(|p| p.file_stem().unwrap().to_str().unwrap().to_owned()).collect()
+}
+
+fn copy_file(from: &Path, to: &Path, check_rerun: bool) {
+    rerun_print(check_rerun, from);
+    rerun_print(check_rerun, to);
+    fs::copy(from, to).unwrap_or_else(|err| match err.kind() {
+        io::ErrorKind::NotFound => panic!("Missing file: {:?}", from),
+        _ => panic!("{}", err),
+    });
 }
 
 fn gen_asset_enum(name: &str, ids: &[String]) -> String {

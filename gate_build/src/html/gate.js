@@ -332,9 +332,9 @@ function gate(args) {
       Module.loadingAudioCount += count;
       var result = new Array(count);
       for (var i = 0; i < count; i++) {
-        let audioSrc = `${prefix}${i}.ogg`;
+        let audioSrc = `${prefix}${i}`;
         result[i] = new Howl({
-          src: [audioSrc],
+          src: [`${audioSrc}.ogg`, `${audioSrc}.mp3`],
           loop: loop,
           onload: function () {
             Module.loadingAudioCount -= 1;
