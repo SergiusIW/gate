@@ -23,7 +23,7 @@ use std::path::Path;
 use std::fs::File;
 use std::io::BufReader;
 
-use sdl2::{self, VideoSubsystem};
+use sdl2::{self, hint, VideoSubsystem};
 use sdl2::video::{FullscreenType, GLProfile};
 use sdl2::video::gl_attr::GLAttr;
 use sdl2::image::LoadTexture;
@@ -56,6 +56,8 @@ macro_rules! gate_header {
 pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
     mark_app_created_flag();
 
+    #[cfg(target_os = "windows")]
+    hint::set("SDL_RENDER_DRIVER", "opengles2");
     let sdl_context = sdl2::init().unwrap();
     let video = sdl_context.video().unwrap();
     let _sdl_audio = sdl_context.audio().unwrap();
