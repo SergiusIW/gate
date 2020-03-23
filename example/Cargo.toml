@@ -9,6 +9,14 @@ authors = ["Matthew Michelotti <matthew@matthewmichelotti.com>"]
 
 [dependencies]
 gate = { path = "../gate" }
+gl = "0.10.0"
 
 [build-dependencies]
 gate_build = { path = "../gate_build" }
+
+#Could also add "bundled", "static-link"
+[dependencies.sdl2]
+version = "0.31.0"
+default-features = false
+features = ["use_mac_framework","image","mixer"]
+

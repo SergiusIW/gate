@@ -15,4 +15,4 @@ byteorder = "1.3.2"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 gl = "0.6.1"
-sdl2 = { version = "0.29", default-features = false, features = ["image", "mixer"] }
+sdl2 = { version = "0.31.0", default-features = false, features = ["image", "mixer", "unsafe_textures"] }
