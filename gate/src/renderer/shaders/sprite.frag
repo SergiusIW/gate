@@ -1,4 +1,4 @@
-#version 100
+#version 120
 
 // Copyright 2017-2019 Matthew D. Michelotti
 //
@@ -13,8 +13,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-precision highp float;
 
 uniform sampler2D tex;
 uniform vec2 inv_tex_dims; // inverse of tex dimensions

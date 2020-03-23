@@ -23,12 +23,12 @@ use std::path::Path;
 use std::fs::File;
 use std::io::BufReader;
 
-use sdl2::{self, VideoSubsystem};
+use sdl2::{self};
 use sdl2::video::{FullscreenType, GLProfile};
 use sdl2::video::gl_attr::GLAttr;
 use sdl2::image::LoadTexture;
 use sdl2::mixer::{Sdl2MixerContext, INIT_OGG, DEFAULT_CHANNELS, AUDIO_S16LSB};
-use sdl2::render::{Renderer as SdlRenderer};
+use sdl2::render::{TextureCreator};
 
 use gl;
 use gl::types::*;
@@ -54,6 +54,7 @@ macro_rules! gate_header {
 }
 
 pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
+    
     mark_app_created_flag();
 
     #[cfg(target_os = "windows")]
@@ -73,19 +74,52 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
         .position_centered().opengl().resizable()
         .build().unwrap();
 
-    let mut sdl_renderer = window.renderer()
+    let mut canvas = window.into_canvas()
+        .index(find_sdl_gl_driver().unwrap())
+        .target_texture()
+        .present_vsync()
         .accelerated()
         .build().unwrap();
 
-    init_gl(&video);
 
-    let mut renderer = build_renderer(&info, &sdl_renderer);
+    gl::load_with(|name| video.gl_get_proc_address(name) as *const _);
+    canvas.window().gl_set_context_to_current().expect("OpenGL failed to start");   
 
-    gl_error_check();
+    unsafe {
+        gl::Enable(gl::BLEND);
+        gl::BlendFunc(gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
+        gl::ClearColor(0.6, 0.0, 0.8, 1.0);
+        gl::Clear(gl::COLOR_BUFFER_BIT);
+    }
+    
+    canvas.present();
+
+    if info.print_gl_info { 
+        print_gl_info(); 
+    }
+
+    let texture_creator : TextureCreator<_> = canvas.texture_creator();
+
+    //let mut renderer = build_renderer(&info, &mut canvas, &texture_creator);
+    let sprites_atlas = Atlas::new(BufReader::new(File::open("assets/sprites.atlas").unwrap())).unwrap();
+    let render_buffer = RenderBuffer::new(&info, info.window_pixels, sprites_atlas);
+
+    let mut sprites_tex = texture_creator.load_texture(Path::new("assets/sprites.png")).unwrap();
+    unsafe {
+        sprites_tex.gl_bind_texture();
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as GLint);
+        sprites_tex.gl_unbind_texture();
+    }
+
+
+    // TODO need to ensure Nearest-neighbor sampling is used?
+    let core_renderer = CoreRenderer::new(sprites_tex);
+
+    let mut renderer = Renderer::<AS>::new(render_buffer, core_renderer);
 
     let mut ctx = AppContext::new(CoreAudio::new(AS::Sound::count()), renderer.app_dims(), renderer.native_px());
 
-    if info.print_gl_info { print_gl_info(); }
 
     app.start(&mut ctx);
 
@@ -97,25 +131,25 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
 
-        let screen_dims = sdl_renderer.window().unwrap().size();
+        let screen_dims = canvas.window().size();
         if screen_dims.0 > 0 && screen_dims.1 > 0 {
             renderer.set_screen_dims(screen_dims);
             ctx.set_dims(renderer.app_dims(), renderer.native_px());
             app.render(&mut renderer, &ctx);
             renderer.flush();
         }
-        sdl_renderer.present();
+        canvas.present();
         gl_error_check();
 
         let elapsed = clock.step();
 
         match (ctx.is_fullscreen(), ctx.desires_fullscreen()) {
             (false, true) => {
-                let success = sdl_renderer.window_mut().unwrap().set_fullscreen(FullscreenType::Desktop).is_ok();
+                let success = canvas.window_mut().set_fullscreen(FullscreenType::Desktop).is_ok();
                 ctx.set_is_fullscreen(success);
             },
             (true, false) => {
-                let success = sdl_renderer.window_mut().unwrap().set_fullscreen(FullscreenType::Off).is_ok();
+                let success = canvas.window_mut().set_fullscreen(FullscreenType::Off).is_ok();
                 ctx.set_is_fullscreen(!success);
             },
             (false, false) | (true, true) => {},
@@ -128,22 +162,6 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
     }
 }
 
-fn build_renderer<AS: AppAssetId>(info: &AppInfo, sdl_renderer: &SdlRenderer) -> Renderer<AS> {
-    let sprites_atlas = Atlas::new(BufReader::new(File::open("assets/sprites.atlas").unwrap())).unwrap();
-    let render_buffer = RenderBuffer::new(&info, info.window_pixels, sprites_atlas);
-
-    let mut sprites_tex = sdl_renderer.load_texture(Path::new("assets/sprites.png")).unwrap();
-    unsafe {
-        sprites_tex.gl_bind_texture();
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as GLint);
-        sprites_tex.gl_unbind_texture();
-    }
-    // TODO need to ensure Nearest-neighbor sampling is used?
-    let core_renderer = CoreRenderer::new(sprites_tex);
-
-    Renderer::<AS>::new(render_buffer, core_renderer)
-}
 
 fn mixer_init() -> Sdl2MixerContext {
     match sdl2::mixer::init(INIT_OGG) {
@@ -167,13 +185,13 @@ fn gl_hints(gl_attr: GLAttr) {
     gl_attr.set_context_version(3, 0);
 }
 
-fn init_gl(video: &VideoSubsystem) {
-    gl::load_with(|name| video.gl_get_proc_address(name) as *const _);
-
-    unsafe {
-        gl::Enable(gl::BLEND);
-        gl::BlendFunc(gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
+fn find_sdl_gl_driver() -> Option<u32> {
+    for (index, item) in sdl2::render::drivers().enumerate() {
+        if item.name == "opengl" {
+            return Some(index as u32);
+        }
     }
+    None
 }
 
 fn print_gl_info() {

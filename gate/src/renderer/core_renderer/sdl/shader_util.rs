@@ -26,9 +26,9 @@ pub fn compile_shader(src: *const c_char, ty: GLenum) -> GLuint {
         gl::CompileShader(shader);
 
         let mut status = gl::FALSE as GLint;
-        gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut status);
+        gl::GetShaderiv(shader, gl::COMPILE_STATUS, &mut status);        
 
-        if status != (gl::TRUE as GLint) {
+        if status != (gl::TRUE as GLint) {            
             let mut len = 0;
             gl::GetShaderiv(shader, gl::INFO_LOG_LENGTH, &mut len);
             let mut buf = Vec::with_capacity(len as usize - 1);

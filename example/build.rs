@@ -29,6 +29,10 @@ fn main() {
     packer.sprites(Path::new("src_assets/sprites"));
     packer.music(Path::new("src_assets/music"));
     packer.sounds(Path::new("src_assets/sounds"));
-    if is_wasm { packer.gen_javascript_and_html(); }
+    if is_wasm { 
+        packer.gen_javascript_and_html(); 
+    } else {
+        println!("cargo:rustc-link-search=framework=/Library/Frameworks"); 
+    }
     packer.gen_asset_id_code(&gen_code_path);
 }
