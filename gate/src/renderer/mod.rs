@@ -1,4 +1,4 @@
-// Copyright 2017-2019 Matthew D. Michelotti
+// Copyright 2017-2020 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 //! Rendering uses OpenGL shaders designed specifically for 2D pixel art,
 //! looking crisp at any scale or rotation.
 
-#[macro_use] mod macros;
 mod geom;
 pub(crate) mod atlas;
 pub(crate) mod render_buffer;

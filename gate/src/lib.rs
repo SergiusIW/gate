@@ -1,4 +1,4 @@
-// Copyright 2017-2019 Matthew D. Michelotti
+// Copyright 2017-2020 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,10 +51,7 @@
 //!   game libraries often seem to overlook this fundamental feature)
 //! * New renderer modes with new shaders
 
-#[cfg(not(target_arch = "wasm32"))] extern crate sdl2;
-#[cfg(not(target_arch = "wasm32"))] extern crate gl;
-extern crate byteorder;
-
+#[macro_use] mod macros;
 pub mod asset_id;
 pub mod renderer;
 mod app_info;

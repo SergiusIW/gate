@@ -1,4 +1,4 @@
-// Copyright 2017-2019 Matthew D. Michelotti
+// Copyright 2017-2020 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ mod sprite_program;
 
 use std::mem;
 
-use sdl2::render::Texture;
+use sdl2_sys as sdl;
 
 use gl::types::*;
 use gl;
@@ -28,11 +28,11 @@ use self::sprite_program::SpriteProgram;
 pub struct CoreRenderer {
     vbo: GLuint,
     sprite_program: SpriteProgram,
-    sprites_tex: Texture,
+    sprites_tex: *mut sdl::SDL_Texture, // TODO invoke sys::SDL_DestroyTexture on panic? does it matter?
 }
 
 impl CoreRenderer {
-    pub fn new(sprites_tex: Texture) -> CoreRenderer {
+    pub fn new(sprites_tex: *mut sdl::SDL_Texture) -> CoreRenderer {
         let mut vbo = 0;
         unsafe {
             gl::GenBuffers(1, &mut vbo);
@@ -64,7 +64,10 @@ impl CoreRenderer {
             gl::UseProgram(self.sprite_program.handle);
 
             gl::ActiveTexture(gl::TEXTURE0);
-            self.sprites_tex.gl_bind_texture();
+            let (width, height) = (0., 0.);
+            if sdl::SDL_GL_BindTexture(self.sprites_tex, &mut width, &mut height) != 0 {
+                panic!("OpenGL texture binding not supported"); // TODO cleaner error handling
+            }
             gl::Uniform1i(self.sprite_program.uniform_tex, 0); // binds to GL_TEXTURE0
             gl::Uniform2f(self.sprite_program.uniform_inv_tex_dims,
                           1. / r.sprite_atlas.dims.0, 1. / r.sprite_atlas.dims.1);
@@ -79,7 +82,9 @@ impl CoreRenderer {
             gl::DrawArrays(gl::TRIANGLES, 0, r.vbo_data.len() as GLint / 7);
 
             gl::BindVertexArray(0);
-            self.sprites_tex.gl_unbind_texture();
+            if sdl::SDL_GL_UnbindTexture(self.sprites_tex) != 0 {
+                panic!("OpenGL texture unbinding not supported"); // TODO cleaner error handling
+            }
             gl::UseProgram(0);
             gl::Disable(gl::SCISSOR_TEST);
         }

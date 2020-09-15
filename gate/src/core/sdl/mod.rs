@@ -1,4 +1,4 @@
-// Copyright 2017-2019 Matthew D. Michelotti
+// Copyright 2017-2020 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,17 +18,14 @@ mod event_handler;
 
 pub use self::core_audio::CoreAudio;
 
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
+use std::os::raw::{c_char, c_int};
 use std::path::Path;
+use std::ptr;
 use std::fs::File;
 use std::io::BufReader;
 
-use sdl2::{self, VideoSubsystem};
-use sdl2::video::{FullscreenType, GLProfile};
-use sdl2::video::gl_attr::GLAttr;
-use sdl2::image::LoadTexture;
-use sdl2::mixer::{Sdl2MixerContext, INIT_OGG, DEFAULT_CHANNELS, AUDIO_S16LSB};
-use sdl2::render::{Renderer as SdlRenderer};
+use sdl2_sys as sdl;
 
 use gl;
 use gl::types::*;
@@ -57,29 +54,42 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
     mark_app_created_flag();
 
     #[cfg(target_os = "windows")]
-    sdl2::hint::set("SDL_RENDER_DRIVER", "opengles2");
-    let sdl_context = sdl2::init().unwrap();
-    let video = sdl_context.video().unwrap();
-    let _sdl_audio = sdl_context.audio().unwrap();
-    let _mixer_context = mixer_init();
+    sdl::SDL_SetHint(c_str!("SDL_RENDER_DRIVER"), c_str!("opengles2"));
+    sdl::SDL_Init(sdl::SDL_INIT_VIDEO | sdl::SDL_INIT_AUDIO | sdl::SDL_INIT_TIMER | sdl::SDL_INIT_EVENTS).sdl_check();
+    sdl::mixer::Mix_Init(sdl::mixer::MIX_InitFlags_MIX_INIT_OGG as c_int).sdl_check();
+    // let sdl_context = sdl2::init().unwrap();
+    // let video = sdl_context.video().unwrap();
+    // let _sdl_audio = sdl_context.audio().unwrap();
+    // let _mixer_context = mixer_init();
 
     mixer_setup();
-    gl_hints(video.gl_attr());
+    gl_hints();
 
-    let timer = sdl_context.timer().unwrap();
-    let mut event_handler = EventHandler::new(sdl_context.event_pump().unwrap());
+    //let timer = sdl_context.timer().unwrap();
+    let mut event_handler = EventHandler::new();
 
-    let window = video.window(info.title, info.window_pixels.0, info.window_pixels.1)
-        .position_centered().opengl().resizable()
-        .build().unwrap();
+    let title = CString::new(info.title.clone()).expect("invalid title");
+    let window = sdl::SDL_CreateWindow(
+        title.as_ptr() as *const c_char,
+        sdl::SDL_WINDOWPOS_CENTERED_MASK as c_int,
+        sdl::SDL_WINDOWPOS_CENTERED_MASK as c_int,
+        info.window_pixels.0 as c_int,
+        info.window_pixels.1 as c_int,
+        sdl::SDL_WindowFlags::SDL_WINDOW_RESIZABLE as u32 | sdl::SDL_WindowFlags::SDL_WINDOW_OPENGL as u32,
+    );
+    if window.is_null() {
+        panic!("error creating window"); // TODO better error message using SDL_GetError
+    }
 
-    let mut sdl_renderer = window.renderer()
-        .accelerated()
-        .build().unwrap();
+    // TODO use SDL_RENDERER_PRESENTVSYNC properly instead of trying to time frames...
+    let sdl_renderer = sdl::SDL_CreateRenderer(window, -1, sdl::SDL_RendererFlags::SDL_RENDERER_ACCELERATED as u32);
+    if sdl_renderer.is_null() {
+        panic!("error creating renderer"); // TODO better error message using SDL_GetError
+    }
 
-    init_gl(&video);
+    init_gl();
 
-    let mut renderer = build_renderer(&info, &sdl_renderer);
+    let mut renderer = build_renderer(&info, sdl_renderer);
 
     gl_error_check();
 
@@ -89,7 +99,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 
     app.start(&mut ctx);
 
-    let mut clock = AppClock::new(timer, &info);
+    let mut clock = AppClock::new(&info);
 
     loop {
         unsafe {
@@ -97,25 +107,26 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
 
-        let screen_dims = sdl_renderer.window().unwrap().size();
+        let screen_dims = (0, 0);
+        sdl::SDL_GetWindowSize(window, &mut screen_dims.0, &mut screen_dims.1);
         if screen_dims.0 > 0 && screen_dims.1 > 0 {
-            renderer.set_screen_dims(screen_dims);
+            renderer.set_screen_dims((screen_dims.0 as u32, screen_dims.1 as u32));
             ctx.set_dims(renderer.app_dims(), renderer.native_px());
             app.render(&mut renderer, &ctx);
             renderer.flush();
         }
-        sdl_renderer.present();
+        sdl::SDL_RenderPresent(sdl_renderer);
         gl_error_check();
 
         let elapsed = clock.step();
 
         match (ctx.is_fullscreen(), ctx.desires_fullscreen()) {
             (false, true) => {
-                let success = sdl_renderer.window_mut().unwrap().set_fullscreen(FullscreenType::Desktop).is_ok();
+                let success = sdl::SDL_SetWindowFullscreen(window, sdl::SDL_WindowFlags::SDL_WINDOW_FULLSCREEN_DESKTOP as u32) == 0;
                 ctx.set_is_fullscreen(success);
             },
             (true, false) => {
-                let success = sdl_renderer.window_mut().unwrap().set_fullscreen(FullscreenType::Off).is_ok();
+                let success = sdl::SDL_SetWindowFullscreen(window, 0) == 0;
                 ctx.set_is_fullscreen(!success);
             },
             (false, false) | (true, true) => {},
@@ -128,47 +139,58 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
     }
 }
 
-fn build_renderer<AS: AppAssetId>(info: &AppInfo, sdl_renderer: &SdlRenderer) -> Renderer<AS> {
+fn build_renderer<AS: AppAssetId>(info: &AppInfo, sdl_renderer: *mut sdl::SDL_Renderer) -> Renderer<AS> {
     let sprites_atlas = Atlas::new(BufReader::new(File::open("assets/sprites.atlas").unwrap())).unwrap();
     let render_buffer = RenderBuffer::new(&info, info.window_pixels, sprites_atlas);
 
-    let mut sprites_tex = sdl_renderer.load_texture(Path::new("assets/sprites.png")).unwrap();
-    unsafe {
-        sprites_tex.gl_bind_texture();
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as GLint);
-        sprites_tex.gl_unbind_texture();
+    let sprites_tex = sdl::image::IMG_LoadTexture(sdl_renderer, c_str!("assets/sprites.png"));
+    if sprites_tex.is_null() {
+        panic!("error loading texture"); // TODO better error message
     }
+
+    let (mut tex_w, mut tex_h) = (0., 0.);
+    sdl::SDL_GL_BindTexture(sprites_tex, &mut tex_w, &mut tex_h).sdl_check();
+    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
+    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as GLint);
+    sdl::SDL_GL_UnbindTexture(sprites_tex).sdl_check();
+
     // TODO need to ensure Nearest-neighbor sampling is used?
     let core_renderer = CoreRenderer::new(sprites_tex);
 
     Renderer::<AS>::new(render_buffer, core_renderer)
 }
 
-fn mixer_init() -> Sdl2MixerContext {
-    match sdl2::mixer::init(INIT_OGG) {
-        Ok(ctx) => ctx,
-        // HACK TODO remove special handling once SDL2 mixer 2.0.3 is released
-        //           (see https://bugzilla.libsdl.org/show_bug.cgi?id=3929 for details)
-        Err(ref msg) if msg.as_str() == "OGG support not available" => Sdl2MixerContext,
-        Err(msg) => panic!("sdl2::mixer::init failed: {}", msg),
-    }
-}
+//fn mixer_init() {
+    // match sdl2::mixer::init(INIT_OGG) {
+    //     Ok(ctx) => ctx,
+    //     // HACK TODO remove special handling once SDL2 mixer 2.0.3 is released
+    //     //           (see https://bugzilla.libsdl.org/show_bug.cgi?id=3929 for details)
+    //     Err(ref msg) if msg.as_str() == "OGG support not available" => Sdl2MixerContext,
+    //     Err(msg) => panic!("sdl2::mixer::init failed: {}", msg),
+    // }
+//}
 
 fn mixer_setup() {
-    sdl2::mixer::open_audio(44100, AUDIO_S16LSB, DEFAULT_CHANNELS, 1024).unwrap();
-    sdl2::mixer::allocate_channels(4);
+    sdl::mixer::Mix_OpenAudio(44100, sdl::AUDIO_S16LSB as u16, sdl::mixer::MIX_DEFAULT_CHANNELS as c_int, 1024).mix_check();
+    let num_channels_requested = 4; // TODO reconsider this limit
+    let num_channels_created = sdl::mixer::Mix_AllocateChannels(4);
+    assert!(num_channels_requested == num_channels_created);
 }
 
-fn gl_hints(gl_attr: GLAttr) {
-    // TODO test that this gl_attr code actually does anything
-    gl_attr.set_context_profile(GLProfile::Core);
-    gl_attr.set_context_flags().debug().set();
-    gl_attr.set_context_version(3, 0);
+fn gl_hints() {
+    // TODO test that this SetAttribute code actually does anything
+    // TODO Reconsider these flags: 3.0 may be lowered, can try PROFILE_ES, debug flag should not be used in release mode, maybe removed entirely
+    sdl::SDL_GL_SetAttribute(sdl::SDL_GLattr::SDL_GL_CONTEXT_PROFILE_MASK, sdl::SDL_GLprofile::SDL_GL_CONTEXT_PROFILE_CORE as c_int).sdl_check();
+    sdl::SDL_GL_SetAttribute(sdl::SDL_GLattr::SDL_GL_CONTEXT_FLAGS, sdl::SDL_GLcontextFlag::SDL_GL_CONTEXT_DEBUG_FLAG as c_int).sdl_check();
+    sdl::SDL_GL_SetAttribute(sdl::SDL_GLattr::SDL_GL_CONTEXT_MAJOR_VERSION, 3).sdl_check();
+    sdl::SDL_GL_SetAttribute(sdl::SDL_GLattr::SDL_GL_CONTEXT_MINOR_VERSION, 0).sdl_check();
 }
 
-fn init_gl(video: &VideoSubsystem) {
-    gl::load_with(|name| video.gl_get_proc_address(name) as *const _);
+fn init_gl() {
+    gl::load_with(|name| {
+        let name = CString::new(name).unwrap();
+        sdl::SDL_GL_GetProcAddress(name.as_ptr())
+    });
 
     unsafe {
         gl::Enable(gl::BLEND);
@@ -192,4 +214,20 @@ fn gl_get_string<'a>(name: GLenum) -> &'a CStr {
 fn gl_error_check() {
     let error = unsafe { gl::GetError() };
     assert!(error == gl::NO_ERROR, "unexpected OpenGL error, code {}", error);
+}
+
+trait SdlErrorCode {
+    fn sdl_check(self);
+    fn mix_check(self);
+}
+
+impl SdlErrorCode for c_int {
+    // TODO make sure to call this on all relevant sdl return values
+    fn sdl_check(self) {
+        todo!()
+    }
+
+    fn mix_check(self) {
+        todo!()
+    }
 }

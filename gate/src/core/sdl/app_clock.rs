@@ -1,4 +1,4 @@
-// Copyright 2017-2019 Matthew D. Michelotti
+// Copyright 2017-2020 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use sdl2::TimerSubsystem;
+use sdl2_sys as sdl;
 
 use crate::app_info::AppInfo;
 use std::u32;
 
 pub struct AppClock {
-    timer: TimerSubsystem,
     last_ticks: u32,
     frame_dur_millis: u32,
     work_load_sum: f64,
@@ -28,10 +27,9 @@ pub struct AppClock {
 }
 
 impl AppClock {
-    pub fn new(mut timer: TimerSubsystem, info: &AppInfo) -> AppClock {
+    pub fn new(info: &AppInfo) -> AppClock {
         AppClock {
-            last_ticks: timer.ticks(),
-            timer,
+            last_ticks: sdl::SDL_GetTicks(),
             frame_dur_millis: (1000. / info.target_fps).round() as u32,
             work_load_sum: 0.0,
             work_load_max: 0.0,
@@ -44,7 +42,7 @@ impl AppClock {
         let mut elapsed;
         let mut first_iter = true;
         loop {
-            let now = self.timer.ticks();
+            let now = sdl::SDL_GetTicks();
             let dt = now - self.last_ticks;
             elapsed = dt as f64 / 1_000.0;
 
@@ -54,12 +52,12 @@ impl AppClock {
             }
 
             if dt < self.frame_dur_millis {
-                self.timer.delay(self.frame_dur_millis - dt);
+                sdl::SDL_Delay(self.frame_dur_millis - dt);
             } else {
                 break;
             }
         }
-        self.last_ticks = self.timer.ticks();
+        self.last_ticks = sdl::SDL_GetTicks();
         elapsed
     }
 

@@ -6,6 +6,7 @@ name = "example"
 version = "0.1.0"
 edition = "2018"
 authors = ["Matthew Michelotti <matthew@matthewmichelotti.com>"]
+publish = false
 
 [dependencies]
 gate = { path = "../gate" }

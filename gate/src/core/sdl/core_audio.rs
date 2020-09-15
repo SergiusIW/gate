@@ -1,4 +1,4 @@
-// Copyright 2017-2019 Matthew D. Michelotti
+// Copyright 2017-2020 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 use std::path::PathBuf;
 
-use sdl2::mixer::{self, Music};
+use sdl2_sys as sdl;
 
 pub struct CoreAudio { music: Option<Music<'static>>, sounds: Vec<mixer::Chunk> }
 
