@@ -70,7 +70,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 
     let title = CString::new(info.title.clone()).expect("invalid title");
     let window = sdl::SDL_CreateWindow(
-        title.as_ptr() as *const c_char,
+        title.as_ptr(),
         sdl::SDL_WINDOWPOS_CENTERED_MASK as c_int,
         sdl::SDL_WINDOWPOS_CENTERED_MASK as c_int,
         info.window_pixels.0 as c_int,

@@ -12,36 +12,43 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::path::PathBuf;
+use std::ffi::CString;
+use std::os::raw::c_char;
 
 use sdl2_sys as sdl;
 
-pub struct CoreAudio { music: Option<Music<'static>>, sounds: Vec<mixer::Chunk> }
+// TODO delete audio after use...
+// TODO error checks...
+pub struct CoreAudio {
+    music: Option<*mut sdl::mixer::Mix_Music>,
+    sounds: Vec<*mut sdl::mixer::Mix_Chunk>,
+}
 
 impl CoreAudio {
     pub(crate) fn new(sound_count: u16) -> CoreAudio {
         let sounds: Vec<_> = (0..sound_count)
-            .map(|id| PathBuf::from(format!("assets/sound{}.ogg", id)))
-            .map(|p| mixer::Chunk::from_file(p).unwrap())
+            .map(|id| CString::new(format!("assets/sound{}.ogg", id)).unwrap())
+            .map(|p| sdl::mixer::Mix_LoadWAV_RW(sdl::SDL_RWFromFile(p.as_ptr(), c_str!("rb")), 0))
             .collect();
         CoreAudio { sounds, music: None }
     }
 
     pub fn play_sound(&mut self, sound: u16) {
-        mixer::Channel::all().play(&self.sounds[sound as usize], 0).unwrap();
+        sdl::mixer::Mix_PlayChannelTimed(-1, self.sounds[sound as usize], 0, -1);
     }
 
     pub fn play_music(&mut self, music: u16, loops: bool) {
-        let music = &format!("assets/music{}.ogg", music);
         self.stop_music();
-        let music = mixer::Music::from_file(music).unwrap();
-        music.play(if loops { 1_000_000 } else { 1 }).unwrap();
+        let loops = if loops { -1 } else { 1 };
+        let music = CString::new(format!("assets/music{}.ogg", music)).unwrap();
+        let music = sdl::mixer::Mix_LoadMUS(music.as_ptr());
+        sdl::mixer::Mix_PlayMusic(music, loops);
         self.music = Some(music);
     }
 
     pub fn stop_music(&mut self) {
-        if let Some(_) = self.music.take() {
-            Music::halt();
+        if let Some(music) = self.music.take() {
+            sdl::mixer::Mix_FreeMusic(music);
         }
     }
 }
