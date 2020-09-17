@@ -27,7 +27,7 @@ pub struct AppClock {
 }
 
 impl AppClock {
-    pub fn new(info: &AppInfo) -> AppClock {
+    pub unsafe fn new(info: &AppInfo) -> AppClock {
         AppClock {
             last_ticks: sdl::SDL_GetTicks(),
             frame_dur_millis: (1000. / info.target_fps).round() as u32,
@@ -38,7 +38,7 @@ impl AppClock {
         }
     }
 
-    pub fn step(&mut self) -> f64 {
+    pub unsafe fn step(&mut self) -> f64 {
         let mut elapsed;
         let mut first_iter = true;
         loop {

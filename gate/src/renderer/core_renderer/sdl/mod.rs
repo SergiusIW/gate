@@ -64,7 +64,7 @@ impl CoreRenderer {
             gl::UseProgram(self.sprite_program.handle);
 
             gl::ActiveTexture(gl::TEXTURE0);
-            let (width, height) = (0., 0.);
+            let (mut width, mut height) = (0., 0.);
             if sdl::SDL_GL_BindTexture(self.sprites_tex, &mut width, &mut height) != 0 {
                 panic!("OpenGL texture binding not supported"); // TODO cleaner error handling
             }

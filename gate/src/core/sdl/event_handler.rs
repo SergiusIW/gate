@@ -31,10 +31,11 @@ impl EventHandler {
         EventHandler { held_keys: HashSet::new() }
     }
 
-    pub fn process_events<AS: AppAssetId, AP: App<AS>>(&mut self, app: &mut AP, ctx: &mut AppContext<AS>,
-                                                       renderer: &Renderer<AS>) -> bool {
+    pub unsafe fn process_events<AS: AppAssetId, AP: App<AS>>(&mut self, app: &mut AP, ctx: &mut AppContext<AS>,
+        renderer: &Renderer<AS>) -> bool
+    {
         loop {
-            let event = mem::MaybeUninit::uninit();
+            let mut event = mem::MaybeUninit::uninit();
             if sdl::SDL_PollEvent(event.as_mut_ptr()) != 1 {
                 break;
             }

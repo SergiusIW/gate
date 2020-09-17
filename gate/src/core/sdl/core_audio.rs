@@ -25,7 +25,7 @@ pub struct CoreAudio {
 }
 
 impl CoreAudio {
-    pub(crate) fn new(sound_count: u16) -> CoreAudio {
+    pub(crate) unsafe fn new(sound_count: u16) -> CoreAudio {
         let sounds: Vec<_> = (0..sound_count)
             .map(|id| CString::new(format!("assets/sound{}.ogg", id)).unwrap())
             .map(|p| sdl::mixer::Mix_LoadWAV_RW(sdl::SDL_RWFromFile(p.as_ptr(), c_str!("rb")), 0))
@@ -34,21 +34,27 @@ impl CoreAudio {
     }
 
     pub fn play_sound(&mut self, sound: u16) {
-        sdl::mixer::Mix_PlayChannelTimed(-1, self.sounds[sound as usize], 0, -1);
+        unsafe {
+            sdl::mixer::Mix_PlayChannelTimed(-1, self.sounds[sound as usize], 0, -1);
+        }
     }
 
     pub fn play_music(&mut self, music: u16, loops: bool) {
-        self.stop_music();
-        let loops = if loops { -1 } else { 1 };
-        let music = CString::new(format!("assets/music{}.ogg", music)).unwrap();
-        let music = sdl::mixer::Mix_LoadMUS(music.as_ptr());
-        sdl::mixer::Mix_PlayMusic(music, loops);
-        self.music = Some(music);
+        unsafe {
+            self.stop_music();
+            let loops = if loops { -1 } else { 1 };
+            let music = CString::new(format!("assets/music{}.ogg", music)).unwrap();
+            let music = sdl::mixer::Mix_LoadMUS(music.as_ptr());
+            sdl::mixer::Mix_PlayMusic(music, loops);
+            self.music = Some(music);
+        }
     }
 
     pub fn stop_music(&mut self) {
         if let Some(music) = self.music.take() {
-            sdl::mixer::Mix_FreeMusic(music);
+            unsafe {
+                sdl::mixer::Mix_FreeMusic(music);
+            }
         }
     }
 }

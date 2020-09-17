@@ -1,4 +1,4 @@
-// Copyright 2017-2019 Matthew D. Michelotti
+// Copyright 2017-2020 Matthew D. Michelotti
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[macro_use]
-extern crate gate;
 
 use gate::{App, AppContext, AppInfo, KeyCode};
 use gate::renderer::{Renderer, Affine};
+use gate::gate_header;
 
 mod asset_id { include!(concat!(env!("OUT_DIR"), "/asset_id.rs")); }
 use crate::asset_id::{AssetId, SpriteId, MusicId, SoundId};
