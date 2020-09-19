@@ -39,8 +39,6 @@ pub struct AppInfo {
     pub(crate) max_dims: (f64, f64),
     pub(crate) tile_width: Option<u32>,
     pub(crate) title: &'static str,
-    pub(crate) target_fps: f64,
-    pub(crate) print_workload_info: bool,
     pub(crate) print_gl_info: bool,
 }
 
@@ -61,8 +59,6 @@ impl AppInfo {
             max_dims: (max_width, max_height),
             tile_width: None,
             title: "untitled app",
-            target_fps: 60.,
-            print_workload_info: false,
             print_gl_info: false,
         }
     }
@@ -101,16 +97,8 @@ impl AppInfo {
         self
     }
 
-    /// Specifies the target frames-per-second (default is `60.`).
-    pub fn target_fps(mut self, target_fps: f64) -> Self {
-        assert!(target_fps >= 20. && target_fps < 200., "unrealistic target_fps: {}", target_fps);
-        self.target_fps = target_fps;
-        self
-    }
-
-    /// If invoked, workload info will be printed to standard output periodically.
-    pub fn print_workload_info(mut self) -> Self { self.print_workload_info = true; self }
-
     /// If invoked, the OpenGL version info will be printed out at the start of the application.
+    /// 
+    /// Does not print anything when building as webassembly.
     pub fn print_gl_info(mut self) -> Self { self.print_gl_info = true; self }
 }

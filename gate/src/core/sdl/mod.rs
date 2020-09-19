@@ -76,8 +76,8 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
             panic!("error creating window"); // TODO better error message using SDL_GetError
         }
 
-        // TODO use SDL_RENDERER_PRESENTVSYNC properly instead of trying to time frames...
-        let sdl_renderer = sdl::SDL_CreateRenderer(window, -1, sdl::SDL_RendererFlags::SDL_RENDERER_ACCELERATED as u32);
+        let sdl_renderer = sdl::SDL_CreateRenderer(window, -1, sdl::SDL_RendererFlags::SDL_RENDERER_ACCELERATED as u32
+            | sdl::SDL_RendererFlags::SDL_RENDERER_PRESENTVSYNC as u32);
         if sdl_renderer.is_null() {
             panic!("error creating renderer"); // TODO better error message using SDL_GetError
         }
@@ -94,7 +94,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 
         app.start(&mut ctx);
 
-        let mut clock = AppClock::new(&info);
+        let mut clock = AppClock::new();
 
         loop {
             gl::ClearColor(0., 0., 0., 1.0);
