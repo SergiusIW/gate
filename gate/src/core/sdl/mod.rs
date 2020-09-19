@@ -48,7 +48,11 @@ macro_rules! gate_header {
     () => {};
 }
 
-pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
+pub fn run<AS, AP, F>(info: AppInfo, app: F) where
+    AS: AppAssetId,
+    AP: App<AS>,
+    F: FnOnce(&mut AppContext<AS>) -> AP
+{
     unsafe {
         mark_app_created_flag();
 
@@ -92,7 +96,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 
         if info.print_gl_info { print_gl_info(); }
 
-        app.start(&mut ctx);
+        let mut app = app(&mut ctx);
 
         let mut clock = AppClock::new();
 

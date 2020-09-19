@@ -74,15 +74,16 @@ const MAX_TIMESTEP: f64 = 1. / 15.;
 ///
 /// Will panic if this method is called more than once.
 /// The `AppInfo` is used to specify intiailization parameters for the application.
-pub fn run<AS: 'static + AppAssetId, AP: 'static + App<AS>>(info: AppInfo, app: AP) {
+pub fn run<AS, AP, F>(info: AppInfo, app: F) where
+    AS: 'static + AppAssetId,
+    AP: 'static + App<AS>,
+    F: 'static + FnOnce(&mut AppContext<AS>) -> AP
+{
     core::run(info, app);
 }
 
 /// Trait that a user can implement to specify application behavior, passed into `gate::run(...)`.
 pub trait App<A: AppAssetId> {
-    /// Invoked when the application is first started, default behavior is a no-op.
-    fn start(&mut self, _ctx: &mut AppContext<A>) {}
-
     /// Advances the app state by a given amount of `seconds` (usually a fraction of a second).
     fn advance(&mut self, seconds: f64, ctx: &mut AppContext<A>);
 

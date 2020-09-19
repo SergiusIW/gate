@@ -89,8 +89,33 @@ fn app_runner_borrow() -> cell::Ref<'static, dyn TraitAppRunner> {
     cell::Ref::map(APP_RUNNER.r.borrow(), |x| &**x.as_ref().unwrap())
 }
 
+enum AppContainer<AS: AppAssetId, AP: App<AS>> {
+    Init(AP),
+    Uninit(Box<dyn FnOnce(&mut AppContext<AS>) -> AP>),
+    Placeholder,
+}
+
+impl <AS: AppAssetId, AP: App<AS>> AppContainer<AS, AP> {
+    pub fn unwrap(&mut self) -> &mut AP {
+        match self {
+            AppContainer::Init(app) => app,
+            _ => panic!(),
+        }
+    }
+
+    pub fn init(&mut self, ctx: &mut AppContext<AS>) {
+        let mut container = AppContainer::Placeholder;
+        mem::swap(self, &mut container);
+        let mut init = match container {
+            AppContainer::Uninit(function) => AppContainer::Init(function(ctx)),
+            _ => panic!(),
+        };
+        mem::swap(self, &mut init);
+    }
+}
+
 struct AppRunner<AS: AppAssetId, AP: App<AS>> {
-    app: AP,
+    app: AppContainer<AS, AP>,
     info: AppInfo,
     renderer: Option<Renderer<AS>>,
     ctx: AppContext<AS>,
@@ -137,7 +162,7 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         {
             let renderer = self.renderer.as_ref().unwrap();
             self.ctx.set_dims(renderer.app_dims(), renderer.native_px());
-            self.app.start(&mut self.ctx);
+            self.app.init(&mut self.ctx);
         }
         self.update_cookie();
         assert!(!self.ctx.take_close_request(), "unexpected close immediately upon start");
@@ -153,14 +178,14 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         self.update_is_fullscreen();
         let elapsed = self.last_time_sec.map(|x| time_sec - x).unwrap_or(0.0).max(0.0).min(0.1);
         if elapsed > 0.0 {
-            self.app.advance(elapsed.min(crate::MAX_TIMESTEP), &mut self.ctx);
+            self.app.unwrap().advance(elapsed.min(crate::MAX_TIMESTEP), &mut self.ctx);
         }
         self.last_time_sec = Some(time_sec);
 
         self.update_cookie();
         let close_requested = self.ctx.take_close_request();
         if !close_requested {
-            self.app.render(self.renderer.as_mut().unwrap(), &self.ctx);
+            self.app.unwrap().render(self.renderer.as_mut().unwrap(), &self.ctx);
             self.renderer.as_mut().unwrap().flush();
         }
         !close_requested
@@ -174,11 +199,11 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
         self.update_is_fullscreen();
         if down {
             if self.held_keys.insert(key) {
-                self.app.key_down(key, &mut self.ctx);
+                self.app.unwrap().key_down(key, &mut self.ctx);
             }
         } else {
             if self.held_keys.remove(&key) {
-                self.app.key_up(key, &mut self.ctx);
+                self.app.unwrap().key_up(key, &mut self.ctx);
             }
         }
         self.update_cookie();
@@ -196,7 +221,7 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
     fn on_restart(&mut self) {
         self.update_is_fullscreen();
         for key in self.held_keys.drain() {
-            self.app.key_up(key, &mut self.ctx);
+            self.app.unwrap().key_up(key, &mut self.ctx);
         }
         self.update_cookie();
         assert!(!self.ctx.take_close_request(), "unexpected close immediately upon restart");
@@ -211,10 +236,15 @@ impl<AS: AppAssetId, AP: App<AS>> TraitAppRunner for AppRunner<AS, AP> {
     }
 }
 
-pub fn run<AS: 'static + AppAssetId, AP: 'static + App<AS>>(info: AppInfo, app: AP) {
+pub fn run<AS, AP, F>(info: AppInfo, app: F) where
+    AS: 'static + AppAssetId,
+    AP: 'static + App<AS>,
+    F: 'static + FnOnce(&mut AppContext<AS>) -> AP
+{
     mark_app_created_flag();
     *APP_RUNNER.r.borrow_mut() = Some(Box::new(AppRunner {
-        app, info,
+        app: AppContainer::Uninit(Box::new(app)),
+        info,
         ctx: AppContext::new(CoreAudio { }, (0., 0.), 1.),
         renderer: None,
         last_time_sec: None,

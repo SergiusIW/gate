@@ -53,10 +53,6 @@ fn pillar_for_cursor(cursor: (f64, f64), dims: (f64, f64)) -> Option<usize> {
 struct TowerGame { pillars: Vec<Vec<u8>>, held: Option<HeldDisc> }
 
 impl App<AssetId> for TowerGame {
-    fn start(&mut self, ctx: &mut AppContext<AssetId>) {
-        ctx.audio.loop_music(MusicId::Tick);
-    }
-
     fn advance(&mut self, seconds: f64, _ctx: &mut AppContext<AssetId>) {
         if let Some(held) = self.held.as_mut() {
             held.pos.1 = (held.pos.1 + seconds * 200.).min(35.);
@@ -123,5 +119,8 @@ fn main() {
                        .min_dims(64., 44.)
                        .tile_width(16)
                        .title("Tower");
-    gate::run(info, TowerGame { pillars: vec![vec![4, 3, 2, 1, 0], vec![], vec![]], held: None });
+    gate::run(info, |ctx| {
+        ctx.audio.loop_music(MusicId::Tick);
+        TowerGame { pillars: vec![vec![4, 3, 2, 1, 0], vec![], vec![]], held: None }
+    });
 }
