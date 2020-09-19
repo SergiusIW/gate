@@ -95,7 +95,7 @@ impl App<AssetId> for TowerGame {
 
     fn render(&mut self, renderer: &mut Renderer<AssetId>, ctx: &AppContext<AssetId>) {
         let (app_width, app_height) = ctx.dims();
-        let mut renderer = renderer.sprite_mode();
+        let mut renderer = renderer.flash_mode();
         for x in 0..((app_width / 16.).ceil() as usize) {
             for y in 0..((app_height / 16.).ceil() as usize) {
                 let affine = Affine::translate(8. + x as f64 * 16., 8. + y as f64 * 16.);

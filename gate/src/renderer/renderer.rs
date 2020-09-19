@@ -53,9 +53,9 @@ impl<A: AppAssetId> Renderer<A> {
         self.c.clear(color);
     }
 
-    /// Enters "sprite mode", for rendering sprites.
-    pub fn sprite_mode(&mut self) -> SpriteRenderer<A> {
-        SpriteRenderer { r: self }
+    /// Enters "flash mode", for rendering images with an optional fade-to-white value.
+    pub fn flash_mode(&mut self) -> FlashRenderer<A> {
+        FlashRenderer { r: self }
     }
 
     pub(crate) fn app_dims(&self) -> (f64, f64) { self.b.dims.dims }
@@ -88,12 +88,12 @@ impl<A: AppAssetId> Renderer<A> {
     }
 }
 
-/// A rendering mode for sprites.
-pub struct SpriteRenderer<'a, A: AppAssetId + 'a> {
+/// A mode for rendering images with an optional fade-to-white value.
+pub struct FlashRenderer<'a, A: AppAssetId + 'a> {
     r: &'a mut Renderer<A>,
 }
 
-impl<'a, A: AppAssetId + 'a> SpriteRenderer<'a, A> {
+impl<'a, A: AppAssetId + 'a> FlashRenderer<'a, A> {
     /// Draws the given `sprite` using the given `affine` transformation from the origin.
     pub fn draw(&mut self, affine: &Affine, sprite: A::Sprite) {
         self.draw_flash(affine, sprite, 0.);
