@@ -57,15 +57,10 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
         sdl::SDL_Init(sdl::SDL_INIT_VIDEO | sdl::SDL_INIT_AUDIO | sdl::SDL_INIT_TIMER | sdl::SDL_INIT_EVENTS).sdl_check();
         let mix_init = sdl::mixer::Mix_Init(sdl::mixer::MIX_InitFlags_MIX_INIT_OGG as c_int);
         assert!(mix_init == sdl::mixer::MIX_InitFlags_MIX_INIT_OGG as c_int, "failed to initialize OGG mixer suport");
-        // let sdl_context = sdl2::init().unwrap();
-        // let video = sdl_context.video().unwrap();
-        // let _sdl_audio = sdl_context.audio().unwrap();
-        // let _mixer_context = mixer_init();
 
         mixer_setup();
         gl_hints();
 
-        //let timer = sdl_context.timer().unwrap();
         let mut event_handler = EventHandler::new();
 
         let title = CString::new(info.title.clone()).expect("invalid title");
@@ -159,16 +154,6 @@ unsafe fn build_renderer<AS: AppAssetId>(info: &AppInfo, sdl_renderer: *mut sdl:
 
     Renderer::<AS>::new(render_buffer, core_renderer)
 }
-
-//fn mixer_init() {
-    // match sdl2::mixer::init(INIT_OGG) {
-    //     Ok(ctx) => ctx,
-    //     // HACK TODO remove special handling once SDL2 mixer 2.0.3 is released
-    //     //           (see https://bugzilla.libsdl.org/show_bug.cgi?id=3929 for details)
-    //     Err(ref msg) if msg.as_str() == "OGG support not available" => Sdl2MixerContext,
-    //     Err(msg) => panic!("sdl2::mixer::init failed: {}", msg),
-    // }
-//}
 
 unsafe fn mixer_setup() {
     sdl::mixer::Mix_OpenAudio(44100, sdl::AUDIO_S16LSB as u16, sdl::mixer::MIX_DEFAULT_CHANNELS as c_int, 1024).mix_check();
