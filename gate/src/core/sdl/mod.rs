@@ -107,6 +107,7 @@ pub fn run<AS: AppAssetId, AP: App<AS>>(info: AppInfo, mut app: AP) {
 
             let mut screen_dims = (0, 0);
             sdl::SDL_GetWindowSize(window, &mut screen_dims.0, &mut screen_dims.1);
+            gl::Viewport(0, 0, screen_dims.0, screen_dims.1); // TODO don't do this unless size changes?
             if screen_dims.0 > 0 && screen_dims.1 > 0 {
                 renderer.set_screen_dims((screen_dims.0 as u32, screen_dims.1 as u32));
                 ctx.set_dims(renderer.app_dims(), renderer.native_px());
