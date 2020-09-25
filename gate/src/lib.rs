@@ -50,6 +50,8 @@
 //!   game libraries often seem to overlook this fundamental feature)
 //! * New renderer modes with new shaders
 
+// TODO make certain structs not Send/Sync...
+
 #[macro_use] mod macros;
 pub mod asset_id;
 pub mod renderer;
@@ -79,6 +81,11 @@ pub fn run<AS, AP, F>(info: AppInfo, app: F) where
     AP: 'static + App<AS>,
     F: 'static + FnOnce(&mut AppContext<AS>) -> AP
 {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    static APP_CREATED: AtomicBool = AtomicBool::new(false);
+    let previously_created = APP_CREATED.swap(true, Ordering::Relaxed);
+    assert!(!previously_created, "Cannot run more than one App.");
+
     core::run(info, app);
 }
 

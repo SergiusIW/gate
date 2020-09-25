@@ -15,6 +15,8 @@
 mod app_clock;
 mod core_audio;
 mod event_handler;
+mod sdl_helpers;
+mod sdl_imports;
 
 pub use self::core_audio::CoreAudio;
 
@@ -24,6 +26,8 @@ use std::fs::File;
 use std::io::BufReader;
 
 use sdl2_sys as sdl;
+use sdl_helpers::*;
+use sdl_imports::*;
 
 use gl;
 use gl::types::*;
@@ -37,7 +41,6 @@ use crate::renderer::atlas::Atlas;
 use crate::asset_id::{AppAssetId, IdU16};
 use self::app_clock::AppClock;
 use self::event_handler::EventHandler;
-use super::mark_app_created_flag;
 
 /// Macro to be placed in the `main.rs` file for a Gate app.
 ///
@@ -48,37 +51,36 @@ macro_rules! gate_header {
     () => {};
 }
 
+// FIXME broke window resizing again, fix it...
+
 pub fn run<AS, AP, F>(info: AppInfo, app: F) where
     AS: AppAssetId,
     AP: App<AS>,
     F: FnOnce(&mut AppContext<AS>) -> AP
 {
     unsafe {
-        mark_app_created_flag();
+        SDL_SetHint(SDL_HINT_RENDER_DRIVER, c_str!("opengles2"));
+        SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_EVENTS).sdl_check();
+        sdl_assert(Mix_Init(MIX_INIT_OGG) == MIX_INIT_OGG);
 
-        #[cfg(target_os = "windows")]
-        sdl::SDL_SetHint(c_str!("SDL_RENDER_DRIVER"), c_str!("opengles2"));
-        sdl::SDL_Init(sdl::SDL_INIT_VIDEO | sdl::SDL_INIT_AUDIO | sdl::SDL_INIT_TIMER | sdl::SDL_INIT_EVENTS).sdl_check();
-        let mix_init = sdl::mixer::Mix_Init(sdl::mixer::MIX_InitFlags_MIX_INIT_OGG as c_int);
-        assert!(mix_init == sdl::mixer::MIX_InitFlags_MIX_INIT_OGG as c_int, "failed to initialize OGG mixer suport");
-
-        mixer_setup();
-        gl_hints();
+        Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024).sdl_check();
+        assert!(Mix_AllocateChannels(16) == 16);
 
         let mut event_handler = EventHandler::new();
 
-        let title = CString::new(info.title.clone()).expect("invalid title");
-        let window = sdl::SDL_CreateWindow(
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES).sdl_check();
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2).sdl_check();
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0).sdl_check();
+
+        let title = CString::new(info.title).expect("invalid title");
+        let window = SDL_CreateWindow(
             title.as_ptr(),
-            sdl::SDL_WINDOWPOS_CENTERED_MASK as c_int,
-            sdl::SDL_WINDOWPOS_CENTERED_MASK as c_int,
+            SDL_WINDOWPOS_CENTERED_MASK,
+            SDL_WINDOWPOS_CENTERED_MASK,
             info.window_pixels.0 as c_int,
             info.window_pixels.1 as c_int,
-            sdl::SDL_WindowFlags::SDL_WINDOW_RESIZABLE as u32 | sdl::SDL_WindowFlags::SDL_WINDOW_OPENGL as u32,
-        );
-        if window.is_null() {
-            panic!("error creating window"); // TODO better error message using SDL_GetError
-        }
+            SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL,
+        ).sdl_check();
 
         let sdl_renderer = sdl::SDL_CreateRenderer(window, -1, sdl::SDL_RendererFlags::SDL_RENDERER_ACCELERATED as u32
             | sdl::SDL_RendererFlags::SDL_RENDERER_PRESENTVSYNC as u32);
@@ -159,22 +161,6 @@ unsafe fn build_renderer<AS: AppAssetId>(info: &AppInfo, sdl_renderer: *mut sdl:
     Renderer::<AS>::new(render_buffer, core_renderer)
 }
 
-unsafe fn mixer_setup() {
-    sdl::mixer::Mix_OpenAudio(44100, sdl::AUDIO_S16LSB as u16, sdl::mixer::MIX_DEFAULT_CHANNELS as c_int, 1024).mix_check();
-    let num_channels_requested = 4; // TODO reconsider this limit
-    let num_channels_created = sdl::mixer::Mix_AllocateChannels(4);
-    assert!(num_channels_requested == num_channels_created);
-}
-
-unsafe fn gl_hints() {
-    // TODO test that this SetAttribute code actually does anything
-    // TODO Reconsider these flags: 3.0 may be lowered, can try PROFILE_ES, debug flag should not be used in release mode, maybe removed entirely
-    sdl::SDL_GL_SetAttribute(sdl::SDL_GLattr::SDL_GL_CONTEXT_PROFILE_MASK, sdl::SDL_GLprofile::SDL_GL_CONTEXT_PROFILE_CORE as c_int).sdl_check();
-    sdl::SDL_GL_SetAttribute(sdl::SDL_GLattr::SDL_GL_CONTEXT_FLAGS, sdl::SDL_GLcontextFlag::SDL_GL_CONTEXT_DEBUG_FLAG as c_int).sdl_check();
-    sdl::SDL_GL_SetAttribute(sdl::SDL_GLattr::SDL_GL_CONTEXT_MAJOR_VERSION, 3).sdl_check();
-    sdl::SDL_GL_SetAttribute(sdl::SDL_GLattr::SDL_GL_CONTEXT_MINOR_VERSION, 0).sdl_check();
-}
-
 unsafe fn init_gl() {
     gl::load_with(|name| {
         let name = CString::new(name).unwrap();
@@ -199,24 +185,4 @@ unsafe fn gl_get_string<'a>(name: GLenum) -> &'a CStr {
 unsafe fn gl_error_check() {
     let error = gl::GetError();
     assert!(error == gl::NO_ERROR, "unexpected OpenGL error, code {}", error);
-}
-
-trait SdlErrorCode {
-    fn sdl_check(self);
-    fn mix_check(self);
-}
-
-impl SdlErrorCode for c_int {
-    // TODO make sure to call this on all relevant sdl return values
-    fn sdl_check(self) {
-        if self != 0 {
-            todo!()
-        }
-    }
-
-    fn mix_check(self) {
-        if self != 0 {
-            todo!()
-        }
-    }
 }
