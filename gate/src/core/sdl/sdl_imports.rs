@@ -15,6 +15,7 @@
 #![allow(non_upper_case_globals)]
 
 use sdl2_sys as sdl;
+use sdl::image as image;
 use sdl::mixer as mix;
 use std::os::raw::{c_char, c_int};
 
@@ -22,17 +23,25 @@ pub use sdl::{
     SDL_BUTTON_LEFT,
     SDL_BUTTON_MIDDLE,
     SDL_BUTTON_RIGHT,
+    SDL_CreateRenderer,
     SDL_CreateWindow,
     SDL_GetError,
+    SDL_GetWindowSize,
+    SDL_GL_BindTexture,
+    SDL_GL_GetProcAddress,
     SDL_GL_SetAttribute,
+    SDL_GL_UnbindTexture,
     SDL_GLattr::{SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_MAJOR_VERSION, SDL_GL_CONTEXT_MINOR_VERSION},
-    SDL_PollEvent,
-    SDL_SetHint,
     SDL_Init,
     SDL_INIT_AUDIO,
     SDL_INIT_EVENTS,
     SDL_INIT_TIMER,
     SDL_INIT_VIDEO,
+    SDL_PollEvent,
+    SDL_Renderer,
+    SDL_RenderPresent,
+    SDL_SetHint,
+    SDL_SetWindowFullscreen,
 };
 
 pub const SDL_GL_CONTEXT_PROFILE_ES: c_int = sdl::SDL_GLprofile::SDL_GL_CONTEXT_PROFILE_ES as c_int;
@@ -43,8 +52,11 @@ pub const SDL_MOUSEBUTTONDOWN: u32 = sdl::SDL_EventType::SDL_MOUSEBUTTONDOWN as 
 pub const SDL_MOUSEBUTTONUP: u32 = sdl::SDL_EventType::SDL_MOUSEBUTTONUP as u32;
 pub const SDL_MOUSEMOTION: u32 = sdl::SDL_EventType::SDL_MOUSEMOTION as u32;
 pub const SDL_QUIT: u32 = sdl::SDL_EventType::SDL_QUIT as u32;
+pub const SDL_RENDERER_ACCELERATED: u32 = sdl::SDL_RendererFlags::SDL_RENDERER_ACCELERATED as u32;
+pub const SDL_RENDERER_PRESENTVSYNC: u32 = sdl::SDL_RendererFlags::SDL_RENDERER_PRESENTVSYNC as u32;
 pub const SDL_WINDOW_OPENGL: u32 = sdl::SDL_WindowFlags::SDL_WINDOW_OPENGL as u32;
 pub const SDL_WINDOW_RESIZABLE: u32 = sdl::SDL_WindowFlags::SDL_WINDOW_RESIZABLE as u32;
+pub const SDL_WINDOW_FULLSCREEN_DESKTOP: u32 = sdl::SDL_WindowFlags::SDL_WINDOW_FULLSCREEN_DESKTOP as u32;
 pub const SDL_WINDOWPOS_CENTERED_MASK: c_int = sdl::SDL_WINDOWPOS_CENTERED_MASK as c_int;
 
 pub const SDLK_a: i32 = sdl::SDLK_a as i32;
@@ -102,3 +114,7 @@ pub const MIX_DEFAULT_CHANNELS: c_int = mix::MIX_DEFAULT_CHANNELS as c_int;
 pub const MIX_DEFAULT_FORMAT: u16 = mix::MIX_DEFAULT_FORMAT as u16;
 pub const MIX_DEFAULT_FREQUENCY: c_int = mix::MIX_DEFAULT_FREQUENCY as c_int;
 pub const MIX_INIT_OGG: c_int = mix::MIX_InitFlags_MIX_INIT_OGG as c_int;
+
+pub use image::{
+    IMG_LoadTexture,
+};

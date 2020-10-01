@@ -60,6 +60,7 @@ impl CoreRenderer {
 
     pub(in crate::renderer) fn draw_sprites(&mut self, r: &mut RenderBuffer) {
         unsafe {
+            gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
             gl::Enable(gl::SCISSOR_TEST);
             gl::UseProgram(self.sprite_program.handle);
 

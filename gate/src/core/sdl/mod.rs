@@ -25,7 +25,6 @@ use std::os::raw::{c_char, c_int};
 use std::fs::File;
 use std::io::BufReader;
 
-use sdl2_sys as sdl;
 use sdl_helpers::*;
 use sdl_imports::*;
 
@@ -50,8 +49,6 @@ use self::event_handler::EventHandler;
 macro_rules! gate_header {
     () => {};
 }
-
-// FIXME broke window resizing again, fix it...
 
 pub fn run<AS, AP, F>(info: AppInfo, app: F) where
     AS: AppAssetId,
@@ -82,11 +79,7 @@ pub fn run<AS, AP, F>(info: AppInfo, app: F) where
             SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL,
         ).sdl_check();
 
-        let sdl_renderer = sdl::SDL_CreateRenderer(window, -1, sdl::SDL_RendererFlags::SDL_RENDERER_ACCELERATED as u32
-            | sdl::SDL_RendererFlags::SDL_RENDERER_PRESENTVSYNC as u32);
-        if sdl_renderer.is_null() {
-            panic!("error creating renderer"); // TODO better error message using SDL_GetError
-        }
+        let sdl_renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC).sdl_check();
 
         init_gl();
 
@@ -107,7 +100,7 @@ pub fn run<AS, AP, F>(info: AppInfo, app: F) where
             gl::Clear(gl::COLOR_BUFFER_BIT);
 
             let mut screen_dims = (0, 0);
-            sdl::SDL_GetWindowSize(window, &mut screen_dims.0, &mut screen_dims.1);
+            SDL_GetWindowSize(window, &mut screen_dims.0, &mut screen_dims.1);
             gl::Viewport(0, 0, screen_dims.0, screen_dims.1); // TODO don't do this unless size changes?
             if screen_dims.0 > 0 && screen_dims.1 > 0 {
                 renderer.set_screen_dims((screen_dims.0 as u32, screen_dims.1 as u32));
@@ -115,18 +108,18 @@ pub fn run<AS, AP, F>(info: AppInfo, app: F) where
                 app.render(&mut renderer, &ctx);
                 renderer.flush();
             }
-            sdl::SDL_RenderPresent(sdl_renderer);
+            SDL_RenderPresent(sdl_renderer);
             gl_error_check();
 
             let elapsed = clock.step();
 
             match (ctx.is_fullscreen(), ctx.desires_fullscreen()) {
                 (false, true) => {
-                    let success = sdl::SDL_SetWindowFullscreen(window, sdl::SDL_WindowFlags::SDL_WINDOW_FULLSCREEN_DESKTOP as u32) == 0;
+                    let success = SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP) == 0;
                     ctx.set_is_fullscreen(success);
                 },
                 (true, false) => {
-                    let success = sdl::SDL_SetWindowFullscreen(window, 0) == 0;
+                    let success = SDL_SetWindowFullscreen(window, 0) == 0;
                     ctx.set_is_fullscreen(!success);
                 },
                 (false, false) | (true, true) => {},
@@ -140,20 +133,17 @@ pub fn run<AS, AP, F>(info: AppInfo, app: F) where
     }
 }
 
-unsafe fn build_renderer<AS: AppAssetId>(info: &AppInfo, sdl_renderer: *mut sdl::SDL_Renderer) -> Renderer<AS> {
+unsafe fn build_renderer<AS: AppAssetId>(info: &AppInfo, sdl_renderer: *mut SDL_Renderer) -> Renderer<AS> {
     let sprites_atlas = Atlas::new(BufReader::new(File::open("assets/sprites.atlas").unwrap())).unwrap();
     let render_buffer = RenderBuffer::new(&info, info.window_pixels, sprites_atlas);
 
-    let sprites_tex = sdl::image::IMG_LoadTexture(sdl_renderer, c_str!("assets/sprites.png"));
-    if sprites_tex.is_null() {
-        panic!("error loading texture"); // TODO better error message
-    }
+    let sprites_tex = IMG_LoadTexture(sdl_renderer, c_str!("assets/sprites.png")).sdl_check();
 
     let (mut tex_w, mut tex_h) = (0., 0.);
-    sdl::SDL_GL_BindTexture(sprites_tex, &mut tex_w, &mut tex_h).sdl_check();
+    SDL_GL_BindTexture(sprites_tex, &mut tex_w, &mut tex_h).sdl_check();
     gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
     gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as GLint);
-    sdl::SDL_GL_UnbindTexture(sprites_tex).sdl_check();
+    SDL_GL_UnbindTexture(sprites_tex).sdl_check();
 
     // TODO need to ensure Nearest-neighbor sampling is used?
     let core_renderer = CoreRenderer::new(sprites_tex);
@@ -164,7 +154,7 @@ unsafe fn build_renderer<AS: AppAssetId>(info: &AppInfo, sdl_renderer: *mut sdl:
 unsafe fn init_gl() {
     gl::load_with(|name| {
         let name = CString::new(name).unwrap();
-        sdl::SDL_GL_GetProcAddress(name.as_ptr())
+        SDL_GL_GetProcAddress(name.as_ptr())
     });
 
     gl::Enable(gl::BLEND);
