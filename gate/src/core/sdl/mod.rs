@@ -15,8 +15,8 @@
 mod app_clock;
 mod core_audio;
 mod event_handler;
-mod sdl_helpers;
-mod sdl_imports;
+pub(crate) mod sdl_helpers;
+pub(crate) mod sdl_imports;
 
 pub use self::core_audio::CoreAudio;
 

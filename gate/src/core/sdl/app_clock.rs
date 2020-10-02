@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use sdl2_sys as sdl;
+use super::sdl_imports::*;
 
 pub struct AppClock {
     last_ticks: u32,
@@ -21,12 +21,12 @@ pub struct AppClock {
 impl AppClock {
     pub unsafe fn new() -> AppClock {
         AppClock {
-            last_ticks: sdl::SDL_GetTicks(),
+            last_ticks: SDL_GetTicks(),
         }
     }
 
     pub unsafe fn step(&mut self) -> f64 {
-        let now = sdl::SDL_GetTicks();
+        let now = SDL_GetTicks();
         let elapsed = (now - self.last_ticks) as f64 / 1_000.0;
         self.last_ticks = now;
         elapsed

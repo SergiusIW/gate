@@ -15,27 +15,27 @@
 use std::ffi::CString;
 use std::os::raw::c_char;
 
-use sdl2_sys as sdl;
+use super::sdl_imports::*;
 
 // TODO delete audio after use...
 // TODO error checks...
 pub struct CoreAudio {
-    music: Option<*mut sdl::mixer::Mix_Music>,
-    sounds: Vec<*mut sdl::mixer::Mix_Chunk>,
+    music: Option<*mut Mix_Music>,
+    sounds: Vec<*mut Mix_Chunk>,
 }
 
 impl CoreAudio {
     pub(crate) unsafe fn new(sound_count: u16) -> CoreAudio {
         let sounds: Vec<_> = (0..sound_count)
             .map(|id| CString::new(format!("assets/sound{}.ogg", id)).unwrap())
-            .map(|p| sdl::mixer::Mix_LoadWAV_RW(sdl::SDL_RWFromFile(p.as_ptr(), c_str!("rb")), 0))
+            .map(|p| Mix_LoadWAV_RW(SDL_RWFromFile(p.as_ptr(), c_str!("rb")), 0))
             .collect();
         CoreAudio { sounds, music: None }
     }
 
     pub fn play_sound(&mut self, sound: u16) {
         unsafe {
-            sdl::mixer::Mix_PlayChannelTimed(-1, self.sounds[sound as usize], 0, -1);
+            Mix_PlayChannelTimed(-1, self.sounds[sound as usize], 0, -1);
         }
     }
 
@@ -44,8 +44,8 @@ impl CoreAudio {
             self.stop_music();
             let loops = if loops { -1 } else { 1 };
             let music = CString::new(format!("assets/music{}.ogg", music)).unwrap();
-            let music = sdl::mixer::Mix_LoadMUS(music.as_ptr());
-            sdl::mixer::Mix_PlayMusic(music, loops);
+            let music = Mix_LoadMUS(music.as_ptr());
+            Mix_PlayMusic(music, loops);
             self.music = Some(music);
         }
     }
@@ -53,7 +53,7 @@ impl CoreAudio {
     pub fn stop_music(&mut self) {
         if let Some(music) = self.music.take() {
             unsafe {
-                sdl::mixer::Mix_FreeMusic(music);
+                Mix_FreeMusic(music);
             }
         }
     }

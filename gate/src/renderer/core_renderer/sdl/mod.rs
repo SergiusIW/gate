@@ -17,7 +17,8 @@ mod sprite_program;
 
 use std::mem;
 
-use sdl2_sys as sdl;
+use crate::core::sdl_helpers::*;
+use crate::core::sdl_imports::*;
 
 use gl::types::*;
 use gl;
@@ -28,11 +29,11 @@ use self::sprite_program::SpriteProgram;
 pub struct CoreRenderer {
     vbo: GLuint,
     sprite_program: SpriteProgram,
-    sprites_tex: *mut sdl::SDL_Texture, // TODO invoke sys::SDL_DestroyTexture on panic? does it matter?
+    sprites_tex: *mut SDL_Texture, // TODO invoke sys::SDL_DestroyTexture on panic? does it matter?
 }
 
 impl CoreRenderer {
-    pub fn new(sprites_tex: *mut sdl::SDL_Texture) -> CoreRenderer {
+    pub fn new(sprites_tex: *mut SDL_Texture) -> CoreRenderer {
         let mut vbo = 0;
         unsafe {
             gl::GenBuffers(1, &mut vbo);
@@ -66,9 +67,7 @@ impl CoreRenderer {
 
             gl::ActiveTexture(gl::TEXTURE0);
             let (mut width, mut height) = (0., 0.);
-            if sdl::SDL_GL_BindTexture(self.sprites_tex, &mut width, &mut height) != 0 {
-                panic!("OpenGL texture binding not supported"); // TODO cleaner error handling
-            }
+            SDL_GL_BindTexture(self.sprites_tex, &mut width, &mut height).sdl_check();
             gl::Uniform1i(self.sprite_program.uniform_tex, 0); // binds to GL_TEXTURE0
             gl::Uniform2f(self.sprite_program.uniform_inv_tex_dims,
                           1. / r.sprite_atlas.dims.0, 1. / r.sprite_atlas.dims.1);
@@ -83,9 +82,7 @@ impl CoreRenderer {
             gl::DrawArrays(gl::TRIANGLES, 0, r.vbo_data.len() as GLint / 7);
 
             gl::BindVertexArray(0);
-            if sdl::SDL_GL_UnbindTexture(self.sprites_tex) != 0 {
-                panic!("OpenGL texture unbinding not supported"); // TODO cleaner error handling
-            }
+            SDL_GL_UnbindTexture(self.sprites_tex).sdl_check();
             gl::UseProgram(0);
             gl::Disable(gl::SCISSOR_TEST);
         }

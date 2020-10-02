@@ -26,6 +26,7 @@ pub use sdl::{
     SDL_CreateRenderer,
     SDL_CreateWindow,
     SDL_GetError,
+    SDL_GetTicks,
     SDL_GetWindowSize,
     SDL_GL_BindTexture,
     SDL_GL_GetProcAddress,
@@ -40,8 +41,10 @@ pub use sdl::{
     SDL_PollEvent,
     SDL_Renderer,
     SDL_RenderPresent,
+    SDL_RWFromFile,
     SDL_SetHint,
     SDL_SetWindowFullscreen,
+    SDL_Texture,
 };
 
 pub const SDL_GL_CONTEXT_PROFILE_ES: c_int = sdl::SDL_GLprofile::SDL_GL_CONTEXT_PROFILE_ES as c_int;
@@ -106,8 +109,15 @@ pub const SDLK_DELETE: i32 = sdl::SDLK_DELETE as i32;
 
 pub use mix::{
     Mix_AllocateChannels,
+    Mix_Chunk,
+    Mix_FreeMusic,
     Mix_Init,
+    Mix_LoadMUS,
+    Mix_LoadWAV_RW,
+    Mix_Music,
     Mix_OpenAudio,
+    Mix_PlayChannelTimed,
+    Mix_PlayMusic,
 };
 
 pub const MIX_DEFAULT_CHANNELS: c_int = mix::MIX_DEFAULT_CHANNELS as c_int;
