@@ -30,7 +30,6 @@ use crate::renderer::atlas::Atlas;
 use crate::renderer::render_buffer::RenderBuffer;
 use crate::renderer::core_renderer::CoreRenderer;
 use self::wasm_imports::*;
-use super::mark_app_created_flag;
 
 pub struct CoreAudio;
 
@@ -241,7 +240,6 @@ pub fn run<AS, AP, F>(info: AppInfo, app: F) where
     AP: 'static + App<AS>,
     F: 'static + FnOnce(&mut AppContext<AS>) -> AP
 {
-    mark_app_created_flag();
     *APP_RUNNER.r.borrow_mut() = Some(Box::new(AppRunner {
         app: AppContainer::Uninit(Box::new(app)),
         info,
