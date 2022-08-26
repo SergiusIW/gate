@@ -19,8 +19,8 @@ use gl::types::*;
 use gl;
 
 pub fn compile_shader(src: *const c_char, ty: GLenum) -> GLuint {
+    let shader = unsafe {gl::CreateShader(ty)};
     unsafe {
-        let shader = gl::CreateShader(ty);
 
         gl::ShaderSource(shader, 1, &src, ptr::null());
         gl::CompileShader(shader);
@@ -36,13 +36,13 @@ pub fn compile_shader(src: *const c_char, ty: GLenum) -> GLuint {
             gl::GetShaderInfoLog(shader, len, ptr::null_mut(), buf.as_mut_ptr() as *mut GLchar);
             panic!("{}", str::from_utf8(&buf).ok().expect("glGetShaderInfoLog returned invalid utf8"));
         }
-        shader
     }
+        shader
 }
 
 pub fn link_program(vs: GLuint, fs: GLuint) -> GLuint {
+    let program = unsafe {gl::CreateProgram()};
     unsafe {
-        let program = gl::CreateProgram();
         gl::AttachShader(program, vs);
         gl::AttachShader(program, fs);
         gl::LinkProgram(program);
@@ -58,6 +58,6 @@ pub fn link_program(vs: GLuint, fs: GLuint) -> GLuint {
             gl::GetProgramInfoLog(program, len, ptr::null_mut(), buf.as_mut_ptr() as *mut GLchar);
             panic!("{}", str::from_utf8(&buf).ok().expect("glGetProgramInfoLog returned invalid utf8"));
         }
-        program
     }
+    program
 }

@@ -40,14 +40,14 @@ impl CoreAudio {
     }
 
     pub fn play_music(&mut self, music: u16, loops: bool) {
-        unsafe {
+        
             self.stop_music();
             let loops = if loops { -1 } else { 1 };
             let music = CString::new(format!("assets/music{}.ogg", music)).unwrap();
-            let music = Mix_LoadMUS(music.as_ptr());
-            Mix_PlayMusic(music, loops);
+            let music = unsafe {Mix_LoadMUS(music.as_ptr())};
+            unsafe {Mix_PlayMusic(music, loops)};
             self.music = Some(music);
-        }
+        
     }
 
     pub fn stop_music(&mut self) {
