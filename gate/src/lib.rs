@@ -86,7 +86,7 @@ pub fn run<AS, AP, F>(info: AppInfo, app: F) where
     let previously_created = APP_CREATED.swap(true, Ordering::Relaxed);
     assert!(!previously_created, "Cannot run more than one App.");
 
-    core::run(info, app);
+    unsafe { core::run(info, app) };
 }
 
 /// Trait that a user can implement to specify application behavior, passed into `gate::run(...)`.
