@@ -50,86 +50,84 @@ macro_rules! gate_header {
     () => {};
 }
 
-pub fn run<AS, AP, F>(info: AppInfo, app: F) where
+pub unsafe fn run<AS, AP, F>(info: AppInfo, app: F) where
     AS: AppAssetId,
     AP: App<AS>,
     F: FnOnce(&mut AppContext<AS>) -> AP
 {
-    unsafe {
-        SDL_SetHint(SDL_HINT_RENDER_DRIVER, c_str!("opengles2"));
-        SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_EVENTS).sdl_check();
-        sdl_assert(Mix_Init(MIX_INIT_OGG) == MIX_INIT_OGG);
+    SDL_SetHint(SDL_HINT_RENDER_DRIVER, c_str!("opengles2"));
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_EVENTS).sdl_check();
+    sdl_assert(Mix_Init(MIX_INIT_OGG) == MIX_INIT_OGG);
 
-        Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024).sdl_check();
-        assert!(Mix_AllocateChannels(16) == 16);
+    Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024).sdl_check();
+    assert!(Mix_AllocateChannels(16) == 16);
 
-        let mut event_handler = EventHandler::new();
+    let mut event_handler = EventHandler::new();
 
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES).sdl_check();
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2).sdl_check();
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0).sdl_check();
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES).sdl_check();
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2).sdl_check();
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0).sdl_check();
 
-        let title = CString::new(info.title).expect("invalid title");
-        let window = SDL_CreateWindow(
-            title.as_ptr(),
-            SDL_WINDOWPOS_CENTERED_MASK,
-            SDL_WINDOWPOS_CENTERED_MASK,
-            info.window_pixels.0 as c_int,
-            info.window_pixels.1 as c_int,
-            SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL,
-        ).sdl_check();
+    let title = CString::new(info.title).expect("invalid title");
+    let window = SDL_CreateWindow(
+        title.as_ptr(),
+        SDL_WINDOWPOS_CENTERED_MASK,
+        SDL_WINDOWPOS_CENTERED_MASK,
+        info.window_pixels.0 as c_int,
+        info.window_pixels.1 as c_int,
+        SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL,
+    ).sdl_check();
 
-        let sdl_renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC).sdl_check();
+    let sdl_renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC).sdl_check();
 
-        init_gl();
+    init_gl();
 
-        let mut renderer = build_renderer(&info, sdl_renderer);
+    let mut renderer = build_renderer(&info, sdl_renderer);
 
+    gl_error_check();
+
+    let mut ctx = AppContext::new(CoreAudio::new(AS::Sound::count()), renderer.app_dims(), renderer.native_px());
+
+    if info.print_gl_info { print_gl_info(); }
+
+    let mut app = app(&mut ctx);
+
+    let mut clock = AppClock::new();
+
+    loop {
+        gl::ClearColor(0., 0., 0., 1.0);
+        gl::Clear(gl::COLOR_BUFFER_BIT);
+
+        let mut screen_dims = (0, 0);
+        SDL_GetWindowSize(window, &mut screen_dims.0, &mut screen_dims.1);
+        gl::Viewport(0, 0, screen_dims.0, screen_dims.1); // TODO don't do this unless size changes?
+        if screen_dims.0 > 0 && screen_dims.1 > 0 {
+            renderer.set_screen_dims((screen_dims.0 as u32, screen_dims.1 as u32));
+            ctx.set_dims(renderer.app_dims(), renderer.native_px());
+            app.render(&mut renderer, &ctx);
+            renderer.flush();
+        }
+        SDL_RenderPresent(sdl_renderer);
         gl_error_check();
 
-        let mut ctx = AppContext::new(CoreAudio::new(AS::Sound::count()), renderer.app_dims(), renderer.native_px());
+        let elapsed = clock.step();
 
-        if info.print_gl_info { print_gl_info(); }
-
-        let mut app = app(&mut ctx);
-
-        let mut clock = AppClock::new();
-
-        loop {
-            gl::ClearColor(0., 0., 0., 1.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
-
-            let mut screen_dims = (0, 0);
-            SDL_GetWindowSize(window, &mut screen_dims.0, &mut screen_dims.1);
-            gl::Viewport(0, 0, screen_dims.0, screen_dims.1); // TODO don't do this unless size changes?
-            if screen_dims.0 > 0 && screen_dims.1 > 0 {
-                renderer.set_screen_dims((screen_dims.0 as u32, screen_dims.1 as u32));
-                ctx.set_dims(renderer.app_dims(), renderer.native_px());
-                app.render(&mut renderer, &ctx);
-                renderer.flush();
-            }
-            SDL_RenderPresent(sdl_renderer);
-            gl_error_check();
-
-            let elapsed = clock.step();
-
-            match (ctx.is_fullscreen(), ctx.desires_fullscreen()) {
-                (false, true) => {
-                    let success = SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP) == 0;
-                    ctx.set_is_fullscreen(success);
-                },
-                (true, false) => {
-                    let success = SDL_SetWindowFullscreen(window, 0) == 0;
-                    ctx.set_is_fullscreen(!success);
-                },
-                (false, false) | (true, true) => {},
-            }
-
-            let continuing = event_handler.process_events(&mut app, &mut ctx, &renderer);
-            if !continuing { break; }
-            app.advance(elapsed.min(crate::MAX_TIMESTEP), &mut ctx);
-            if ctx.take_close_request() { break; }
+        match (ctx.is_fullscreen(), ctx.desires_fullscreen()) {
+            (false, true) => {
+                let success = SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP) == 0;
+                ctx.set_is_fullscreen(success);
+            },
+            (true, false) => {
+                let success = SDL_SetWindowFullscreen(window, 0) == 0;
+                ctx.set_is_fullscreen(!success);
+            },
+            (false, false) | (true, true) => {},
         }
+
+        let continuing = event_handler.process_events(&mut app, &mut ctx, &renderer);
+        if !continuing { break; }
+        app.advance(elapsed.min(crate::MAX_TIMESTEP), &mut ctx);
+        if ctx.take_close_request() { break; }
     }
 }
 
